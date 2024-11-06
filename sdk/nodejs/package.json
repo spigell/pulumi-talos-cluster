@@ -1,0 +1,29 @@
+{
+    "name": "@spigell/pulumi-talos-cluster",
+    "version": "${VERSION}",
+    "keywords": [
+        "pulumi",
+        "talos",
+        "category/infrastructure",
+        "kind/component",
+        "kubernetes"
+    ],
+    "repository": "https://github.com/spigell/pulumi-talos-cluster",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/command": "0.11.1",
+        "@pulumi/pulumi": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^4.3.5"
+    },
+    "pulumi": {
+        "resource": true,
+        "name": "talos-cluster",
+        "server": "github://api.github.com/spigell/pulumi-talos-cluster"
+    }
+}

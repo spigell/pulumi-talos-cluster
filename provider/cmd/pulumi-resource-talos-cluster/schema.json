@@ -1,0 +1,271 @@
+{
+    "name": "talos-cluster",
+    "description": "Create and manage Talos kubernetes cluster",
+    "keywords": [
+        "pulumi",
+        "talos",
+        "category/infrastructure",
+        "kind/component",
+        "kubernetes"
+    ],
+    "license": "Apache-2.0",
+    "repository": "https://github.com/spigell/pulumi-talos-cluster",
+    "pluginDownloadURL": "github://api.github.com/spigell/pulumi-talos-cluster",
+    "publisher": "spigell",
+    "language": {
+        "csharp": {
+            "packageReferences": {
+                "Pulumi": "3.*",
+                "Pulumi.Command": "1.1.0-alpha.1727883369"
+            }
+        },
+        "go": {
+            "generateResourceContainerTypes": true,
+            "importBasePath": "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
+        },
+        "nodejs": {
+            "dependencies": {
+                "@pulumi/command": "v1.0.1",
+                "@pulumi/pulumi": "^3.0.0",
+                "@pulumiverse/talos": "v0.4.1"
+            },
+            "devDependencies": {
+                "@types/node": "^20.0.0",
+                "typescript": "^4.3.5"
+            },
+            "packageName": "@spigell/pulumi-talos-cluster"
+        },
+        "python": {
+            "liftSingleValueMethodReturns": true,
+            "pyproject": {
+                "enabled": true
+            },
+            "requires": {
+                "pulumi": "\u003e=3.0.0,\u003c4.0.0",
+                "pulumi-command": "1.0.1",
+                "pulumiverse-talos": "0.4.1"
+            },
+            "usesIOClasses": true
+        }
+    },
+    "config": {},
+    "types": {
+        "talos-cluster:index:applyMachines": {
+            "properties": {
+                "configuration": {
+                    "type": "string",
+                    "description": "Configuration settings for machines to apply. \nThis can be retrieved from the cluster resource."
+                },
+                "machineId": {
+                    "type": "string",
+                    "description": "ID or name of the machine."
+                },
+                "node": {
+                    "type": "string",
+                    "description": "The IP address of the node where configuration will be applied."
+                },
+                "userConfigPatches": {
+                    "type": "string",
+                    "description": "User-provided machine configuration to apply. \nThis can be retrieved from the cluster resource."
+                }
+            },
+            "type": "object",
+            "required": [
+                "machineId",
+                "node",
+                "configuration"
+            ]
+        },
+        "talos-cluster:index:applyMachinesByType": {
+            "properties": {
+                "controlplane": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#types/talos-cluster:index:applyMachines"
+                    }
+                },
+                "init": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:applyMachines"
+                },
+                "worker": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#types/talos-cluster:index:applyMachines"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "init"
+            ]
+        },
+        "talos-cluster:index:clientConfiguration": {
+            "properties": {
+                "caCertificate": {
+                    "type": "string",
+                    "description": "The Certificate Authority (CA) certificate used to verify connections to the Talos API server."
+                },
+                "clientCertificate": {
+                    "type": "string",
+                    "description": "The client certificate used to authenticate to the Talos API server."
+                },
+                "clientKey": {
+                    "type": "string",
+                    "description": "The private key for the client certificate, used for authenticating the client to the Talos API server."
+                }
+            },
+            "type": "object"
+        },
+        "talos-cluster:index:clusterMachines": {
+            "properties": {
+                "configPatches": {
+                    "type": "string",
+                    "description": "User-provided machine configuration to apply. \nMust be a valid YAML string. \nFor structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/"
+                },
+                "kubernetesVersion": {
+                    "type": "string",
+                    "description": "Kubernetes version to install. \nDefault is v1.31.0.",
+                    "default": "v1.31.0"
+                },
+                "machineId": {
+                    "type": "string",
+                    "plain": true,
+                    "description": "ID or name of the machine."
+                },
+                "machineType": {
+                    "type": "enum",
+                    "$ref": "#types/talos-cluster:index:machineTypes",
+                    "plain": true,
+                    "description": "Type of the machine."
+                },
+                "talosImage": {
+                    "type": "string",
+                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.",
+                    "default": "ghcr.io/siderolabs/installer:v1.8.2"
+                }
+            },
+            "type": "object",
+            "required": [
+                "machineType",
+                "machineId"
+            ]
+        },
+        "talos-cluster:index:machineTypes": {
+            "description": "Allowed machine types",
+            "type": "string",
+            "enum": [
+                {
+                    "value": "controlplane"
+                },
+                {
+                    "value": "worker"
+                },
+                {
+                    "value": "init"
+                }
+            ]
+        }
+    },
+    "provider": {},
+    "resources": {
+        "talos-cluster:index:Apply": {
+            "description": "Apply the configuration to nodes.",
+            "inputProperties": {
+                "applyMachines": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:applyMachinesByType",
+                    "description": "The machine configurations to apply."
+                },
+                "clientConfiguration": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:clientConfiguration",
+                    "description": "Client configuration for bootstrapping and applying resources."
+                }
+            },
+            "requiredInputs": [
+                "applyMachines",
+                "clientConfiguration"
+            ],
+            "isComponent": true
+        },
+        "talos-cluster:index:Bootstrap": {
+            "description": "Initialize a new talos cluster: creates etcd cluster. It must not depend on apply call",
+            "inputProperties": {
+                "clientConfiguration": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:clientConfiguration",
+                    "description": "Client configuration for bootstrapping and applying resources."
+                },
+                "node": {
+                    "type": "string",
+                    "description": "An IP address or fqdn for node bootstraping."
+                }
+            },
+            "requiredInputs": [
+                "clientConfiguration",
+                "node"
+            ],
+            "isComponent": true
+        },
+        "talos-cluster:index:Cluster": {
+            "description": "Initialize a new Talos cluster: \n- Creates secrets \n- Generates machine configurations for all nodes",
+            "properties": {
+                "clientConfiguration": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:clientConfiguration",
+                    "description": "Client configuration for bootstrapping and applying resources."
+                },
+                "controlplaneMachineConfigurations": {
+                    "type": "object",
+                    "description": "The map of generated machine configurations for controlplanes. \nThis is an unstructured string, but it is valid YAML."
+                },
+                "initMachineConfiguration": {
+                    "type": "string",
+                    "description": "The generated machine configurations for the init node. \nThis is an unstructured string, but it is valid YAML."
+                },
+                "userConfigPatches": {
+                    "type": "object",
+                    "description": "Map of user-provided machine configuration patches. \nCan be used in the apply resource."
+                },
+                "workerMachineConfigurations": {
+                    "type": "object",
+                    "description": "The map of generated machine configurations for workers. \nThis is an unstructured string, but it is valid YAML."
+                }
+            },
+            "inputProperties": {
+                "clusterEndpoint": {
+                    "type": "string",
+                    "description": "Cluster endpoint, the Kubernetes API endpoint accessible by all nodes"
+                },
+                "clusterMachines": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#types/talos-cluster:index:clusterMachines"
+                    },
+                    "description": "Configuration settings for machines"
+                },
+                "clusterName": {
+                    "type": "string",
+                    "plain": true,
+                    "description": "Name of the cluster"
+                },
+                "talosVersionContract": {
+                    "type": "string",
+                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.8.2.",
+                    "default": "v1.8.2"
+                }
+            },
+            "requiredInputs": [
+                "talosVersionContract",
+                "clusterName",
+                "clusterEndpoint",
+                "clusterMachines"
+            ],
+            "isComponent": true
+        }
+    }
+}
