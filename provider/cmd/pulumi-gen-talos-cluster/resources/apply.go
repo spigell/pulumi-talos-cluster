@@ -4,15 +4,14 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
-	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
 var (
-	ApplyResourceName            = provider.ApplyType()
-	ApplyResourceMachinesKey     = "applyMachines"
-	ApplyTypesMachinesPath       = provider.ProviderName + ":index:" + ApplyResourceMachinesKey
-	ApplyTypesMachinesByTypePath = provider.ProviderName + ":index:" + "applyMachinesByType"
+	ApplyResourceName         = provider.ApplyType()
+	ApplyTypesMachineInfoKey  = "machineInfo"
+	ApplyTypesMachineInfoPath = provider.ProviderName + ":index:" + ApplyTypesMachineInfoKey
 )
 
 var Apply = map[string]schema.ResourceSpec{
@@ -33,10 +32,10 @@ func ApplyProperties() map[string]schema.PropertySpec {
 
 func ApplyInputProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
-		ApplyResourceMachinesKey: {
+		"applyMachines": {
 			TypeSpec: schema.TypeSpec{
 				Type: "object",
-				Ref:  fmt.Sprintf("#types/%s", ApplyTypesMachinesByTypePath),
+				Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
 			},
 			Description: "The machine configurations to apply.",
 		},
@@ -45,78 +44,67 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 }
 
 func ApplyRequiredInputProperties() []string {
-	return []string{ApplyResourceMachinesKey, provider.ClusterResourceOutputsClientConfiguration}
+	return []string{"applyMachines", provider.ClusterResourceOutputsClientConfiguration}
 }
 
 func ApplyTypes() map[string]schema.ComplexTypeSpec {
-	types := make(map[string]schema.ComplexTypeSpec)
+	ty := make(map[string]schema.ComplexTypeSpec)
 
-	types[ApplyTypesMachinesByTypePath] = schema.ComplexTypeSpec{
+	ty[ApplyTypesMachineInfoPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
 			Type: "object",
 			Properties: map[string]schema.PropertySpec{
-				machine.TypeControlPlane.String(): {
-					TypeSpec: schema.TypeSpec{
-						Type:  "array",
-						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachinesPath)},
-					},
-				},
-				machine.TypeInit.String(): {
-					TypeSpec: schema.TypeSpec{
-						Type: "object",
-						Ref:  fmt.Sprintf("#types/%s", ApplyTypesMachinesPath),
-					},
-				},
-				machine.TypeWorker.String(): {
-					TypeSpec: schema.TypeSpec{
-						Type:  "array",
-						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachinesPath)},
-					},
-				},
-			},
-			Required: []string{
-				machine.TypeInit.String(),
-			},
-		},
-	}
-
-	types[ApplyTypesMachinesPath] = schema.ComplexTypeSpec{
-		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type: "object",
-			Properties: map[string]schema.PropertySpec{
-				BasicMachinesMachineIDKey: {
+				types.MachineIDKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
 					Description: "ID or name of the machine.",
 				},
-				BasicResourceNodeKey: {
+				types.NodeIPKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
 					Description: "The IP address of the node where configuration will be applied.",
 				},
-				"configuration": {
+				types.ConfigurationKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
 					Description: "Configuration settings for machines to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
-				provider.ClusterResourceOutputsUserConfigPatches: {
+				types.UserConfigPatchesKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
 					Description: "User-provided machine configuration to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
+				types.TalosImageKey: {
+					TypeSpec: schema.TypeSpec{
+						Type: "string",
+					},
+					Description: "TO DO",
+				},
+				types.KubernetesVersionKey: {
+					TypeSpec: schema.TypeSpec{
+						Type: "string",
+					},
+					Description: "TO DO",
+				},
+				types.ClusterEnpointKey: {
+					TypeSpec: schema.TypeSpec{
+						Type: "string",
+					},
+					Description: "cluster endpoint applied to node",
+				},
 			},
 			Required: []string{
-				BasicMachinesMachineIDKey,
-				BasicResourceNodeKey,
-				"configuration",
+				types.MachineIDKey,
+				types.NodeIPKey,
+				types.ConfigurationKey,
 			},
 		},
 	}
-	return types
+	return ty
 }

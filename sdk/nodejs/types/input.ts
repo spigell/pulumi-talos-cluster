@@ -6,22 +6,98 @@ import * as inputs from "../types/input";
 import * as outputs from "../types/output";
 import * as enums from "../types/enums";
 
+import * as utilities from "../utilities";
+
 export interface ApplyMachinesArgs {
-    configuration: pulumi.Input<string>;
-    machineId: pulumi.Input<string>;
-    node: pulumi.Input<string>;
+    controlplane?: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[]>;
+    init: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[]>;
+    worker?: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[]>;
 }
 
 export interface ClientConfigurationArgs {
+    /**
+     * The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
+     */
     caCertificate?: pulumi.Input<string>;
+    /**
+     * The client certificate used to authenticate to the Talos API server.
+     */
     clientCertificate?: pulumi.Input<string>;
+    /**
+     * The private key for the client certificate, used for authenticating the client to the Talos API server.
+     */
     clientKey?: pulumi.Input<string>;
 }
 
 export interface ClusterMachinesArgs {
+    /**
+     * cluster endpoint generated
+     */
+    clusterEndpoint?: pulumi.Input<string>;
+    /**
+     * User-provided machine configuration to apply. 
+     * Must be a valid YAML string. 
+     * For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
+     */
     configPatches?: pulumi.Input<string>;
-    kubernetesVersion: pulumi.Input<string>;
+    /**
+     * ID or name of the machine.
+     */
+    machineId: string;
+    /**
+     * Type of the machine.
+     */
+    machineType: enums.MachineTypes;
+    /**
+     * The IP address of the node where configuration will be applied.
+     */
+    nodeIp: pulumi.Input<string>;
+    /**
+     * Talos OS installation image. 
+     * Used in the `install` configuration and set via CLI. 
+     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.
+     */
+    talosImage?: pulumi.Input<string>;
+}
+/**
+ * clusterMachinesArgsProvideDefaults sets the appropriate defaults for ClusterMachinesArgs
+ */
+export function clusterMachinesArgsProvideDefaults(val: ClusterMachinesArgs): ClusterMachinesArgs {
+    return {
+        ...val,
+        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.8.2",
+    };
+}
+
+export interface MachineInfoArgs {
+    /**
+     * cluster endpoint applied to node
+     */
+    clusterEndpoint?: pulumi.Input<string>;
+    /**
+     * Configuration settings for machines to apply. 
+     * This can be retrieved from the cluster resource.
+     */
+    configuration: pulumi.Input<string>;
+    /**
+     * TO DO
+     */
+    kubernetesVersion?: pulumi.Input<string>;
+    /**
+     * ID or name of the machine.
+     */
     machineId: pulumi.Input<string>;
-    machineType: pulumi.Input<enums.MachineTypes>;
-    talosImage: pulumi.Input<string>;
+    /**
+     * The IP address of the node where configuration will be applied.
+     */
+    nodeIp: pulumi.Input<string>;
+    /**
+     * TO DO
+     */
+    talosImage?: pulumi.Input<string>;
+    /**
+     * User-provided machine configuration to apply. 
+     * This can be retrieved from the cluster resource.
+     */
+    userConfigPatches?: pulumi.Input<string>;
 }

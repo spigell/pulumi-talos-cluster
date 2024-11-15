@@ -10,11 +10,6 @@ export type Apply = import("./apply").Apply;
 export const Apply: typeof import("./apply").Apply = null as any;
 utilities.lazyLoad(exports, ["Apply"], () => require("./apply"));
 
-export { BootstrapArgs } from "./bootstrap";
-export type Bootstrap = import("./bootstrap").Bootstrap;
-export const Bootstrap: typeof import("./bootstrap").Bootstrap = null as any;
-utilities.lazyLoad(exports, ["Bootstrap"], () => require("./bootstrap"));
-
 export { ClusterArgs } from "./cluster";
 export type Cluster = import("./cluster").Cluster;
 export const Cluster: typeof import("./cluster").Cluster = null as any;
@@ -42,8 +37,6 @@ const _module = {
         switch (type) {
             case "talos-cluster:index:Apply":
                 return new Apply(name, <any>undefined, { urn })
-            case "talos-cluster:index:Bootstrap":
-                return new Bootstrap(name, <any>undefined, { urn })
             case "talos-cluster:index:Cluster":
                 return new Cluster(name, <any>undefined, { urn })
             default:

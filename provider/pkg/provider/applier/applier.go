@@ -7,6 +7,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/client"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
 type Applier struct {
@@ -14,19 +15,14 @@ type Applier struct {
 	name                string
 	clientConfiguration *machine.ClientConfigurationArgs
 	parent              pulumi.ResourceOption
+	commnanInterpreter  pulumi.StringArray
+
+	InitNode *InitNode
 }
 
-type ApplyMachines struct {
-	Init          *ApplyMachine   `pulumi:"init"`
-	Controlplanes []*ApplyMachine `pulumi:"controlplane"`
-	Workers       []*ApplyMachine `pulumi:"worker"`
-}
-
-type ApplyMachine struct {
-	MachineID         string              `pulumi:"machineId"`
-	Node              pulumi.StringOutput `pulumi:"node"`
-	Configuration     pulumi.StringOutput `pulumi:"configuration"`
-	UserConfigPatches pulumi.StringOutput `pulumi:"userConfigPatches"`
+type InitNode struct {
+	IP   string
+	Name string
 }
 
 func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationArgs, parent pulumi.ResourceOption) *Applier {
@@ -35,10 +31,14 @@ func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationAr
 		ctx:                 ctx,
 		parent:              parent,
 		clientConfiguration: client,
+		commnanInterpreter: pulumi.StringArray{
+			pulumi.String("/bin/bash"),
+			pulumi.String("-c"),
+		},
 	}
 }
 
-func (a *Applier) Init(m *ApplyMachine) ([]pulumi.Resource, error) {
+func (a *Applier) Init(m *types.MachineInfo) ([]pulumi.Resource, error) {
 	applied, err := a.initApply(m, nil)
 	if err != nil {
 		return nil, err
@@ -46,9 +46,9 @@ func (a *Applier) Init(m *ApplyMachine) ([]pulumi.Resource, error) {
 
 	deps := []pulumi.Resource{applied}
 
-	bootstrap, err := machine.NewBootstrap(a.ctx, fmt.Sprintf("%s:bootstrap", a.name), &machine.BootstrapArgs{
+	bootstrap, err := machine.NewBootstrap(a.ctx, fmt.Sprintf("%s:bootstrap:%s", a.name, m.MachineID), &machine.BootstrapArgs{
 		ClientConfiguration: a.clientConfiguration,
-		Node:                m.Node,
+		Node:                pulumi.String(m.NodeIP),
 	}, a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m", Update: "1m"}),
 		pulumi.DependsOn(deps),
@@ -67,7 +67,7 @@ func (a *Applier) Init(m *ApplyMachine) ([]pulumi.Resource, error) {
 	return append(deps, cli...), nil
 }
 
-func (a *Applier) ApplyTo(m *ApplyMachine, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
 	inited, err := a.initApply(m, deps)
 	if err != nil {
 		return deps, fmt.Errorf("failed to unmarshal config from string: %w", err)
@@ -83,13 +83,15 @@ func (a *Applier) ApplyTo(m *ApplyMachine, deps []pulumi.Resource) ([]pulumi.Res
 	return append(deps, cli...), nil
 }
 
-func (a *Applier) cliApply(m *ApplyMachine, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
 	set, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-talos-version:%s", a.name, m.MachineID), &local.CommandArgs{
 		Create: a.talosctlUpgradeCMD(m),
 		Triggers: pulumi.Array{
-			m.Configuration,
+			pulumi.String(m.TalosImage),
 		},
-	}, a.parent,
+		Interpreter: a.commnanInterpreter,
+	},
+		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: "10m"}),
 		pulumi.DependsOn(deps),
 	)
@@ -98,12 +100,14 @@ func (a *Applier) cliApply(m *ApplyMachine, deps []pulumi.Resource) ([]pulumi.Re
 	}
 	deps = append(deps, set)
 
+	cmd := a.talosctlApplyCMD(m)
 	apply, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-apply:%s", a.name, m.MachineID), &local.CommandArgs{
-		Create: a.talosctlApplyCMD(m),
+		Create: cmd,
 		Triggers: pulumi.Array{
-			m.UserConfigPatches,
-			m.Configuration,
+			pulumi.String(m.UserConfigPatches),
+			pulumi.String(m.ClusterEnpoint),
 		},
+		Interpreter: a.commnanInterpreter,
 	}, a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
 		pulumi.DependsOn(deps),
@@ -117,10 +121,28 @@ func (a *Applier) cliApply(m *ApplyMachine, deps []pulumi.Resource) ([]pulumi.Re
 	return deps, nil
 }
 
-func (a *Applier) initApply(m *ApplyMachine, deps []pulumi.Resource) (pulumi.Resource, error) {
+func (a *Applier) UpgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	k8s, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-k8s-version:%s", a.name, m.MachineID), &local.CommandArgs{
+		Create:      a.talosctlUpgradeK8SCMD(m),
+		Interpreter: a.commnanInterpreter,
+		Triggers: pulumi.Array{
+			pulumi.String(m.KubernetesVersion),
+		},
+	}, a.parent,
+		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "20m", Update: "20m"}),
+		pulumi.DependsOn(deps),
+	)
+	if err != nil {
+		return deps, err
+	}
+
+	return append(deps, k8s), nil
+}
+
+func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	return machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
-		Node:                      m.Node,
-		MachineConfigurationInput: m.Configuration,
+		Node:                      pulumi.String(m.NodeIP),
+		MachineConfigurationInput: pulumi.String(m.Configuration),
 		// Staged is not supported in maintenance.
 		// NoReboot can lead to failures.
 		ApplyMode: pulumi.String("reboot"),

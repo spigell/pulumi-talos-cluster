@@ -78,12 +78,10 @@ func generateSchema() schema.PackageSpec {
 
 	maps.Insert(types, maps.All(resources.ClusterTypes()))
 	maps.Insert(types, maps.All(resources.BasicTypes()))
-	maps.Insert(types, maps.All(resources.BootstrapTypes()))
 	maps.Insert(types, maps.All(resources.ApplyTypes()))
 
 	res := make(map[string]schema.ResourceSpec)
 	maps.Insert(res, maps.All(resources.Cluster))
-	maps.Insert(res, maps.All(resources.Bootstrap))
 	maps.Insert(res, maps.All(resources.Apply))
 
 	return schema.PackageSpec{

@@ -10,6 +10,7 @@ import (
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/siderolabs/talos/pkg/machinery/gendata"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,11 +19,12 @@ const (
 	DefaultK8SVersion = "v1.31.0"
 )
 
-var (
+const (
+	ClusterResourceOutputsMachines                                = "machines"
+	ClusterResourceOutputsGeneratedConfigurations                 = "generatedConfigurations"
 	ClusterResourceOutputsControlplaneMachineConfigurations       = "controlplaneMachineConfigurations"
 	ClusterResourceOutputsWorkerMachineConfigurations             = "workerMachineConfigurations"
 	ClusterResourceOutputsInitMachineConfiguration                = "initMachineConfiguration"
-	ClusterResourceOutputsUserConfigPatches                       = "userConfigPatches"
 	ClusterResourceOutputsClientConfiguration                     = "clientConfiguration"
 	ClusterResourceOutputsClientConfigurationCAKey                = "caCertificate"
 	ClusterResourceOutputsClientConfigurationClientKey            = "clientKey"
@@ -33,11 +35,9 @@ type Cluster struct {
 	pulumi.ResourceState
 	ClusterArgs
 
-	ClientConfiguration               pulumi.StringMap    `pulumi:"clientConfiguration"`
-	InitMachineConfiguration          pulumi.StringOutput `pulumi:"initMachineConfiguration"`
-	ControlplaneMachineConfigurations pulumi.Map          `pulumi:"controlplaneMachineConfigurations"`
-	WorkerMachineConfigurations       pulumi.Map          `pulumi:"workerMachineConfigurations"`
-	UserConfigPatches                 pulumi.Map          `pulumi:"userConfigPatches"`
+	ClientConfiguration     pulumi.StringMap `pulumi:"clientConfiguration"`
+	GeneratedConfigurations pulumi.StringMap `pulumi:"generatedConfigurations"`
+	Machines                pulumi.ArrayMap  `pulumi:"machines"`
 }
 
 func ClusterType() string {
@@ -48,21 +48,9 @@ type ClusterArgs struct {
 	ClusterName          string             `pulumi:"clusterName"`
 	TalosVersionContract pulumi.StringInput `pulumi:"talosVersionContract"`
 	ClusterEndpoint      pulumi.StringInput `pulumi:"clusterEndpoint"`
+	KubernetesVersion    pulumi.StringInput `pulumi:"kubernetesVersion"`
 
-	ClusterMachines []ClusterMachine `pulumi:"clusterMachines"`
-}
-
-type ClusterMachine struct {
-	MachineID         string                `pulumi:"machineId"`
-	MachineType       string                `pulumi:"machineType"`
-	TalosImage        pulumi.StringPtrInput `pulumi:"talosImage"`
-	KubernetesVersion pulumi.StringPtrInput `pulumi:"kubernetesVersion"`
-	ConfigPatches     pulumi.StringPtrInput `pulumi:"configPatches"`
-}
-
-type MachineConfiguration struct {
-	Configuration     pulumi.StringOutput `pulumi:"configuration"`
-	UserConfigPatches pulumi.StringOutput `pulumi:"userConfigPatches"`
+	ClusterMachines []*types.ClusterMachine `pulumi:"clusterMachines"`
 }
 
 func GenerateDefaultInstallerImage() string {
@@ -89,9 +77,10 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		return nil, err
 	}
 
-	workers := make(pulumi.Map, 0)
-	controlplanes := make(pulumi.Map, 0)
-	userPatches := make(pulumi.Map, 0)
+	workers := make(pulumi.Array, 0)
+	controlplanes := make(pulumi.Array, 0)
+	generated := make(pulumi.StringMap, 0)
+	c.Machines = make(pulumi.ArrayMap)
 
 	for _, m := range args.ClusterMachines {
 		// The provider doesn't know anything about init node type.
@@ -110,14 +99,11 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 			m.TalosImage = pulumi.String(GenerateDefaultInstallerImage())
 		}
 
-		if m.KubernetesVersion == nil {
-			m.KubernetesVersion = pulumi.String(DefaultK8SVersion)
-		}
 		configuration := machine.GetConfigurationOutput(ctx, machine.GetConfigurationOutputArgs{
 			ClusterName:       pulumi.String(args.ClusterName),
 			MachineType:       pulumi.String(machineType),
 			ClusterEndpoint:   args.ClusterEndpoint,
-			KubernetesVersion: m.KubernetesVersion,
+			KubernetesVersion: args.KubernetesVersion,
 			TalosVersion:      compareContractVersionWithNotify(ctx, secrets.TalosVersion, args.TalosVersionContract.ToStringOutput()),
 			ConfigPatches: pulumi.StringArray{
 				m.ConfigPatches.ToStringPtrOutput().Elem(),
@@ -126,23 +112,25 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 			MachineSecrets: secrets.ToSecretsOutput().MachineSecrets(),
 		}, nil)
 
-		userPatches[m.MachineID] = m.ConfigPatches.ToStringPtrOutput().Elem()
+		generated[m.MachineID] = configuration.MachineConfiguration()
 
 		switch m.MachineType {
 		case tmachine.TypeControlPlane.String():
-			controlplanes[m.MachineID] = configuration.MachineConfiguration()
+			controlplanes = append(controlplanes, m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration()))
 		case tmachine.TypeWorker.String():
-			workers[m.MachineID] = configuration.MachineConfiguration()
+			workers = append(workers, m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration()))
 		case tmachine.TypeInit.String():
-			c.InitMachineConfiguration = configuration.MachineConfiguration()
+			c.Machines[tmachine.TypeInit.String()] = pulumi.Array{m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration())}
 		default:
 			return nil, fmt.Errorf("unknown machine type %s", m.MachineType)
 		}
 	}
 
-	c.ControlplaneMachineConfigurations = controlplanes
-	c.WorkerMachineConfigurations = workers
-	c.UserConfigPatches = userPatches
+	c.Machines[tmachine.TypeWorker.String()] = workers
+	c.Machines[tmachine.TypeControlPlane.String()] = controlplanes
+
+	c.GeneratedConfigurations = generated
+
 	c.ClientConfiguration = pulumi.StringMap{
 		ClusterResourceOutputsClientConfigurationCAKey:                secrets.ClientConfiguration.CaCertificate(),
 		ClusterResourceOutputsClientConfigurationClientKey:            secrets.ClientConfiguration.ClientKey(),
@@ -150,11 +138,9 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	}
 
 	if err := ctx.RegisterResourceOutputs(c, pulumi.Map{
-		ClusterResourceOutputsControlplaneMachineConfigurations: controlplanes,
-		ClusterResourceOutputsWorkerMachineConfigurations:       workers,
-		ClusterResourceOutputsInitMachineConfiguration:          c.InitMachineConfiguration,
-		ClusterResourceOutputsUserConfigPatches:                 userPatches,
-		ClusterResourceOutputsClientConfiguration:               secrets.ClientConfiguration,
+		ClusterResourceOutputsClientConfiguration:     secrets.ClientConfiguration,
+		ClusterResourceOutputsMachines:                c.Machines,
+		ClusterResourceOutputsGeneratedConfigurations: generated,
 	}); err != nil {
 		return nil, err
 	}

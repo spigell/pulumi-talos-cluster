@@ -1,18 +1,51 @@
 package resources
 
 import (
+	"fmt"
+
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
+	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider"
 )
 
 var (
-	BasicTypesClientConfifgurationPath = provider.ProviderName + ":index:" + provider.ClusterResourceOutputsClientConfiguration
-	BasicResourceNodeKey               = "node"
-	BasicMachinesMachineIDKey          = "machineId"
+	BasicClientConfifgurationPath = provider.ProviderName + ":index:" + provider.ClusterResourceOutputsClientConfiguration
+	BasicMachinesByTypePath       = provider.ProviderName + ":index:" + "applyMachines"
 )
 
 func BasicTypes() map[string]schema.ComplexTypeSpec {
-	ClientConfiguration := schema.ComplexTypeSpec{
+	types := make(map[string]schema.ComplexTypeSpec)
+
+	types[BasicMachinesByTypePath] = schema.ComplexTypeSpec{
+		ObjectTypeSpec: schema.ObjectTypeSpec{
+			Type: "object",
+			Properties: map[string]schema.PropertySpec{
+				machine.TypeControlPlane.String(): {
+					TypeSpec: schema.TypeSpec{
+						Type:  "array",
+						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
+					},
+				},
+				machine.TypeInit.String(): {
+					TypeSpec: schema.TypeSpec{
+						Type:  "array",
+						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
+					},
+				},
+				machine.TypeWorker.String(): {
+					TypeSpec: schema.TypeSpec{
+						Type:  "array",
+						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
+					},
+				},
+			},
+			Required: []string{
+				machine.TypeInit.String(),
+			},
+		},
+	}
+
+	types[BasicClientConfifgurationPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
 			Type: "object",
 			Properties: map[string]schema.PropertySpec{
@@ -37,9 +70,6 @@ func BasicTypes() map[string]schema.ComplexTypeSpec {
 			},
 		},
 	}
-	types := make(map[string]schema.ComplexTypeSpec)
-
-	types[BasicTypesClientConfifgurationPath] = ClientConfiguration
 
 	return types
 }

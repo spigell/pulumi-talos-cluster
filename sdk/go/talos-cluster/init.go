@@ -23,8 +23,6 @@ func (m *module) Construct(ctx *pulumi.Context, name, typ, urn string) (r pulumi
 	switch typ {
 	case "talos-cluster:index:Apply":
 		r = &Apply{}
-	case "talos-cluster:index:Bootstrap":
-		r = &Bootstrap{}
 	case "talos-cluster:index:Cluster":
 		r = &Cluster{}
 	default:

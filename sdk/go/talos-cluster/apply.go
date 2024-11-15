@@ -41,7 +41,7 @@ func NewApply(ctx *pulumi.Context,
 
 type applyArgs struct {
 	// The machine configurations to apply.
-	ApplyMachines ApplyMachinesByType `pulumi:"applyMachines"`
+	ApplyMachines ApplyMachines `pulumi:"applyMachines"`
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfiguration `pulumi:"clientConfiguration"`
 }
@@ -49,7 +49,7 @@ type applyArgs struct {
 // The set of arguments for constructing a Apply resource.
 type ApplyArgs struct {
 	// The machine configurations to apply.
-	ApplyMachines ApplyMachinesByTypeInput
+	ApplyMachines ApplyMachinesInput
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfigurationInput
 }

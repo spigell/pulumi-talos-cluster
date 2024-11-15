@@ -14,16 +14,9 @@ import (
 var _ = internal.GetEnvOrDefault
 
 type ApplyMachines struct {
-	// Configuration settings for machines to apply.
-	// This can be retrieved from the cluster resource.
-	Configuration string `pulumi:"configuration"`
-	// ID or name of the machine.
-	MachineId string `pulumi:"machineId"`
-	// The IP address of the node where configuration will be applied.
-	Node string `pulumi:"node"`
-	// User-provided machine configuration to apply.
-	// This can be retrieved from the cluster resource.
-	UserConfigPatches *string `pulumi:"userConfigPatches"`
+	Controlplane []MachineInfo `pulumi:"controlplane"`
+	Init         []MachineInfo `pulumi:"init"`
+	Worker       []MachineInfo `pulumi:"worker"`
 }
 
 // ApplyMachinesInput is an input type that accepts ApplyMachinesArgs and ApplyMachinesOutput values.
@@ -38,16 +31,9 @@ type ApplyMachinesInput interface {
 }
 
 type ApplyMachinesArgs struct {
-	// Configuration settings for machines to apply.
-	// This can be retrieved from the cluster resource.
-	Configuration pulumi.StringInput `pulumi:"configuration"`
-	// ID or name of the machine.
-	MachineId pulumi.StringInput `pulumi:"machineId"`
-	// The IP address of the node where configuration will be applied.
-	Node pulumi.StringInput `pulumi:"node"`
-	// User-provided machine configuration to apply.
-	// This can be retrieved from the cluster resource.
-	UserConfigPatches pulumi.StringPtrInput `pulumi:"userConfigPatches"`
+	Controlplane MachineInfoArrayInput `pulumi:"controlplane"`
+	Init         MachineInfoArrayInput `pulumi:"init"`
+	Worker       MachineInfoArrayInput `pulumi:"worker"`
 }
 
 func (ApplyMachinesArgs) ElementType() reflect.Type {
@@ -60,31 +46,6 @@ func (i ApplyMachinesArgs) ToApplyMachinesOutput() ApplyMachinesOutput {
 
 func (i ApplyMachinesArgs) ToApplyMachinesOutputWithContext(ctx context.Context) ApplyMachinesOutput {
 	return pulumi.ToOutputWithContext(ctx, i).(ApplyMachinesOutput)
-}
-
-// ApplyMachinesArrayInput is an input type that accepts ApplyMachinesArray and ApplyMachinesArrayOutput values.
-// You can construct a concrete instance of `ApplyMachinesArrayInput` via:
-//
-//	ApplyMachinesArray{ ApplyMachinesArgs{...} }
-type ApplyMachinesArrayInput interface {
-	pulumi.Input
-
-	ToApplyMachinesArrayOutput() ApplyMachinesArrayOutput
-	ToApplyMachinesArrayOutputWithContext(context.Context) ApplyMachinesArrayOutput
-}
-
-type ApplyMachinesArray []ApplyMachinesInput
-
-func (ApplyMachinesArray) ElementType() reflect.Type {
-	return reflect.TypeOf((*[]ApplyMachines)(nil)).Elem()
-}
-
-func (i ApplyMachinesArray) ToApplyMachinesArrayOutput() ApplyMachinesArrayOutput {
-	return i.ToApplyMachinesArrayOutputWithContext(context.Background())
-}
-
-func (i ApplyMachinesArray) ToApplyMachinesArrayOutputWithContext(ctx context.Context) ApplyMachinesArrayOutput {
-	return pulumi.ToOutputWithContext(ctx, i).(ApplyMachinesArrayOutput)
 }
 
 type ApplyMachinesOutput struct{ *pulumi.OutputState }
@@ -101,107 +62,67 @@ func (o ApplyMachinesOutput) ToApplyMachinesOutputWithContext(ctx context.Contex
 	return o
 }
 
-// Configuration settings for machines to apply.
-// This can be retrieved from the cluster resource.
-func (o ApplyMachinesOutput) Configuration() pulumi.StringOutput {
-	return o.ApplyT(func(v ApplyMachines) string { return v.Configuration }).(pulumi.StringOutput)
+func (o ApplyMachinesOutput) Controlplane() MachineInfoArrayOutput {
+	return o.ApplyT(func(v ApplyMachines) []MachineInfo { return v.Controlplane }).(MachineInfoArrayOutput)
 }
 
-// ID or name of the machine.
-func (o ApplyMachinesOutput) MachineId() pulumi.StringOutput {
-	return o.ApplyT(func(v ApplyMachines) string { return v.MachineId }).(pulumi.StringOutput)
+func (o ApplyMachinesOutput) Init() MachineInfoArrayOutput {
+	return o.ApplyT(func(v ApplyMachines) []MachineInfo { return v.Init }).(MachineInfoArrayOutput)
 }
 
-// The IP address of the node where configuration will be applied.
-func (o ApplyMachinesOutput) Node() pulumi.StringOutput {
-	return o.ApplyT(func(v ApplyMachines) string { return v.Node }).(pulumi.StringOutput)
+func (o ApplyMachinesOutput) Worker() MachineInfoArrayOutput {
+	return o.ApplyT(func(v ApplyMachines) []MachineInfo { return v.Worker }).(MachineInfoArrayOutput)
 }
 
-// User-provided machine configuration to apply.
-// This can be retrieved from the cluster resource.
-func (o ApplyMachinesOutput) UserConfigPatches() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v ApplyMachines) *string { return v.UserConfigPatches }).(pulumi.StringPtrOutput)
+type ApplyMachinesPtrOutput struct{ *pulumi.OutputState }
+
+func (ApplyMachinesPtrOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((**ApplyMachines)(nil)).Elem()
 }
 
-type ApplyMachinesArrayOutput struct{ *pulumi.OutputState }
-
-func (ApplyMachinesArrayOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((*[]ApplyMachines)(nil)).Elem()
-}
-
-func (o ApplyMachinesArrayOutput) ToApplyMachinesArrayOutput() ApplyMachinesArrayOutput {
+func (o ApplyMachinesPtrOutput) ToApplyMachinesPtrOutput() ApplyMachinesPtrOutput {
 	return o
 }
 
-func (o ApplyMachinesArrayOutput) ToApplyMachinesArrayOutputWithContext(ctx context.Context) ApplyMachinesArrayOutput {
+func (o ApplyMachinesPtrOutput) ToApplyMachinesPtrOutputWithContext(ctx context.Context) ApplyMachinesPtrOutput {
 	return o
 }
 
-func (o ApplyMachinesArrayOutput) Index(i pulumi.IntInput) ApplyMachinesOutput {
-	return pulumi.All(o, i).ApplyT(func(vs []interface{}) ApplyMachines {
-		return vs[0].([]ApplyMachines)[vs[1].(int)]
+func (o ApplyMachinesPtrOutput) Elem() ApplyMachinesOutput {
+	return o.ApplyT(func(v *ApplyMachines) ApplyMachines {
+		if v != nil {
+			return *v
+		}
+		var ret ApplyMachines
+		return ret
 	}).(ApplyMachinesOutput)
 }
 
-type ApplyMachinesByType struct {
-	Controlplane []ApplyMachines `pulumi:"controlplane"`
-	Init         ApplyMachines   `pulumi:"init"`
-	Worker       []ApplyMachines `pulumi:"worker"`
+func (o ApplyMachinesPtrOutput) Controlplane() MachineInfoArrayOutput {
+	return o.ApplyT(func(v *ApplyMachines) []MachineInfo {
+		if v == nil {
+			return nil
+		}
+		return v.Controlplane
+	}).(MachineInfoArrayOutput)
 }
 
-// ApplyMachinesByTypeInput is an input type that accepts ApplyMachinesByTypeArgs and ApplyMachinesByTypeOutput values.
-// You can construct a concrete instance of `ApplyMachinesByTypeInput` via:
-//
-//	ApplyMachinesByTypeArgs{...}
-type ApplyMachinesByTypeInput interface {
-	pulumi.Input
-
-	ToApplyMachinesByTypeOutput() ApplyMachinesByTypeOutput
-	ToApplyMachinesByTypeOutputWithContext(context.Context) ApplyMachinesByTypeOutput
+func (o ApplyMachinesPtrOutput) Init() MachineInfoArrayOutput {
+	return o.ApplyT(func(v *ApplyMachines) []MachineInfo {
+		if v == nil {
+			return nil
+		}
+		return v.Init
+	}).(MachineInfoArrayOutput)
 }
 
-type ApplyMachinesByTypeArgs struct {
-	Controlplane ApplyMachinesArrayInput `pulumi:"controlplane"`
-	Init         ApplyMachinesInput      `pulumi:"init"`
-	Worker       ApplyMachinesArrayInput `pulumi:"worker"`
-}
-
-func (ApplyMachinesByTypeArgs) ElementType() reflect.Type {
-	return reflect.TypeOf((*ApplyMachinesByType)(nil)).Elem()
-}
-
-func (i ApplyMachinesByTypeArgs) ToApplyMachinesByTypeOutput() ApplyMachinesByTypeOutput {
-	return i.ToApplyMachinesByTypeOutputWithContext(context.Background())
-}
-
-func (i ApplyMachinesByTypeArgs) ToApplyMachinesByTypeOutputWithContext(ctx context.Context) ApplyMachinesByTypeOutput {
-	return pulumi.ToOutputWithContext(ctx, i).(ApplyMachinesByTypeOutput)
-}
-
-type ApplyMachinesByTypeOutput struct{ *pulumi.OutputState }
-
-func (ApplyMachinesByTypeOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((*ApplyMachinesByType)(nil)).Elem()
-}
-
-func (o ApplyMachinesByTypeOutput) ToApplyMachinesByTypeOutput() ApplyMachinesByTypeOutput {
-	return o
-}
-
-func (o ApplyMachinesByTypeOutput) ToApplyMachinesByTypeOutputWithContext(ctx context.Context) ApplyMachinesByTypeOutput {
-	return o
-}
-
-func (o ApplyMachinesByTypeOutput) Controlplane() ApplyMachinesArrayOutput {
-	return o.ApplyT(func(v ApplyMachinesByType) []ApplyMachines { return v.Controlplane }).(ApplyMachinesArrayOutput)
-}
-
-func (o ApplyMachinesByTypeOutput) Init() ApplyMachinesOutput {
-	return o.ApplyT(func(v ApplyMachinesByType) ApplyMachines { return v.Init }).(ApplyMachinesOutput)
-}
-
-func (o ApplyMachinesByTypeOutput) Worker() ApplyMachinesArrayOutput {
-	return o.ApplyT(func(v ApplyMachinesByType) []ApplyMachines { return v.Worker }).(ApplyMachinesArrayOutput)
+func (o ApplyMachinesPtrOutput) Worker() MachineInfoArrayOutput {
+	return o.ApplyT(func(v *ApplyMachines) []MachineInfo {
+		if v == nil {
+			return nil
+		}
+		return v.Worker
+	}).(MachineInfoArrayOutput)
 }
 
 type ClientConfiguration struct {
@@ -329,17 +250,18 @@ func (o ClientConfigurationPtrOutput) ClientKey() pulumi.StringPtrOutput {
 }
 
 type ClusterMachines struct {
+	// cluster endpoint generated
+	ClusterEndpoint *string `pulumi:"clusterEndpoint"`
 	// User-provided machine configuration to apply.
 	// Must be a valid YAML string.
 	// For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
 	ConfigPatches *string `pulumi:"configPatches"`
-	// Kubernetes version to install.
-	// Default is v1.31.0.
-	KubernetesVersion *string `pulumi:"kubernetesVersion"`
 	// ID or name of the machine.
 	MachineId string `pulumi:"machineId"`
 	// Type of the machine.
 	MachineType MachineTypes `pulumi:"machineType"`
+	// The IP address of the node where configuration will be applied.
+	NodeIp string `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
 	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.
@@ -352,10 +274,6 @@ func (val *ClusterMachines) Defaults() *ClusterMachines {
 		return nil
 	}
 	tmp := *val
-	if tmp.KubernetesVersion == nil {
-		kubernetesVersion_ := "v1.31.0"
-		tmp.KubernetesVersion = &kubernetesVersion_
-	}
 	if tmp.TalosImage == nil {
 		talosImage_ := "ghcr.io/siderolabs/installer:v1.8.2"
 		tmp.TalosImage = &talosImage_
@@ -375,17 +293,18 @@ type ClusterMachinesInput interface {
 }
 
 type ClusterMachinesArgs struct {
+	// cluster endpoint generated
+	ClusterEndpoint pulumi.StringPtrInput `pulumi:"clusterEndpoint"`
 	// User-provided machine configuration to apply.
 	// Must be a valid YAML string.
 	// For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
 	ConfigPatches pulumi.StringPtrInput `pulumi:"configPatches"`
-	// Kubernetes version to install.
-	// Default is v1.31.0.
-	KubernetesVersion pulumi.StringPtrInput `pulumi:"kubernetesVersion"`
 	// ID or name of the machine.
 	MachineId string `pulumi:"machineId"`
 	// Type of the machine.
 	MachineType MachineTypes `pulumi:"machineType"`
+	// The IP address of the node where configuration will be applied.
+	NodeIp pulumi.StringInput `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
 	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.
@@ -398,9 +317,6 @@ func (val *ClusterMachinesArgs) Defaults() *ClusterMachinesArgs {
 		return nil
 	}
 	tmp := *val
-	if tmp.KubernetesVersion == nil {
-		tmp.KubernetesVersion = pulumi.StringPtr("v1.31.0")
-	}
 	if tmp.TalosImage == nil {
 		tmp.TalosImage = pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.8.2")
 	}
@@ -457,17 +373,16 @@ func (o ClusterMachinesOutput) ToClusterMachinesOutputWithContext(ctx context.Co
 	return o
 }
 
+// cluster endpoint generated
+func (o ClusterMachinesOutput) ClusterEndpoint() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v ClusterMachines) *string { return v.ClusterEndpoint }).(pulumi.StringPtrOutput)
+}
+
 // User-provided machine configuration to apply.
 // Must be a valid YAML string.
 // For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
 func (o ClusterMachinesOutput) ConfigPatches() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v ClusterMachines) *string { return v.ConfigPatches }).(pulumi.StringPtrOutput)
-}
-
-// Kubernetes version to install.
-// Default is v1.31.0.
-func (o ClusterMachinesOutput) KubernetesVersion() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v ClusterMachines) *string { return v.KubernetesVersion }).(pulumi.StringPtrOutput)
 }
 
 // ID or name of the machine.
@@ -478,6 +393,11 @@ func (o ClusterMachinesOutput) MachineId() pulumi.StringOutput {
 // Type of the machine.
 func (o ClusterMachinesOutput) MachineType() MachineTypesOutput {
 	return o.ApplyT(func(v ClusterMachines) MachineTypes { return v.MachineType }).(MachineTypesOutput)
+}
+
+// The IP address of the node where configuration will be applied.
+func (o ClusterMachinesOutput) NodeIp() pulumi.StringOutput {
+	return o.ApplyT(func(v ClusterMachines) string { return v.NodeIp }).(pulumi.StringOutput)
 }
 
 // Talos OS installation image.
@@ -507,18 +427,176 @@ func (o ClusterMachinesArrayOutput) Index(i pulumi.IntInput) ClusterMachinesOutp
 	}).(ClusterMachinesOutput)
 }
 
+type MachineInfo struct {
+	// cluster endpoint applied to node
+	ClusterEndpoint *string `pulumi:"clusterEndpoint"`
+	// Configuration settings for machines to apply.
+	// This can be retrieved from the cluster resource.
+	Configuration string `pulumi:"configuration"`
+	// TO DO
+	KubernetesVersion *string `pulumi:"kubernetesVersion"`
+	// ID or name of the machine.
+	MachineId string `pulumi:"machineId"`
+	// The IP address of the node where configuration will be applied.
+	NodeIp string `pulumi:"nodeIp"`
+	// TO DO
+	TalosImage *string `pulumi:"talosImage"`
+	// User-provided machine configuration to apply.
+	// This can be retrieved from the cluster resource.
+	UserConfigPatches *string `pulumi:"userConfigPatches"`
+}
+
+// MachineInfoInput is an input type that accepts MachineInfoArgs and MachineInfoOutput values.
+// You can construct a concrete instance of `MachineInfoInput` via:
+//
+//	MachineInfoArgs{...}
+type MachineInfoInput interface {
+	pulumi.Input
+
+	ToMachineInfoOutput() MachineInfoOutput
+	ToMachineInfoOutputWithContext(context.Context) MachineInfoOutput
+}
+
+type MachineInfoArgs struct {
+	// cluster endpoint applied to node
+	ClusterEndpoint pulumi.StringPtrInput `pulumi:"clusterEndpoint"`
+	// Configuration settings for machines to apply.
+	// This can be retrieved from the cluster resource.
+	Configuration pulumi.StringInput `pulumi:"configuration"`
+	// TO DO
+	KubernetesVersion pulumi.StringPtrInput `pulumi:"kubernetesVersion"`
+	// ID or name of the machine.
+	MachineId pulumi.StringInput `pulumi:"machineId"`
+	// The IP address of the node where configuration will be applied.
+	NodeIp pulumi.StringInput `pulumi:"nodeIp"`
+	// TO DO
+	TalosImage pulumi.StringPtrInput `pulumi:"talosImage"`
+	// User-provided machine configuration to apply.
+	// This can be retrieved from the cluster resource.
+	UserConfigPatches pulumi.StringPtrInput `pulumi:"userConfigPatches"`
+}
+
+func (MachineInfoArgs) ElementType() reflect.Type {
+	return reflect.TypeOf((*MachineInfo)(nil)).Elem()
+}
+
+func (i MachineInfoArgs) ToMachineInfoOutput() MachineInfoOutput {
+	return i.ToMachineInfoOutputWithContext(context.Background())
+}
+
+func (i MachineInfoArgs) ToMachineInfoOutputWithContext(ctx context.Context) MachineInfoOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(MachineInfoOutput)
+}
+
+// MachineInfoArrayInput is an input type that accepts MachineInfoArray and MachineInfoArrayOutput values.
+// You can construct a concrete instance of `MachineInfoArrayInput` via:
+//
+//	MachineInfoArray{ MachineInfoArgs{...} }
+type MachineInfoArrayInput interface {
+	pulumi.Input
+
+	ToMachineInfoArrayOutput() MachineInfoArrayOutput
+	ToMachineInfoArrayOutputWithContext(context.Context) MachineInfoArrayOutput
+}
+
+type MachineInfoArray []MachineInfoInput
+
+func (MachineInfoArray) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]MachineInfo)(nil)).Elem()
+}
+
+func (i MachineInfoArray) ToMachineInfoArrayOutput() MachineInfoArrayOutput {
+	return i.ToMachineInfoArrayOutputWithContext(context.Background())
+}
+
+func (i MachineInfoArray) ToMachineInfoArrayOutputWithContext(ctx context.Context) MachineInfoArrayOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(MachineInfoArrayOutput)
+}
+
+type MachineInfoOutput struct{ *pulumi.OutputState }
+
+func (MachineInfoOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*MachineInfo)(nil)).Elem()
+}
+
+func (o MachineInfoOutput) ToMachineInfoOutput() MachineInfoOutput {
+	return o
+}
+
+func (o MachineInfoOutput) ToMachineInfoOutputWithContext(ctx context.Context) MachineInfoOutput {
+	return o
+}
+
+// cluster endpoint applied to node
+func (o MachineInfoOutput) ClusterEndpoint() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v MachineInfo) *string { return v.ClusterEndpoint }).(pulumi.StringPtrOutput)
+}
+
+// Configuration settings for machines to apply.
+// This can be retrieved from the cluster resource.
+func (o MachineInfoOutput) Configuration() pulumi.StringOutput {
+	return o.ApplyT(func(v MachineInfo) string { return v.Configuration }).(pulumi.StringOutput)
+}
+
+// TO DO
+func (o MachineInfoOutput) KubernetesVersion() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v MachineInfo) *string { return v.KubernetesVersion }).(pulumi.StringPtrOutput)
+}
+
+// ID or name of the machine.
+func (o MachineInfoOutput) MachineId() pulumi.StringOutput {
+	return o.ApplyT(func(v MachineInfo) string { return v.MachineId }).(pulumi.StringOutput)
+}
+
+// The IP address of the node where configuration will be applied.
+func (o MachineInfoOutput) NodeIp() pulumi.StringOutput {
+	return o.ApplyT(func(v MachineInfo) string { return v.NodeIp }).(pulumi.StringOutput)
+}
+
+// TO DO
+func (o MachineInfoOutput) TalosImage() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v MachineInfo) *string { return v.TalosImage }).(pulumi.StringPtrOutput)
+}
+
+// User-provided machine configuration to apply.
+// This can be retrieved from the cluster resource.
+func (o MachineInfoOutput) UserConfigPatches() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v MachineInfo) *string { return v.UserConfigPatches }).(pulumi.StringPtrOutput)
+}
+
+type MachineInfoArrayOutput struct{ *pulumi.OutputState }
+
+func (MachineInfoArrayOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*[]MachineInfo)(nil)).Elem()
+}
+
+func (o MachineInfoArrayOutput) ToMachineInfoArrayOutput() MachineInfoArrayOutput {
+	return o
+}
+
+func (o MachineInfoArrayOutput) ToMachineInfoArrayOutputWithContext(ctx context.Context) MachineInfoArrayOutput {
+	return o
+}
+
+func (o MachineInfoArrayOutput) Index(i pulumi.IntInput) MachineInfoOutput {
+	return pulumi.All(o, i).ApplyT(func(vs []interface{}) MachineInfo {
+		return vs[0].([]MachineInfo)[vs[1].(int)]
+	}).(MachineInfoOutput)
+}
+
 func init() {
 	pulumi.RegisterInputType(reflect.TypeOf((*ApplyMachinesInput)(nil)).Elem(), ApplyMachinesArgs{})
-	pulumi.RegisterInputType(reflect.TypeOf((*ApplyMachinesArrayInput)(nil)).Elem(), ApplyMachinesArray{})
-	pulumi.RegisterInputType(reflect.TypeOf((*ApplyMachinesByTypeInput)(nil)).Elem(), ApplyMachinesByTypeArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*ClientConfigurationInput)(nil)).Elem(), ClientConfigurationArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*ClusterMachinesInput)(nil)).Elem(), ClusterMachinesArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*ClusterMachinesArrayInput)(nil)).Elem(), ClusterMachinesArray{})
+	pulumi.RegisterInputType(reflect.TypeOf((*MachineInfoInput)(nil)).Elem(), MachineInfoArgs{})
+	pulumi.RegisterInputType(reflect.TypeOf((*MachineInfoArrayInput)(nil)).Elem(), MachineInfoArray{})
 	pulumi.RegisterOutputType(ApplyMachinesOutput{})
-	pulumi.RegisterOutputType(ApplyMachinesArrayOutput{})
-	pulumi.RegisterOutputType(ApplyMachinesByTypeOutput{})
+	pulumi.RegisterOutputType(ApplyMachinesPtrOutput{})
 	pulumi.RegisterOutputType(ClientConfigurationOutput{})
 	pulumi.RegisterOutputType(ClientConfigurationPtrOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesArrayOutput{})
+	pulumi.RegisterOutputType(MachineInfoOutput{})
+	pulumi.RegisterOutputType(MachineInfoArrayOutput{})
 }

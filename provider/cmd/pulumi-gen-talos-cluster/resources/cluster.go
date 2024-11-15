@@ -7,6 +7,7 @@ import (
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/gendata"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
 var (
@@ -15,7 +16,6 @@ var (
 	ClusterTypesMachinesKey             = "clusterMachines"
 	ClusterTypesMachinesPath            = provider.ProviderName + ":index:" + ClusterTypesMachinesKey
 	ClusterTypesClusterNameKey          = "clusterName"
-	ClusterTypesClusterEndpointKey      = "clusterEndpoint"
 	ClusterTypesTalosVersionContractKey = "talosVersionContract"
 	ClusterTypesMachinesMachineTypeKey  = "machineType"
 )
@@ -35,12 +35,17 @@ var Cluster = map[string]schema.ResourceSpec{
 }
 
 func ClusterTypes() map[string]schema.ComplexTypeSpec {
-	types := make(map[string]schema.ComplexTypeSpec)
+	ty := make(map[string]schema.ComplexTypeSpec)
 
-	types[ClusterTypesMachinesTypesPath] = schema.ComplexTypeSpec{
+	ty[ClusterTypesMachinesTypesPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
 			Type:        "string",
 			Description: "Allowed machine types",
+			Plain: []string{
+				machine.TypeControlPlane.String(),
+				machine.TypeWorker.String(),
+				machine.TypeInit.String(),
+			},
 		},
 		Enum: []schema.EnumValueSpec{
 			{
@@ -55,18 +60,32 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 		},
 	}
 
-	types[ClusterTypesMachinesPath] = schema.ComplexTypeSpec{
+	ty[ClusterTypesMachinesPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
 			Type: "object",
 			Properties: map[string]schema.PropertySpec{
-				BasicMachinesMachineIDKey: {
+				types.MachineIDKey: {
 					TypeSpec: schema.TypeSpec{
 						Type:  "string",
 						Plain: true,
 					},
 					Description: "ID or name of the machine.",
 				},
-				"talosImage": {
+				ClusterTypesMachinesMachineTypeKey: {
+					TypeSpec: schema.TypeSpec{
+						Type:  "enum",
+						Plain: true,
+						Ref:   fmt.Sprintf("#types/%s", ClusterTypesMachinesTypesPath),
+					},
+					Description: "Type of the machine.",
+				},
+				types.NodeIPKey: {
+					TypeSpec: schema.TypeSpec{
+						Type: "string",
+					},
+					Description: "The IP address of the node where configuration will be applied.",
+				},
+				types.TalosImageKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
@@ -75,21 +94,11 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 						"The default is generated based on the Talos machinery version, current: %s.", provider.GenerateDefaultInstallerImage()),
 					Default: provider.GenerateDefaultInstallerImage(),
 				},
-				ClusterTypesMachinesMachineTypeKey: {
-					TypeSpec: schema.TypeSpec{
-						Type:  "enum",
-						Ref:   fmt.Sprintf("#types/%s", ClusterTypesMachinesTypesPath),
-						Plain: true,
-					},
-					Description: "Type of the machine.",
-				},
-				"kubernetesVersion": {
+				types.ClusterEnpointKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
-					Description: fmt.Sprintf("Kubernetes version to install. \n"+
-						"Default is %s.", provider.DefaultK8SVersion),
-					Default: provider.DefaultK8SVersion,
+					Description: "cluster endpoint generated",
 				},
 				"configPatches": {
 					TypeSpec: schema.TypeSpec{
@@ -102,57 +111,43 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 			},
 			Required: []string{
 				ClusterTypesMachinesMachineTypeKey,
-				BasicMachinesMachineIDKey,
+				types.MachineIDKey,
+				types.NodeIPKey,
 			},
 		},
 	}
 
-	return types
+	return ty
 }
 
 func ClusterProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
-		provider.ClusterResourceOutputsInitMachineConfiguration: {
-			TypeSpec: schema.TypeSpec{
-				Type: "string",
-			},
-			Description: "The generated machine configurations for the init node. \n" +
-				"This is an unstructured string, but it is valid YAML.",
-		},
-		provider.ClusterResourceOutputsWorkerMachineConfigurations: {
-			TypeSpec: schema.TypeSpec{
-				Type: "object",
-			},
-			Description: "The map of generated machine configurations for workers. \n" +
-				"This is an unstructured string, but it is valid YAML.",
-		},
-		provider.ClusterResourceOutputsControlplaneMachineConfigurations: {
-			TypeSpec: schema.TypeSpec{
-				Type: "object",
-			},
-			Description: "The map of generated machine configurations for controlplanes. \n" +
-				"This is an unstructured string, but it is valid YAML.",
-		},
-		provider.ClusterResourceOutputsUserConfigPatches: {
-			TypeSpec: schema.TypeSpec{
-				Type: "object",
-			},
-			Description: "Map of user-provided machine configuration patches. \n" +
-				"Can be used in the apply resource.",
-		},
 		provider.ClusterResourceOutputsClientConfiguration: {
 			TypeSpec: schema.TypeSpec{
 				Type: "object",
-				Ref:  fmt.Sprintf("#types/%s", BasicTypesClientConfifgurationPath),
+				Ref:  fmt.Sprintf("#types/%s", BasicClientConfifgurationPath),
 			},
 			Description: "Client configuration for bootstrapping and applying resources.",
+		},
+		provider.ClusterResourceOutputsGeneratedConfigurations: {
+			TypeSpec: schema.TypeSpec{
+				Type: "object",
+			},
+			Description: "TO DO",
+		},
+		provider.ClusterResourceOutputsMachines: {
+			TypeSpec: schema.TypeSpec{
+				Type: "object",
+				Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
+			},
+			Description: "TO DO",
 		},
 	}
 }
 
 func ClusterInputProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
-		ClusterTypesClusterEndpointKey: {
+		types.ClusterEnpointKey: {
 			TypeSpec: schema.TypeSpec{
 				Type: "string",
 			},
@@ -164,6 +159,14 @@ func ClusterInputProperties() map[string]schema.PropertySpec {
 				Plain: true,
 			},
 			Description: "Name of the cluster",
+		},
+		types.KubernetesVersionKey: {
+			TypeSpec: schema.TypeSpec{
+				Type: "string",
+			},
+			Description: fmt.Sprintf("Kubernetes version to install. \n"+
+				"Default is %s.", provider.DefaultK8SVersion),
+			Default: provider.DefaultK8SVersion,
 		},
 		ClusterTypesTalosVersionContractKey: {
 			TypeSpec: schema.TypeSpec{
@@ -194,7 +197,7 @@ func ClusterRequiredInputProperties() []string {
 	return []string{
 		ClusterTypesTalosVersionContractKey,
 		ClusterTypesClusterNameKey,
-		ClusterTypesClusterEndpointKey,
+		types.ClusterEnpointKey,
 		ClusterTypesMachinesKey,
 	}
 }

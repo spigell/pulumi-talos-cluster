@@ -69,7 +69,7 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 
 func providerPluginPathEnv() (string, error) {
 	// Local build of the plugin.
-	pluginDir := filepath.Join("..", "bin")
+	pluginDir := filepath.Join("..", "bin", "test")
 	absPluginDir, err := filepath.Abs(pluginDir)
 	if err != nil {
 		return "", err

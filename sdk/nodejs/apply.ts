@@ -8,7 +8,7 @@ import * as enums from "./types/enums";
 import * as utilities from "./utilities";
 
 /**
- * Apply config: creates etcd cluster
+ * Apply the configuration to nodes.
  */
 export class Apply extends pulumi.ComponentResource {
     /** @internal */
@@ -57,11 +57,11 @@ export class Apply extends pulumi.ComponentResource {
  */
 export interface ApplyArgs {
     /**
-     * The machine configurations for apply.
+     * The machine configurations to apply.
      */
-    applyMachines: pulumi.Input<pulumi.Input<inputs.ApplyMachinesArgs>[]>;
+    applyMachines: pulumi.Input<inputs.ApplyMachinesArgs>;
     /**
-     * The client configuration. Can be used for bootstraping and apply
+     * Client configuration for bootstrapping and applying resources.
      */
     clientConfiguration: pulumi.Input<inputs.ClientConfigurationArgs>;
 }

@@ -6,9 +6,59 @@ import * as inputs from "../types/input";
 import * as outputs from "../types/output";
 import * as enums from "../types/enums";
 
+import * as utilities from "../utilities";
+
+export interface ApplyMachines {
+    controlplane?: outputs.MachineInfo[];
+    init: outputs.MachineInfo[];
+    worker?: outputs.MachineInfo[];
+}
+
 export interface ClientConfiguration {
+    /**
+     * The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
+     */
     caCertificate?: string;
+    /**
+     * The client certificate used to authenticate to the Talos API server.
+     */
     clientCertificate?: string;
+    /**
+     * The private key for the client certificate, used for authenticating the client to the Talos API server.
+     */
     clientKey?: string;
+}
+
+export interface MachineInfo {
+    /**
+     * cluster endpoint applied to node
+     */
+    clusterEndpoint?: string;
+    /**
+     * Configuration settings for machines to apply. 
+     * This can be retrieved from the cluster resource.
+     */
+    configuration: string;
+    /**
+     * TO DO
+     */
+    kubernetesVersion?: string;
+    /**
+     * ID or name of the machine.
+     */
+    machineId: string;
+    /**
+     * The IP address of the node where configuration will be applied.
+     */
+    nodeIp: string;
+    /**
+     * TO DO
+     */
+    talosImage?: string;
+    /**
+     * User-provided machine configuration to apply. 
+     * This can be retrieved from the cluster resource.
+     */
+    userConfigPatches?: string;
 }
 

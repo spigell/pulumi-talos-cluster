@@ -27,8 +27,6 @@ func Construct(ctx *pulumi.Context, typ, name string, inputs pp.ConstructInputs,
 	switch typ {
 	case ClusterType():
 		return cluster(ctx, &Cluster{}, name, &ClusterArgs{}, inputs, opts)
-	case BootstrapType():
-		return bootstrap(ctx, &Bootstrap{}, name, &BootstrapArgs{}, inputs, opts)
 	case ApplyType():
 		return apply(ctx, &Apply{}, name, &ApplyArgs{}, inputs, opts)
 	default:

@@ -8,7 +8,9 @@ import * as enums from "./types/enums";
 import * as utilities from "./utilities";
 
 /**
- * Initialize a new talos cluster: creates secrets and configure
+ * Initialize a new Talos cluster:
+ * - Creates secrets
+ * - Generates machine configurations for all nodes
  */
 export class Cluster extends pulumi.ComponentResource {
     /** @internal */
@@ -26,14 +28,17 @@ export class Cluster extends pulumi.ComponentResource {
     }
 
     /**
-     * The client configuration. Can be used for bootstraping and apply
+     * Client configuration for bootstrapping and applying resources.
      */
     public /*out*/ readonly clientConfiguration!: pulumi.Output<outputs.ClientConfiguration | undefined>;
     /**
-     * The map of generated machines configurations. 
-     * This is a unstructed string. Same as machine_configuration output in the TF provider
+     * TO DO
      */
-    public /*out*/ readonly machineConfigurations!: pulumi.Output<{[key: string]: string} | undefined>;
+    public /*out*/ readonly generatedConfigurations!: pulumi.Output<{[key: string]: string} | undefined>;
+    /**
+     * TO DO
+     */
+    public /*out*/ readonly machines!: pulumi.Output<outputs.ApplyMachines | undefined>;
 
     /**
      * Create a Cluster resource with the given unique name, arguments, and options.
@@ -61,12 +66,15 @@ export class Cluster extends pulumi.ComponentResource {
             resourceInputs["clusterEndpoint"] = args ? args.clusterEndpoint : undefined;
             resourceInputs["clusterMachines"] = args ? args.clusterMachines : undefined;
             resourceInputs["clusterName"] = args ? args.clusterName : undefined;
-            resourceInputs["talosVersionContract"] = args ? args.talosVersionContract : undefined;
+            resourceInputs["kubernetesVersion"] = (args ? args.kubernetesVersion : undefined) ?? "v1.31.0";
+            resourceInputs["talosVersionContract"] = (args ? args.talosVersionContract : undefined) ?? "v1.8.2";
             resourceInputs["clientConfiguration"] = undefined /*out*/;
-            resourceInputs["machineConfigurations"] = undefined /*out*/;
+            resourceInputs["generatedConfigurations"] = undefined /*out*/;
+            resourceInputs["machines"] = undefined /*out*/;
         } else {
             resourceInputs["clientConfiguration"] = undefined /*out*/;
-            resourceInputs["machineConfigurations"] = undefined /*out*/;
+            resourceInputs["generatedConfigurations"] = undefined /*out*/;
+            resourceInputs["machines"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Cluster.__pulumiType, name, resourceInputs, opts, true /*remote*/);
@@ -77,11 +85,30 @@ export class Cluster extends pulumi.ComponentResource {
  * The set of arguments for constructing a Cluster resource.
  */
 export interface ClusterArgs {
+    /**
+     * Cluster endpoint, the Kubernetes API endpoint accessible by all nodes
+     */
     clusterEndpoint: pulumi.Input<string>;
     /**
-     * Configuration for machines
+     * Configuration settings for machines
      */
     clusterMachines: pulumi.Input<pulumi.Input<inputs.ClusterMachinesArgs>[]>;
-    clusterName: pulumi.Input<string>;
+    /**
+     * Name of the cluster
+     */
+    clusterName: string;
+    /**
+     * Kubernetes version to install. 
+     * Default is v1.31.0.
+     */
+    kubernetesVersion?: pulumi.Input<string>;
+    /**
+     * Version of Talos features used for configuration generation. 
+     * Do not confuse this with the talosImage property. 
+     * Used in NewSecrets() and GetConfigurationOutput() resources. 
+     * This property is immutable to prevent version conflicts across provider updates. 
+     * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
+     * The default value is based on gendata.VersionTag, current: v1.8.2.
+     */
     talosVersionContract: pulumi.Input<string>;
 }

@@ -3,11 +3,13 @@ package applier
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -38,6 +40,36 @@ func (a *Applier) NewTalosctl() *Talosctl {
 	}
 }
 
+// MachineConfig represents the parsed YAML structure.
+type MachineConfig struct {
+	Spec string
+}
+
+// getCurrentMachineConfig retrieves current machineconfig fron running cluster.
+// BEWARE: this function should be used with caution. Do not call unprovised nodes!
+func (t *Talosctl) getCurrentMachineConfig(node string) (*v1alpha1.Config, error) {
+	command := withBashRetryAndHiddenStdErr(fmt.Sprintf("%s get machineconfig -n %[2]s -e %[2]s -oyaml",
+		t.BasicCommand, node,
+	))
+	cmd := exec.Command("bash", "-c", command)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("error executing command: %w, output: %s", err, string(output))
+	}
+
+	var config MachineConfig
+	if err := yaml.Unmarshal(output, &config); err != nil {
+		return nil, fmt.Errorf("error parsing YAML output: %w", err)
+	}
+
+	var spec v1alpha1.Config
+	if err := yaml.Unmarshal([]byte(config.Spec), &spec); err != nil {
+		return nil, fmt.Errorf("error parsing YAML spec string: %w", err)
+	}
+
+	return &spec, nil
+}
+
 func (t *Talosctl) prepare(config string) error {
 	err := os.MkdirAll(t.Home.Dir, 0o700)
 	if err != nil {
@@ -52,8 +84,8 @@ func (t *Talosctl) prepare(config string) error {
 	return nil
 }
 
-func (a *Applier) talosctlUpgradeCMD(m *ApplyMachine) pulumi.StringOutput {
-	return pulumi.All(a.basicClient().TalosConfig(), m.Node, m.Configuration).ApplyT(func(args []any) (string, error) {
+func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
+	return pulumi.All(a.basicClient().TalosConfig(), m.NodeIP, m.Configuration).ApplyT(func(args []any) (string, error) {
 		talosConfig := args[0].(string)
 		ip := args[1].(string)
 		machineConfig := args[2].(string)
@@ -71,38 +103,28 @@ func (a *Applier) talosctlUpgradeCMD(m *ApplyMachine) pulumi.StringOutput {
 
 		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
 			"%[1]s upgrade --debug -n %[2]s -e %[2]s --image %s",
-		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()))
+		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "5")
 
 		return command, nil
 	}).(pulumi.StringOutput)
 }
 
-func (a *Applier) talosctlApplyCMD(m *ApplyMachine) pulumi.StringOutput {
-	return pulumi.All(a.basicClient().TalosConfig(), m.UserConfigPatches, m.Node, m.Configuration).ApplyT(func(args []any) (string, error) {
+func (a *Applier) talosctlUpgradeK8SCMD(m *types.MachineInfo) pulumi.StringOutput {
+	return pulumi.All(a.basicClient().TalosConfig(), m.NodeIP, m.KubernetesVersion).ApplyT(func(args []any) (string, error) {
 		talosConfig := args[0].(string)
-		userPatches := args[1].(string)
-		ip := args[2].(string)
-		machineConfig := args[3].(string)
+		ip := args[1].(string)
+		k8sVer := args[2].(string)
 
 		talosctl := a.NewTalosctl()
-
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
 
-		config, err := mergeYAML(machineConfig, userPatches)
-		if err != nil {
-			return "", fmt.Errorf("failed merge yaml strings: %w", err)
-		}
-
-		configPath := filepath.Join(talosctl.Home.Dir, fmt.Sprintf("machineconfig-%s.yaml", m.MachineID))
-		if err := os.WriteFile(configPath, []byte(config), 0o600); err != nil {
-			return "", fmt.Errorf("failed to write machine config: %w", err)
-		}
+		talosctlFlags := "--with-docs=false --with-examples=false"
 
 		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
-			"%[1]s apply-config -n %[2]s -e %[2]s -f %s",
-		}, " && "), talosctl.BasicCommand, ip, configPath))
+			"%[1]s upgrade-k8s -n %[2]s -e %[2]s --to %s %s",
+		}, " && "), talosctl.BasicCommand, ip, k8sVer, talosctlFlags), "5")
 
 		return command, nil
 	}).(pulumi.StringOutput)
@@ -153,13 +175,30 @@ func mergeMaps(map1, map2 map[string]interface{}) map[string]interface{} {
 	return map1
 }
 
-func withBashRetry(cmd string) string {
+func withBashRetry(cmd string, retryCount string) string {
 	return fmt.Sprintf(strings.Join([]string{
 		"n=0",
-		"until [ $n -ge 5 ]",
+		"until [ $n -ge %[1]s ]",
 		"do %s && break",
 		"sleep 10",
 		"n=$((n+1))",
 		"done",
+		// Exiting with 0 if command succeeded.
+		// Otherwise exit with 10 exit code.
+		"[ $n -ge %[1]s ] && exit 10 || exit 0",
+	}, " ; "), retryCount, cmd)
+}
+
+func withBashRetryAndHiddenStdErr(cmd string) string {
+	return fmt.Sprintf(strings.Join([]string{
+		"n=0",
+		"until [ $n -ge 5 ]",
+		"do %s 2>/dev/null && break",
+		"sleep 10",
+		"n=$((n+1))",
+		"done",
+		// Exiting with 0 if command succeeded.
+		// Otherwise exit with 10 exit code.
+		"[ $n -ge 5 ] && exit 10 || exit 0",
 	}, " ; "), cmd)
 }

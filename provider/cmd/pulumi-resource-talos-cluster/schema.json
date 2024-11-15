@@ -52,48 +52,25 @@
     "types": {
         "talos-cluster:index:applyMachines": {
             "properties": {
-                "configuration": {
-                    "type": "string",
-                    "description": "Configuration settings for machines to apply. \nThis can be retrieved from the cluster resource."
-                },
-                "machineId": {
-                    "type": "string",
-                    "description": "ID or name of the machine."
-                },
-                "node": {
-                    "type": "string",
-                    "description": "The IP address of the node where configuration will be applied."
-                },
-                "userConfigPatches": {
-                    "type": "string",
-                    "description": "User-provided machine configuration to apply. \nThis can be retrieved from the cluster resource."
-                }
-            },
-            "type": "object",
-            "required": [
-                "machineId",
-                "node",
-                "configuration"
-            ]
-        },
-        "talos-cluster:index:applyMachinesByType": {
-            "properties": {
                 "controlplane": {
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "$ref": "#types/talos-cluster:index:applyMachines"
+                        "$ref": "#types/talos-cluster:index:machineInfo"
                     }
                 },
                 "init": {
-                    "type": "object",
-                    "$ref": "#types/talos-cluster:index:applyMachines"
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "$ref": "#types/talos-cluster:index:machineInfo"
+                    }
                 },
                 "worker": {
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "$ref": "#types/talos-cluster:index:applyMachines"
+                        "$ref": "#types/talos-cluster:index:machineInfo"
                     }
                 }
             },
@@ -121,14 +98,13 @@
         },
         "talos-cluster:index:clusterMachines": {
             "properties": {
+                "clusterEndpoint": {
+                    "type": "string",
+                    "description": "cluster endpoint generated"
+                },
                 "configPatches": {
                     "type": "string",
                     "description": "User-provided machine configuration to apply. \nMust be a valid YAML string. \nFor structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/"
-                },
-                "kubernetesVersion": {
-                    "type": "string",
-                    "description": "Kubernetes version to install. \nDefault is v1.31.0.",
-                    "default": "v1.31.0"
                 },
                 "machineId": {
                     "type": "string",
@@ -141,6 +117,10 @@
                     "plain": true,
                     "description": "Type of the machine."
                 },
+                "nodeIp": {
+                    "type": "string",
+                    "description": "The IP address of the node where configuration will be applied."
+                },
                 "talosImage": {
                     "type": "string",
                     "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.",
@@ -150,12 +130,56 @@
             "type": "object",
             "required": [
                 "machineType",
-                "machineId"
+                "machineId",
+                "nodeIp"
+            ]
+        },
+        "talos-cluster:index:machineInfo": {
+            "properties": {
+                "clusterEndpoint": {
+                    "type": "string",
+                    "description": "cluster endpoint applied to node"
+                },
+                "configuration": {
+                    "type": "string",
+                    "description": "Configuration settings for machines to apply. \nThis can be retrieved from the cluster resource."
+                },
+                "kubernetesVersion": {
+                    "type": "string",
+                    "description": "TO DO"
+                },
+                "machineId": {
+                    "type": "string",
+                    "description": "ID or name of the machine."
+                },
+                "nodeIp": {
+                    "type": "string",
+                    "description": "The IP address of the node where configuration will be applied."
+                },
+                "talosImage": {
+                    "type": "string",
+                    "description": "TO DO"
+                },
+                "userConfigPatches": {
+                    "type": "string",
+                    "description": "User-provided machine configuration to apply. \nThis can be retrieved from the cluster resource."
+                }
+            },
+            "type": "object",
+            "required": [
+                "machineId",
+                "nodeIp",
+                "configuration"
             ]
         },
         "talos-cluster:index:machineTypes": {
             "description": "Allowed machine types",
             "type": "string",
+            "plain": [
+                "controlplane",
+                "worker",
+                "init"
+            ],
             "enum": [
                 {
                     "value": "controlplane"
@@ -176,7 +200,7 @@
             "inputProperties": {
                 "applyMachines": {
                     "type": "object",
-                    "$ref": "#types/talos-cluster:index:applyMachinesByType",
+                    "$ref": "#types/talos-cluster:index:applyMachines",
                     "description": "The machine configurations to apply."
                 },
                 "clientConfiguration": {
@@ -191,25 +215,6 @@
             ],
             "isComponent": true
         },
-        "talos-cluster:index:Bootstrap": {
-            "description": "Initialize a new talos cluster: creates etcd cluster. It must not depend on apply call",
-            "inputProperties": {
-                "clientConfiguration": {
-                    "type": "object",
-                    "$ref": "#types/talos-cluster:index:clientConfiguration",
-                    "description": "Client configuration for bootstrapping and applying resources."
-                },
-                "node": {
-                    "type": "string",
-                    "description": "An IP address or fqdn for node bootstraping."
-                }
-            },
-            "requiredInputs": [
-                "clientConfiguration",
-                "node"
-            ],
-            "isComponent": true
-        },
         "talos-cluster:index:Cluster": {
             "description": "Initialize a new Talos cluster: \n- Creates secrets \n- Generates machine configurations for all nodes",
             "properties": {
@@ -218,21 +223,14 @@
                     "$ref": "#types/talos-cluster:index:clientConfiguration",
                     "description": "Client configuration for bootstrapping and applying resources."
                 },
-                "controlplaneMachineConfigurations": {
+                "generatedConfigurations": {
                     "type": "object",
-                    "description": "The map of generated machine configurations for controlplanes. \nThis is an unstructured string, but it is valid YAML."
+                    "description": "TO DO"
                 },
-                "initMachineConfiguration": {
-                    "type": "string",
-                    "description": "The generated machine configurations for the init node. \nThis is an unstructured string, but it is valid YAML."
-                },
-                "userConfigPatches": {
+                "machines": {
                     "type": "object",
-                    "description": "Map of user-provided machine configuration patches. \nCan be used in the apply resource."
-                },
-                "workerMachineConfigurations": {
-                    "type": "object",
-                    "description": "The map of generated machine configurations for workers. \nThis is an unstructured string, but it is valid YAML."
+                    "$ref": "#types/talos-cluster:index:applyMachines",
+                    "description": "TO DO"
                 }
             },
             "inputProperties": {
@@ -252,6 +250,11 @@
                     "type": "string",
                     "plain": true,
                     "description": "Name of the cluster"
+                },
+                "kubernetesVersion": {
+                    "type": "string",
+                    "description": "Kubernetes version to install. \nDefault is v1.31.0.",
+                    "default": "v1.31.0"
                 },
                 "talosVersionContract": {
                     "type": "string",

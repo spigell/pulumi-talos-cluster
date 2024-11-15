@@ -1,0 +1,5 @@
+{
+  "resource": true,
+  "name": "talos-cluster",
+  "server": "github://api.github.com/spigell/pulumi-talos-cluster"
+}

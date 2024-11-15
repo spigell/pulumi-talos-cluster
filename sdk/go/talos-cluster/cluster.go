@@ -20,18 +20,10 @@ type Cluster struct {
 
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfigurationPtrOutput `pulumi:"clientConfiguration"`
-	// The map of generated machine configurations for controlplanes.
-	// This is an unstructured string, but it is valid YAML.
-	ControlplaneMachineConfigurations pulumi.StringMapOutput `pulumi:"controlplaneMachineConfigurations"`
-	// The generated machine configurations for the init node.
-	// This is an unstructured string, but it is valid YAML.
-	InitMachineConfiguration pulumi.StringPtrOutput `pulumi:"initMachineConfiguration"`
-	// Map of user-provided machine configuration patches.
-	// Can be used in the apply resource.
-	UserConfigPatches pulumi.StringMapOutput `pulumi:"userConfigPatches"`
-	// The map of generated machine configurations for workers.
-	// This is an unstructured string, but it is valid YAML.
-	WorkerMachineConfigurations pulumi.StringMapOutput `pulumi:"workerMachineConfigurations"`
+	// TO DO
+	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
+	// TO DO
+	Machines ApplyMachinesPtrOutput `pulumi:"machines"`
 }
 
 // NewCluster registers a new resource with the given unique name, arguments, and options.
@@ -46,6 +38,9 @@ func NewCluster(ctx *pulumi.Context,
 	}
 	if args.ClusterMachines == nil {
 		return nil, errors.New("invalid value for required argument 'ClusterMachines'")
+	}
+	if args.KubernetesVersion == nil {
+		args.KubernetesVersion = pulumi.StringPtr("v1.31.0")
 	}
 	if args.TalosVersionContract == nil {
 		args.TalosVersionContract = pulumi.String("v1.8.2")
@@ -66,6 +61,9 @@ type clusterArgs struct {
 	ClusterMachines []ClusterMachines `pulumi:"clusterMachines"`
 	// Name of the cluster
 	ClusterName string `pulumi:"clusterName"`
+	// Kubernetes version to install.
+	// Default is v1.31.0.
+	KubernetesVersion *string `pulumi:"kubernetesVersion"`
 	// Version of Talos features used for configuration generation.
 	// Do not confuse this with the talosImage property.
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
@@ -83,6 +81,9 @@ type ClusterArgs struct {
 	ClusterMachines ClusterMachinesArrayInput
 	// Name of the cluster
 	ClusterName string
+	// Kubernetes version to install.
+	// Default is v1.31.0.
+	KubernetesVersion pulumi.StringPtrInput
 	// Version of Talos features used for configuration generation.
 	// Do not confuse this with the talosImage property.
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
@@ -184,28 +185,14 @@ func (o ClusterOutput) ClientConfiguration() ClientConfigurationPtrOutput {
 	return o.ApplyT(func(v *Cluster) ClientConfigurationPtrOutput { return v.ClientConfiguration }).(ClientConfigurationPtrOutput)
 }
 
-// The map of generated machine configurations for controlplanes.
-// This is an unstructured string, but it is valid YAML.
-func (o ClusterOutput) ControlplaneMachineConfigurations() pulumi.StringMapOutput {
-	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.ControlplaneMachineConfigurations }).(pulumi.StringMapOutput)
+// TO DO
+func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
+	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.GeneratedConfigurations }).(pulumi.StringMapOutput)
 }
 
-// The generated machine configurations for the init node.
-// This is an unstructured string, but it is valid YAML.
-func (o ClusterOutput) InitMachineConfiguration() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *Cluster) pulumi.StringPtrOutput { return v.InitMachineConfiguration }).(pulumi.StringPtrOutput)
-}
-
-// Map of user-provided machine configuration patches.
-// Can be used in the apply resource.
-func (o ClusterOutput) UserConfigPatches() pulumi.StringMapOutput {
-	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.UserConfigPatches }).(pulumi.StringMapOutput)
-}
-
-// The map of generated machine configurations for workers.
-// This is an unstructured string, but it is valid YAML.
-func (o ClusterOutput) WorkerMachineConfigurations() pulumi.StringMapOutput {
-	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.WorkerMachineConfigurations }).(pulumi.StringMapOutput)
+// TO DO
+func (o ClusterOutput) Machines() ApplyMachinesPtrOutput {
+	return o.ApplyT(func(v *Cluster) ApplyMachinesPtrOutput { return v.Machines }).(ApplyMachinesPtrOutput)
 }
 
 type ClusterArrayOutput struct{ *pulumi.OutputState }

@@ -1,3 +1,6 @@
+venv
+sdk/dotnet/obj
+*.png
 Pulumi.*.yaml
 *sublime-workspace
 .vagrant/
@@ -16,6 +19,5 @@ output/*
 build/*
 bin/
 node_modules
-yarn.lock
 provider/cmd/pulumi-resource-talos-cluster/schema.go
 __debug*

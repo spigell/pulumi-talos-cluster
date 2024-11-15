@@ -5,9 +5,10 @@
 export const MachineTypes = {
     Controlplane: "controlplane",
     Worker: "worker",
+    Init: "init",
 } as const;
 
 /**
- * Allowed types for machines: controlplane or worker
+ * Allowed machine types
  */
 export type MachineTypes = (typeof MachineTypes)[keyof typeof MachineTypes];
