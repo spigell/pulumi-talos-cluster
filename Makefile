@@ -24,10 +24,13 @@ lint::
 	cd tests && golangci-lint run
 
 # Tests
-integrations:: build_provider_tests
+unit_test: 
+	set -o pipefail ; go test $$(go list ./... | grep -v tests | grep -v crds/generated) | grep -v 'no test files'
+
+integration_tests:: integration_tests_nodejs
 	cd tests && go test -v
 
-integrations_nodejs:: build_nodejs_sdk build_provider_tests install_nodejs_sdk
+integrations_tests_nodejs:: build_nodejs_sdk build_provider_tests install_nodejs_sdk
 	cd tests && go test -v -run TestHcloudClusterJS
 
 # Provider
