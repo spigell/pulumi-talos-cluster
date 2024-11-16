@@ -23,10 +23,9 @@ jobs:
           repo: pulumi/pulumictl
       - name: Generate nodejs sdk package
         run: make build_nodejs_sdk
-        working-directory: pulumi-component
       - name: Publish package to npm
         uses: JS-DevTools/npm-publish@v3
         with:
-          package: pulumi-component/sdk/nodejs/bin
+          package: sdk/nodejs/bin
           token: ${{ secrets.NPM_TOKEN }}
           dry-run: false

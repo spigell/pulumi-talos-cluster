@@ -64,6 +64,7 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 		DecryptSecretsInOutput: true,
 		ExpectRefreshChanges:   false,
 		RetryFailedSteps:       false,
+		SecretsProvider: getSecretProvider(),
 	}
 }
 
@@ -89,4 +90,14 @@ func getCwd(t *testing.T) string {
 	}
 
 	return cwd
+}
+
+func getSecretProvider() string {
+	prov := "default"
+
+	if os.Getenv("SECRET_PROVIDER") != "" {
+		prov = os.Getenv("SECRET_PROVIDER")
+	}
+
+	return prov
 }

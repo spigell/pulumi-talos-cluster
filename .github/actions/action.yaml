@@ -1,0 +1,85 @@
+name: prepare-pulumi
+description: "Prepare credentials and pulumi stack for github CI"
+inputs:
+  google-credentials:
+    required: true
+    description: "credentials for GCP pulumi backend"
+  runtime:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ inputs.google-credentials }}'
+    - name: Setup cache
+      uses: runs-on/cache@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Setup Go ✨
+      uses: actions/setup-go@v4
+      with:
+        cache: false
+        go-version-file: provider/go.mod
+    - name: Setup Node LTS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+      if: startsWith(inputs.runtime, 'nodejs')
+    - name: Install pulumictl
+      uses: jaxxstorm/action-install-gh-release@v1.10.0
+      with:
+        repo: pulumi/pulumictl
+    - name: Generate nodejs sdk package
+      shell: bash
+      run: make build_nodejs_sdk
+      working-directory: pulumi-component
+      if: startsWith(inputs.runtime, 'nodejs')
+    - name: Wait for builds
+      uses: lewagon/wait-on-check-action@v1.3.1
+      with:
+        ref: ${{ github.ref }}
+        check-name: "Build and save component binary"
+        repo-token: ${{ github.token }}
+        wait-interval: 10
+    - name: Install pulumi cli
+      uses: pulumi/actions@v4
+      with:
+        pulumi-version: v3.139.0
+    - name: Download artifact
+      id: download-artifact
+      uses: dawidd6/action-download-artifact@v3
+      with:
+        workflow: all-build-component.yaml
+        workflow_conclusion: success
+    - name: Add component to pulumi plugin directory
+      run: |
+        mv -v pulumi-component-*/pulumi-resource-talos-cluster talos-cluster && \
+        chmod +x pulumi-talos && \
+        stat talos-cluster && \
+        pulumi plugin install resource talos-cluster $(pulumictl get version) -f talos-cluster
+      shell: bash
+    - name: Downloading GO dependencies 📦
+      shell: bash
+      run: go mod download
+      working-directory: tests
+    - name: Login to Pulumi
+      shell: bash
+      run: pulumi login gs://spigell-infra-phkh-pulumi-states
+    - name: a stack
+      shell: bash
+      run: make pulumi-ci-prepare
+      env:
+        PULUMI_STACK_INIT_FLAGS: --secrets-provider=gcpkms://projects/spigell-infra/locations/global/keyRings/spigell-infra-keyring/cryptoKeys/spigell-infra-phkh-pulumi-key
+        PULUMI_BACKEND: gs://spigell-infra-phkh-pulumi-states

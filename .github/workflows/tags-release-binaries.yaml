@@ -40,7 +40,6 @@ jobs:
           go-version-file: provider/go.mod
       - name: Generate schema for component
         run: make generate_schema
-        working-directory: pulumi-component
       - name: Release required binaries
         uses: goreleaser/goreleaser-action@v4
         with:

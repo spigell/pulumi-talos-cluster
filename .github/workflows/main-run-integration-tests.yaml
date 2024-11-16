@@ -1,0 +1,39 @@
+name: Run integration tests
+env:
+  SECRET_PROVIDER: gcpkms://projects/spigell-infra/locations/global/keyRings/spigell-infra-keyring/cryptoKeys/spigell-infra-phkh-pulumi-key
+on:
+  push:
+    branches:
+      - main
+      - preview
+  workflow_dispatch:
+    inputs:
+      test:
+        type: choice
+        options:
+          - TestHcloudClusterGo
+          - all
+        description: "The test to run. Defaults to `all`"
+        required: true
+        default: 'all'
+
+jobs:
+  TestHcloudClusterGo:
+    # runs-on: runs-on,family=c7i+m7,runner=4cpu-linux-x64,run-id=${{ github.run_id }}
+    runs-on: ubuntu-latest
+    name: The simple GO private cluster
+    if: contains(fromJson('["all", "TestHcloudClusterGo"]'), inputs.test) || github.ref == 'refs/heads/main'
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - name: Prepare pulumi environment
+        uses: ./.github/actions/prepare-pulumi
+        with:
+          runtime: go
+          google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+      - name: run test
+        env: 
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+        run: make integration_tests_go TEST=TestHcloudClusterGo
