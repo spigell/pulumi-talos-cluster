@@ -24,7 +24,7 @@ lint::
 	cd tests && golangci-lint run
 
 # Tests
-unit_test: 
+unit_tests: 
 	set -o pipefail ; go test $$(go list ./... | grep -v tests | grep -v crds/generated) | grep -v 'no test files'
 
 integration_tests:: integration_tests_nodejs

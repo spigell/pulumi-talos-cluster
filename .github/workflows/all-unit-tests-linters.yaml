@@ -31,7 +31,7 @@ jobs:
         working-directory: provider
       - name: Run tests
         shell: bash
-        run: make unit-tests
+        run: make unit_tests
 
   golangci-linter:
     name: Run golangci linter
