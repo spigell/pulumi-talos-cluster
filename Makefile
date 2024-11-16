@@ -1,3 +1,5 @@
+SHELL := bash
+
 VERSION         ?= $(shell pulumictl get version)
 
 PACK            := talos-cluster
