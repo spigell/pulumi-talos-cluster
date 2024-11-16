@@ -1,4 +1,4 @@
-module github.com/spigell/pulumi-talos-cluster/examples
+module github.com/spigell/pulumi-talos-cluster/tests
 
 go 1.23.1
 

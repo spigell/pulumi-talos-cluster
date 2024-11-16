@@ -233,6 +233,11 @@
                     "description": "TO DO"
                 }
             },
+            "required": [
+                "machines",
+                "generatedConfigurations",
+                "clientConfiguration"
+            ],
             "inputProperties": {
                 "clusterEndpoint": {
                     "type": "string",
@@ -263,7 +268,6 @@
                 }
             },
             "requiredInputs": [
-                "talosVersionContract",
                 "clusterName",
                 "clusterEndpoint",
                 "clusterMachines"

@@ -1,5 +1,5 @@
 {
-    "name": "hcloud-simple-ts",
+    "name": "hcloud-simple-js",
     "main": "index.ts",
     "devDependencies": {
         "@types/node": "^18",

@@ -30,15 +30,15 @@ export class Cluster extends pulumi.ComponentResource {
     /**
      * Client configuration for bootstrapping and applying resources.
      */
-    public /*out*/ readonly clientConfiguration!: pulumi.Output<outputs.ClientConfiguration | undefined>;
+    public /*out*/ readonly clientConfiguration!: pulumi.Output<outputs.ClientConfiguration>;
     /**
      * TO DO
      */
-    public /*out*/ readonly generatedConfigurations!: pulumi.Output<{[key: string]: string} | undefined>;
+    public /*out*/ readonly generatedConfigurations!: pulumi.Output<{[key: string]: string}>;
     /**
      * TO DO
      */
-    public /*out*/ readonly machines!: pulumi.Output<outputs.ApplyMachines | undefined>;
+    public /*out*/ readonly machines!: pulumi.Output<outputs.ApplyMachines>;
 
     /**
      * Create a Cluster resource with the given unique name, arguments, and options.
@@ -59,9 +59,6 @@ export class Cluster extends pulumi.ComponentResource {
             }
             if ((!args || args.clusterName === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'clusterName'");
-            }
-            if ((!args || args.talosVersionContract === undefined) && !opts.urn) {
-                throw new Error("Missing required property 'talosVersionContract'");
             }
             resourceInputs["clusterEndpoint"] = args ? args.clusterEndpoint : undefined;
             resourceInputs["clusterMachines"] = args ? args.clusterMachines : undefined;
@@ -110,5 +107,5 @@ export interface ClusterArgs {
      * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
      * The default value is based on gendata.VersionTag, current: v1.8.2.
      */
-    talosVersionContract: pulumi.Input<string>;
+    talosVersionContract?: pulumi.Input<string>;
 }

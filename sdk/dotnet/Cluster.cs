@@ -21,19 +21,19 @@ namespace Pulumi.TalosCluster
         /// Client configuration for bootstrapping and applying resources.
         /// </summary>
         [Output("clientConfiguration")]
-        public Output<Outputs.ClientConfiguration?> ClientConfiguration { get; private set; } = null!;
+        public Output<Outputs.ClientConfiguration> ClientConfiguration { get; private set; } = null!;
 
         /// <summary>
         /// TO DO
         /// </summary>
         [Output("generatedConfigurations")]
-        public Output<ImmutableDictionary<string, string>?> GeneratedConfigurations { get; private set; } = null!;
+        public Output<ImmutableDictionary<string, string>> GeneratedConfigurations { get; private set; } = null!;
 
         /// <summary>
         /// TO DO
         /// </summary>
         [Output("machines")]
-        public Output<Outputs.ApplyMachines?> Machines { get; private set; } = null!;
+        public Output<Outputs.ApplyMachines> Machines { get; private set; } = null!;
 
 
         /// <summary>
@@ -103,8 +103,8 @@ namespace Pulumi.TalosCluster
         /// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
         /// The default value is based on gendata.VersionTag, current: v1.8.2.
         /// </summary>
-        [Input("talosVersionContract", required: true)]
-        public Input<string> TalosVersionContract { get; set; } = null!;
+        [Input("talosVersionContract")]
+        public Input<string>? TalosVersionContract { get; set; }
 
         public ClusterArgs()
         {

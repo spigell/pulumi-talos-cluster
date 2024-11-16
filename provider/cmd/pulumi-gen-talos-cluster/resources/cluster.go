@@ -28,6 +28,7 @@ var Cluster = map[string]schema.ResourceSpec{
 				"- Creates secrets \n" +
 				"- Generates machine configurations for all nodes",
 			Properties: ClusterProperties(),
+			Required:   ClusterRequiredProperties(),
 		},
 		InputProperties: ClusterInputProperties(),
 		RequiredInputs:  ClusterRequiredInputProperties(),
@@ -145,6 +146,14 @@ func ClusterProperties() map[string]schema.PropertySpec {
 	}
 }
 
+func ClusterRequiredProperties() []string {
+	return []string{
+		provider.ClusterResourceOutputsMachines,
+		provider.ClusterResourceOutputsGeneratedConfigurations,
+		provider.ClusterResourceOutputsClientConfiguration,
+	}
+}
+
 func ClusterInputProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		types.ClusterEnpointKey: {
@@ -195,7 +204,6 @@ func ClusterInputProperties() map[string]schema.PropertySpec {
 
 func ClusterRequiredInputProperties() []string {
 	return []string{
-		ClusterTypesTalosVersionContractKey,
 		ClusterTypesClusterNameKey,
 		types.ClusterEnpointKey,
 		ClusterTypesMachinesKey,

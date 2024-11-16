@@ -25,32 +25,33 @@ class ClusterArgs:
                  cluster_endpoint: pulumi.Input[str],
                  cluster_machines: pulumi.Input[Sequence[pulumi.Input['ClusterMachinesArgs']]],
                  cluster_name: str,
-                 talos_version_contract: Optional[pulumi.Input[str]] = None,
-                 kubernetes_version: Optional[pulumi.Input[str]] = None):
+                 kubernetes_version: Optional[pulumi.Input[str]] = None,
+                 talos_version_contract: Optional[pulumi.Input[str]] = None):
         """
         The set of arguments for constructing a Cluster resource.
         :param pulumi.Input[str] cluster_endpoint: Cluster endpoint, the Kubernetes API endpoint accessible by all nodes
         :param pulumi.Input[Sequence[pulumi.Input['ClusterMachinesArgs']]] cluster_machines: Configuration settings for machines
         :param str cluster_name: Name of the cluster
+        :param pulumi.Input[str] kubernetes_version: Kubernetes version to install. 
+               Default is v1.31.0.
         :param pulumi.Input[str] talos_version_contract: Version of Talos features used for configuration generation. 
                Do not confuse this with the talosImage property. 
                Used in NewSecrets() and GetConfigurationOutput() resources. 
                This property is immutable to prevent version conflicts across provider updates. 
                See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
                The default value is based on gendata.VersionTag, current: v1.8.2.
-        :param pulumi.Input[str] kubernetes_version: Kubernetes version to install. 
-               Default is v1.31.0.
         """
         pulumi.set(__self__, "cluster_endpoint", cluster_endpoint)
         pulumi.set(__self__, "cluster_machines", cluster_machines)
         pulumi.set(__self__, "cluster_name", cluster_name)
-        if talos_version_contract is None:
-            talos_version_contract = 'v1.8.2'
-        pulumi.set(__self__, "talos_version_contract", talos_version_contract)
         if kubernetes_version is None:
             kubernetes_version = 'v1.31.0'
         if kubernetes_version is not None:
             pulumi.set(__self__, "kubernetes_version", kubernetes_version)
+        if talos_version_contract is None:
+            talos_version_contract = 'v1.8.2'
+        if talos_version_contract is not None:
+            pulumi.set(__self__, "talos_version_contract", talos_version_contract)
 
     @property
     @pulumi.getter(name="clusterEndpoint")
@@ -89,23 +90,6 @@ class ClusterArgs:
         pulumi.set(self, "cluster_name", value)
 
     @property
-    @pulumi.getter(name="talosVersionContract")
-    def talos_version_contract(self) -> pulumi.Input[str]:
-        """
-        Version of Talos features used for configuration generation. 
-        Do not confuse this with the talosImage property. 
-        Used in NewSecrets() and GetConfigurationOutput() resources. 
-        This property is immutable to prevent version conflicts across provider updates. 
-        See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-        The default value is based on gendata.VersionTag, current: v1.8.2.
-        """
-        return pulumi.get(self, "talos_version_contract")
-
-    @talos_version_contract.setter
-    def talos_version_contract(self, value: pulumi.Input[str]):
-        pulumi.set(self, "talos_version_contract", value)
-
-    @property
     @pulumi.getter(name="kubernetesVersion")
     def kubernetes_version(self) -> Optional[pulumi.Input[str]]:
         """
@@ -117,6 +101,23 @@ class ClusterArgs:
     @kubernetes_version.setter
     def kubernetes_version(self, value: Optional[pulumi.Input[str]]):
         pulumi.set(self, "kubernetes_version", value)
+
+    @property
+    @pulumi.getter(name="talosVersionContract")
+    def talos_version_contract(self) -> Optional[pulumi.Input[str]]:
+        """
+        Version of Talos features used for configuration generation. 
+        Do not confuse this with the talosImage property. 
+        Used in NewSecrets() and GetConfigurationOutput() resources. 
+        This property is immutable to prevent version conflicts across provider updates. 
+        See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
+        The default value is based on gendata.VersionTag, current: v1.8.2.
+        """
+        return pulumi.get(self, "talos_version_contract")
+
+    @talos_version_contract.setter
+    def talos_version_contract(self, value: Optional[pulumi.Input[str]]):
+        pulumi.set(self, "talos_version_contract", value)
 
 
 class Cluster(pulumi.ComponentResource):
@@ -205,8 +206,6 @@ class Cluster(pulumi.ComponentResource):
             __props__.__dict__["kubernetes_version"] = kubernetes_version
             if talos_version_contract is None:
                 talos_version_contract = 'v1.8.2'
-            if talos_version_contract is None and not opts.urn:
-                raise TypeError("Missing required property 'talos_version_contract'")
             __props__.__dict__["talos_version_contract"] = talos_version_contract
             __props__.__dict__["client_configuration"] = None
             __props__.__dict__["generated_configurations"] = None
@@ -220,7 +219,7 @@ class Cluster(pulumi.ComponentResource):
 
     @property
     @pulumi.getter(name="clientConfiguration")
-    def client_configuration(self) -> pulumi.Output[Optional['outputs.ClientConfiguration']]:
+    def client_configuration(self) -> pulumi.Output['outputs.ClientConfiguration']:
         """
         Client configuration for bootstrapping and applying resources.
         """
@@ -228,7 +227,7 @@ class Cluster(pulumi.ComponentResource):
 
     @property
     @pulumi.getter(name="generatedConfigurations")
-    def generated_configurations(self) -> pulumi.Output[Optional[Mapping[str, str]]]:
+    def generated_configurations(self) -> pulumi.Output[Mapping[str, str]]:
         """
         TO DO
         """
@@ -236,7 +235,7 @@ class Cluster(pulumi.ComponentResource):
 
     @property
     @pulumi.getter
-    def machines(self) -> pulumi.Output[Optional['outputs.ApplyMachines']]:
+    def machines(self) -> pulumi.Output['outputs.ApplyMachines']:
         """
         TO DO
         """

@@ -21,11 +21,14 @@ install:: install_provider install_nodejs_sdk
 # Lint
 lint::
 	cd provider && golangci-lint run
-	cd examples && golangci-lint run
+	cd tests && golangci-lint run
 
 # Tests
 integrations:: build_provider_tests
-	cd examples && go test -v
+	cd tests && go test -v
+
+integrations_nodejs:: build_nodejs_sdk build_provider_tests install_nodejs_sdk
+	cd tests && go test -v -run TestHcloudClusterJS
 
 # Provider
 
@@ -89,7 +92,7 @@ build_nodejs_sdk:: gen_nodejs_sdk
 		sed -i -e "s/\$${VERSION}/$(VERSION)/g" ./bin/package.json
 
 install_nodejs_sdk:: build_nodejs_sdk
-	yarn unlink ${PACK} || true
+	yarn unlink pulumi-${PACK} || true
 	yarn link --cwd ${WORKING_DIR}/sdk/nodejs/bin
 
 
@@ -110,12 +113,6 @@ build_python_sdk:: gen_python_sdk
 		./venv/bin/python -m pip install build && \
 		cd ./bin && \
 		../venv/bin/python -m build .
-	#cd sdk/python/ && \
-	#	python3 setup.py clean --all 2>/dev/null && \
-	#	rm -rf ./bin/ ../python.bin/ && cp -R . ../python.bin && mv ../python.bin ./bin && \
-	#	sed -i.bak -e 's/^VERSION = .*/VERSION = "$(PYPI_VERSION)"/g' -e 's/^PLUGIN_VERSION = .*/PLUGIN_VERSION = "$(VERSION)"/g' ./bin/setup.py && \
-	#	rm ./bin/setup.py.bak && \
-	#	cd ./bin && python3 setup.py build sdist
 
 ## Empty build target for Go
 build_go_sdk::

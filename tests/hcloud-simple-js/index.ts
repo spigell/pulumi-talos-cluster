@@ -15,7 +15,7 @@ const cluster: Cluster = {
 			id: 'controlplane-1',
 			type: talos.MachineTypes.Init,
 			bootTalosImageID: imageID,
-			serverType: 'cax22',
+			serverType: 'cax21',
 			privateIP: '10.10.10.2'
 		}
 	]
@@ -30,10 +30,15 @@ cluster.machines.forEach(v => machines.push({
 	machineType: v.type
 }))
 
-const clu = new talos.Cluster(cluster.name, {
-	talosVersionContract: '1',
+export const clu = new talos.Cluster(cluster.name, {
 	kubernetesVersion: cluster.kubernetesVersion,
 	clusterEndpoint: pulumi.interpolate `https://${servers[0].ip}:6443`,
 	clusterName: cluster.name,
 	clusterMachines: machines,
+})
+
+
+export const apply = new talos.Apply(cluster.name, {
+		clientConfiguration: clu.clientConfiguration,
+		applyMachines: clu.machines
 })

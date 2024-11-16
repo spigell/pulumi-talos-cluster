@@ -91,7 +91,7 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		}
 
 		if m.ConfigPatches == nil {
-			m.ConfigPatches = pulumi.String("{}")
+			m.ConfigPatches = pulumi.String("")
 		}
 
 		// Required and Defaults do not work for nested structs in Components?
