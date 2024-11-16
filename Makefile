@@ -27,7 +27,7 @@ lint::
 
 # Tests
 unit_tests: 
-	set -o pipefail ; go test $$(go list ./... | grep -v tests | grep -v crds/generated) | grep -v 'no test files'
+	cd provider && set -o pipefail ; go test $$(go list ./... | grep -v tests | grep -v crds/generated) | grep -v 'no test files'
 
 integration_tests:: integration_tests_nodejs
 	cd tests && go test -v
