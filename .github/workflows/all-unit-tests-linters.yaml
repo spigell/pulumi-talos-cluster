@@ -58,7 +58,6 @@ jobs:
       - name: Generate schema
         shell: bash
         run: make generate_schema
-        working-directory: provider
       - uses: golangci/golangci-lint-action@v3
         name: Run the linter (provider)
         with:
