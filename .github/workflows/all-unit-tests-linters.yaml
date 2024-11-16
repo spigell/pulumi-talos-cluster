@@ -24,8 +24,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           cache: false
-          go-version-file: go.mod
-          working-directory: provider
+          go-version-file: provider/go.mod
       - name: Downloading dependencies 📦
         shell: bash
         run: go mod download
@@ -51,8 +50,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           cache: false
-          go-version-file: go.mod
-          working-directory: provider
+          go-version-file: provider/go.mod
       - name: Downloading dependencies 📦
         shell: bash
         run: go mod download
