@@ -26,6 +26,7 @@ jobs:
         with:
           cache: false
           go-version-file: go.mod
+          working-directory: provider
       - uses: benjlevesque/short-sha@v2.2
         id: short-sha
         with:

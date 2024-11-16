@@ -25,6 +25,7 @@ jobs:
         with:
           cache: false
           go-version-file: go.mod
+          working-directory: provider
       - name: Downloading dependencies 📦
         shell: bash
         run: go mod download
@@ -51,6 +52,7 @@ jobs:
         with:
           cache: false
           go-version-file: go.mod
+          working-directory: provider
       - name: Downloading dependencies 📦
         shell: bash
         run: go mod download
