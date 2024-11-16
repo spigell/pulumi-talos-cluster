@@ -40,4 +40,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: pulumi-component-${{ steps.short-sha.outputs.sha }}
-          path: pulumi-component/bin/pulumi-resource-hcloud-kube-hetzner
+          path: bin/pulumi-resource-talos-cluster
