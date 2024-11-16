@@ -51,24 +51,28 @@ jobs:
         with:
           cache: false
           go-version-file: provider/go.mod
-      - name: Downloading dependencies 📦
+      - name: Downloading dependencies (provider)
         shell: bash
         run: go mod download
         working-directory: provider
+      - name: Downloading dependencies (tests)
+        shell: bash
+        run: go mod download
+        working-directory: tests
       - name: Generate schema
         shell: bash
         run: make generate_schema
-      - uses: golangci/golangci-lint-action@v3
+      - uses: golangci/golangci-lint-action@v6
         name: Run the linter (provider)
         with:
-          skip-pkg-cache: true
+          skip-cache: true
           working-directory: provider
           args: --timeout=10m --exclude schema.go
           version: v1.62.0
-      - uses: golangci/golangci-lint-action@v3
+      - uses: golangci/golangci-lint-action@v6
         name: Run the linter (tests)
         with:
-          skip-pkg-cache: true
+          skip-cache: true
           working-directory: tests
           args: --timeout=10m
           version: v1.62.0
