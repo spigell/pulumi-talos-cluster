@@ -1,0 +1,78 @@
+name: Run tests and linter for all branches
+on:
+  push:
+    tags-ignore:
+      - '**'
+    branches:
+      - '**'
+
+jobs:
+  unit-tests:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: runs-on/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Setup Go ✨
+        uses: actions/setup-go@v4
+        with:
+          cache: false
+          go-version-file: provider/go.mod
+      - name: Downloading dependencies 📦
+        shell: bash
+        run: go mod download
+        working-directory: provider
+      - name: Run tests
+        shell: bash
+        run: make unit_tests
+
+  golangci-linter:
+    name: Run golangci linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: runs-on/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Setup Go ✨
+        uses: actions/setup-go@v4
+        with:
+          cache: false
+          go-version-file: provider/go.mod
+      - name: Downloading dependencies (provider)
+        shell: bash
+        run: go mod download
+        working-directory: provider
+      - name: Downloading dependencies (tests)
+        shell: bash
+        run: go mod download
+        working-directory: tests
+      - name: Generate schema
+        shell: bash
+        run: make generate_schema
+      - uses: golangci/golangci-lint-action@v6
+        name: Run the linter (provider)
+        with:
+          skip-cache: true
+          working-directory: provider
+          args: --timeout=10m --exclude schema.go
+          version: v1.62.0
+      - uses: golangci/golangci-lint-action@v6
+        name: Run the linter (tests)
+        with:
+          skip-cache: true
+          working-directory: tests
+          args: --timeout=10m
+          version: v1.62.0

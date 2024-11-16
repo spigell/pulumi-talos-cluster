@@ -1,0 +1,32 @@
+name: Auto-clean hetzner test images
+
+on:
+  schedule:
+    # Weekly
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+
+jobs:
+  clean:
+    strategy:
+      matrix:
+        arch: ['arm', 'x86']
+      fail-fast: false
+    env:
+      MAX_SNAPSHOTS: 1 # Max count for every arch
+    name: Clean
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Hetzner Cloud CLI
+      run: |
+        sudo apt-get update && sudo apt-get install -y curl jq
+        curl -LO https://github.com/hetznercloud/cli/releases/download/v1.49.0/hcloud-linux-amd64.tar.gz
+        tar -xzf hcloud-linux-amd64.tar.gz
+        chmod +x hcloud
+        sudo mv hcloud /usr/local/bin/
+    - name: Auto-clean old snapshots
+      run: tests/packer/hcloud-clean-old-snapshots.sh ${{ env.MAX_SNAPSHOTS }} ${{ matrix.arch }}
+      env:
+        HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}

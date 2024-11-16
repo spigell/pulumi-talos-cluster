@@ -90,3 +90,8 @@ func getCwd(t *testing.T) string {
 
 	return cwd
 }
+
+func getTestPrograms(t *testing.T) string {
+	cwd := getCwd(t)
+	return filepath.Join(cwd, "testdata", "programs")
+}
