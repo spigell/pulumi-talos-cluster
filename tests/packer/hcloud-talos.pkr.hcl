@@ -14,6 +14,7 @@ variable "talos_version" {
 
 variable "talos_schematic_id" {
   type    = string
+  default = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
 }
 
 locals {
