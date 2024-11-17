@@ -2,9 +2,7 @@ SHELL := bash
 PROG ?= testdata/programs/hcloud-simple-go
 TAG ?= $(shell git describe --tags --abbrev=0)
 
-GH_TEST ?= k3s-private-non-ha-simple
-
-include ../Makefile
+GH_TEST ?= TestHcloudClusterGo
 
 dev-go-testprog: clean
 	echo $(PROG) > .current_test_dir
@@ -27,7 +25,9 @@ clean:
 	yarn unlink --cwd ../sdk/nodejs/bin || true
 	rm -rf .current_test_dir
 
-github-run:
-	gh workflow run --ref $$(git rev-parse --abbrev-ref HEAD) -f example=$(GH_EXAMPLE) main-test-examples.yaml
+
+github-run-test: export TEST=$(GH_TEST)
+github-run-test:
+	gh workflow run --ref $$(git rev-parse --abbrev-ref HEAD) -f test=$(TEST) main-run-integration-tests.yaml
 	sleep 10
-	watch gh run view $$(gh run list --workflow=main-test-examples.yaml -b $$(git rev-parse --abbrev-ref HEAD) -L 1 --json databaseId | jq .[0].databaseId -r) -v
+	watch gh run view $$(gh run list --workflow=main-run-integration-tests.yaml -b $$(git rev-parse --abbrev-ref HEAD) -L 1 --json databaseId | jq .[0].databaseId -r) -v
