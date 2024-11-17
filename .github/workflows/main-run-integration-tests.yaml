@@ -15,7 +15,7 @@ on:
           - all
         description: "The test to run. Defaults to `all`"
         required: true
-        default: 'all'
+        default: 'TestHcloudClusterGo'
 
 env:
   PULUMI_BACKEND: gs://spigell-infra-talos-pulumi-states
