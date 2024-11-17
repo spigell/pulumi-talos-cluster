@@ -64,7 +64,6 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 		DecryptSecretsInOutput: true,
 		ExpectRefreshChanges:   false,
 		RetryFailedSteps:       false,
-		SecretsProvider: getSecretProvider(),
 	}
 }
 

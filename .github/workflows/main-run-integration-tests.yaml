@@ -29,10 +29,9 @@ jobs:
         with:
           fetch-tags: true
       - name: Prepare pulumi environment
-        uses: ./.github/actions/prepare-pulumi
+        uses: ./.github/actions/prepare-pulumi-env
         with:
           runtime: go
-          google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       - name: run test
         env: 
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}

@@ -1,11 +1,14 @@
-name: prepare-pulumi
-description: "Prepare credentials and pulumi stack for github CI"
+name: prepare-pulumi-env
+description: "Donwload dependencies and configure runtimes"
 inputs:
-  google-credentials:
-    required: true
-    description: "credentials for GCP pulumi backend"
   runtime:
+    description: "Runtime to install"
     required: true
+  with-tests:
+    description: "Install deps for tests"
+    required: false
+    default: default
+
 
 runs:
   using: "composite"
@@ -14,10 +17,6 @@ runs:
       with:
         fetch-depth: 0
         fetch-tags: true
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v1'
-      with:
-        credentials_json: '${{ inputs.google-credentials }}'
     - name: Setup cache
       uses: runs-on/cache@v4
       with:
@@ -74,12 +73,3 @@ runs:
       shell: bash
       run: go mod download
       working-directory: tests
-    - name: Login to Pulumi
-      shell: bash
-      run: pulumi login gs://spigell-infra-phkh-pulumi-states
-    - name: a stack
-      shell: bash
-      run: make pulumi-ci-prepare
-      env:
-        PULUMI_STACK_INIT_FLAGS: --secrets-provider=gcpkms://projects/spigell-infra/locations/global/keyRings/spigell-infra-keyring/cryptoKeys/spigell-infra-phkh-pulumi-key
-        PULUMI_BACKEND: gs://spigell-infra-phkh-pulumi-states
