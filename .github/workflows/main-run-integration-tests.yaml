@@ -60,10 +60,10 @@ jobs:
         if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
         with:
           repo: siderolabs/talos
-          asset-name: talosctl-linux-amd64
           rename-to: talosctl
           chmod: 0755
           extension-matching: disable
+          tag: v1.8.2
       - name: Run the test
         if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
         env:

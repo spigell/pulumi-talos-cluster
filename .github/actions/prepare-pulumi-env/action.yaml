@@ -47,7 +47,6 @@ runs:
     - name: Generate nodejs sdk package
       shell: bash
       run: make install_nodejs_sdk
-      working-directory: pulumi-component
       if: startsWith(inputs.runtime, 'nodejs')
     - name: Wait for builds
       uses: lewagon/wait-on-check-action@v1.3.1
