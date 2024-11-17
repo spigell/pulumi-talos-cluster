@@ -32,6 +32,8 @@ jobs:
         uses: ./.github/actions/prepare-pulumi-env
         with:
           runtime: go
+          with-tests: 'true'
+          with-provider: 'false'
       - name: run test
         env: 
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
