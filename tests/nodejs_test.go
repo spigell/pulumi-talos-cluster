@@ -11,7 +11,7 @@ func TestHcloudClusterJS(t *testing.T) {
 	test := getJSBaseOptions(t).
 		With(integration.ProgramTestOptions{
 			RunUpdateTest: false,
-			Dir:           filepath.Join(getCwd(t), "hcloud-simple-js"),
+			Dir:           filepath.Join(getTestPrograms(t), "hcloud-simple-js"),
 			// ExtraRuntimeValidation: func(t *testing.T, info integration.RuntimeValidationStackInfo) {
 		})
 

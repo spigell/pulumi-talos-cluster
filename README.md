@@ -32,8 +32,7 @@ The following features and improvements are planned for future releases:
 
 - [x] **Kubernetes Version Configuration**: Allow setting the Kubernetes version directly via CLI
 
-
-- [ ] **`talosctl` Installation**: Automate the installation and configuration of `talosctl`.
 - [ ] **Tests and Continuous Integration**: Implement tests and CI/CD pipelines to ensure code quality and stability.
 - [ ] **Multi-language Examples**: Provide usage examples in four languages (TypeScript, Python, Go, and .NET).
 - [ ] **Comprehensive Documentation**: Enhance documentation with detailed setup, customization, and troubleshooting guides.
+- [ ] **`talosctl` Installation**: Automate the installation and configuration of `talosctl`.

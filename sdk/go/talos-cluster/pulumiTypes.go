@@ -74,57 +74,6 @@ func (o ApplyMachinesOutput) Worker() MachineInfoArrayOutput {
 	return o.ApplyT(func(v ApplyMachines) []MachineInfo { return v.Worker }).(MachineInfoArrayOutput)
 }
 
-type ApplyMachinesPtrOutput struct{ *pulumi.OutputState }
-
-func (ApplyMachinesPtrOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((**ApplyMachines)(nil)).Elem()
-}
-
-func (o ApplyMachinesPtrOutput) ToApplyMachinesPtrOutput() ApplyMachinesPtrOutput {
-	return o
-}
-
-func (o ApplyMachinesPtrOutput) ToApplyMachinesPtrOutputWithContext(ctx context.Context) ApplyMachinesPtrOutput {
-	return o
-}
-
-func (o ApplyMachinesPtrOutput) Elem() ApplyMachinesOutput {
-	return o.ApplyT(func(v *ApplyMachines) ApplyMachines {
-		if v != nil {
-			return *v
-		}
-		var ret ApplyMachines
-		return ret
-	}).(ApplyMachinesOutput)
-}
-
-func (o ApplyMachinesPtrOutput) Controlplane() MachineInfoArrayOutput {
-	return o.ApplyT(func(v *ApplyMachines) []MachineInfo {
-		if v == nil {
-			return nil
-		}
-		return v.Controlplane
-	}).(MachineInfoArrayOutput)
-}
-
-func (o ApplyMachinesPtrOutput) Init() MachineInfoArrayOutput {
-	return o.ApplyT(func(v *ApplyMachines) []MachineInfo {
-		if v == nil {
-			return nil
-		}
-		return v.Init
-	}).(MachineInfoArrayOutput)
-}
-
-func (o ApplyMachinesPtrOutput) Worker() MachineInfoArrayOutput {
-	return o.ApplyT(func(v *ApplyMachines) []MachineInfo {
-		if v == nil {
-			return nil
-		}
-		return v.Worker
-	}).(MachineInfoArrayOutput)
-}
-
 type ClientConfiguration struct {
 	// The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
 	CaCertificate *string `pulumi:"caCertificate"`
@@ -193,60 +142,6 @@ func (o ClientConfigurationOutput) ClientCertificate() pulumi.StringPtrOutput {
 // The private key for the client certificate, used for authenticating the client to the Talos API server.
 func (o ClientConfigurationOutput) ClientKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v ClientConfiguration) *string { return v.ClientKey }).(pulumi.StringPtrOutput)
-}
-
-type ClientConfigurationPtrOutput struct{ *pulumi.OutputState }
-
-func (ClientConfigurationPtrOutput) ElementType() reflect.Type {
-	return reflect.TypeOf((**ClientConfiguration)(nil)).Elem()
-}
-
-func (o ClientConfigurationPtrOutput) ToClientConfigurationPtrOutput() ClientConfigurationPtrOutput {
-	return o
-}
-
-func (o ClientConfigurationPtrOutput) ToClientConfigurationPtrOutputWithContext(ctx context.Context) ClientConfigurationPtrOutput {
-	return o
-}
-
-func (o ClientConfigurationPtrOutput) Elem() ClientConfigurationOutput {
-	return o.ApplyT(func(v *ClientConfiguration) ClientConfiguration {
-		if v != nil {
-			return *v
-		}
-		var ret ClientConfiguration
-		return ret
-	}).(ClientConfigurationOutput)
-}
-
-// The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
-func (o ClientConfigurationPtrOutput) CaCertificate() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *ClientConfiguration) *string {
-		if v == nil {
-			return nil
-		}
-		return v.CaCertificate
-	}).(pulumi.StringPtrOutput)
-}
-
-// The client certificate used to authenticate to the Talos API server.
-func (o ClientConfigurationPtrOutput) ClientCertificate() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *ClientConfiguration) *string {
-		if v == nil {
-			return nil
-		}
-		return v.ClientCertificate
-	}).(pulumi.StringPtrOutput)
-}
-
-// The private key for the client certificate, used for authenticating the client to the Talos API server.
-func (o ClientConfigurationPtrOutput) ClientKey() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *ClientConfiguration) *string {
-		if v == nil {
-			return nil
-		}
-		return v.ClientKey
-	}).(pulumi.StringPtrOutput)
 }
 
 type ClusterMachines struct {
@@ -592,9 +487,7 @@ func init() {
 	pulumi.RegisterInputType(reflect.TypeOf((*MachineInfoInput)(nil)).Elem(), MachineInfoArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*MachineInfoArrayInput)(nil)).Elem(), MachineInfoArray{})
 	pulumi.RegisterOutputType(ApplyMachinesOutput{})
-	pulumi.RegisterOutputType(ApplyMachinesPtrOutput{})
 	pulumi.RegisterOutputType(ClientConfigurationOutput{})
-	pulumi.RegisterOutputType(ClientConfigurationPtrOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesArrayOutput{})
 	pulumi.RegisterOutputType(MachineInfoOutput{})

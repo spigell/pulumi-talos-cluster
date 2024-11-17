@@ -11,7 +11,7 @@ func TestHcloudClusterGo(t *testing.T) {
 	test := getGoBaseOptions(t).
 		With(integration.ProgramTestOptions{
 			RunUpdateTest: false,
-			Dir:           filepath.Join(getCwd(t), "hcloud-simple-go"),
+			Dir:           filepath.Join(getTestPrograms(t), "hcloud-simple-go"),
 			// ExtraRuntimeValidation: func(t *testing.T, info integration.RuntimeValidationStackInfo) {
 		})
 

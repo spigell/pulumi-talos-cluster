@@ -11,7 +11,6 @@ type Cluster struct {
 	Name              string
 	PrivateNetwork    string
 	PrivateSubnetwork string
-	BootTalosImageID  string
 	KubernetesVersion string
 	Machines          []*ClusterMachine
 }
@@ -27,7 +26,6 @@ var (
 	cluster = &Cluster{
 			PrivateNetwork:    "10.10.10.0/24",
 			PrivateSubnetwork: "10.10.10.0/25",
-			BootTalosImageID:  "197664890",
 			KubernetesVersion: "v1.31.0",
 			Machines: []*ClusterMachine{
 				{

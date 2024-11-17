@@ -38,6 +38,18 @@ func NewHetzner(ctx *pulumi.Context, cluster *Cluster) ([]*DeployedServer, error
 		return nil, fmt.Errorf("error creating subnet: %w", err)
 	}
 
+
+	selector := "os=talos,testing=true"
+	image, err := hcloud.GetImage(ctx, &hcloud.GetImageArgs{
+		WithSelector: pulumi.StringRef(selector),
+		MostRecent:   pulumi.BoolRef(true),
+		WithArchitecture: pulumi.StringRef("x86"),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("can't find an image")
+	}
+
 	deployed := make([]*DeployedServer, 0)
 
 	for _, machine := range cluster.Machines {
@@ -45,7 +57,8 @@ func NewHetzner(ctx *pulumi.Context, cluster *Cluster) ([]*DeployedServer, error
 		server, err := hcloud.NewServer(ctx, machine.Name, &hcloud.ServerArgs{
 			Name:       pulumi.String(machine.Name),
 			ServerType: pulumi.String(machine.ServerType),
-			Image:      pulumi.String(cluster.BootTalosImageID), // OS image
+			// Image:      pulumi.Sprintf(fmt.Sprintf("%d", image.Id)), // OS image
+			Image:      pulumi.Sprintf("%d", image.Id), // OS image
 			Location:   pulumi.String("nbg1"),                   // Choose the Hetzner location
 			Networks: &hcloud.ServerNetworkTypeArray{
 				hcloud.ServerNetworkTypeArgs{

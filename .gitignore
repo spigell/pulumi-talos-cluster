@@ -16,6 +16,8 @@ kubeconfig
 output/*
 *local*
 
+tests/test-project
+
 build/*
 bin/
 node_modules
