@@ -21,6 +21,7 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: Simple test suites (GO)
@@ -32,7 +33,8 @@ jobs:
             test: TestHcloudClusterJS
             command: make integration_tests_go TEST=TestHcloudClusterJS
     name: ${{ matrix.name }}
-    if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
+    # if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
+    if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == 'main'
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
