@@ -19,11 +19,11 @@ type Cluster struct {
 	pulumi.ResourceState
 
 	// Client configuration for bootstrapping and applying resources.
-	ClientConfiguration ClientConfigurationPtrOutput `pulumi:"clientConfiguration"`
+	ClientConfiguration ClientConfigurationOutput `pulumi:"clientConfiguration"`
 	// TO DO
 	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
 	// TO DO
-	Machines ApplyMachinesPtrOutput `pulumi:"machines"`
+	Machines ApplyMachinesOutput `pulumi:"machines"`
 }
 
 // NewCluster registers a new resource with the given unique name, arguments, and options.
@@ -43,7 +43,7 @@ func NewCluster(ctx *pulumi.Context,
 		args.KubernetesVersion = pulumi.StringPtr("v1.31.0")
 	}
 	if args.TalosVersionContract == nil {
-		args.TalosVersionContract = pulumi.String("v1.8.2")
+		args.TalosVersionContract = pulumi.StringPtr("v1.8.2")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Cluster
@@ -70,7 +70,7 @@ type clusterArgs struct {
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
 	// The default value is based on gendata.VersionTag, current: v1.8.2.
-	TalosVersionContract string `pulumi:"talosVersionContract"`
+	TalosVersionContract *string `pulumi:"talosVersionContract"`
 }
 
 // The set of arguments for constructing a Cluster resource.
@@ -90,7 +90,7 @@ type ClusterArgs struct {
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
 	// The default value is based on gendata.VersionTag, current: v1.8.2.
-	TalosVersionContract pulumi.StringInput
+	TalosVersionContract pulumi.StringPtrInput
 }
 
 func (ClusterArgs) ElementType() reflect.Type {
@@ -181,8 +181,8 @@ func (o ClusterOutput) ToClusterOutputWithContext(ctx context.Context) ClusterOu
 }
 
 // Client configuration for bootstrapping and applying resources.
-func (o ClusterOutput) ClientConfiguration() ClientConfigurationPtrOutput {
-	return o.ApplyT(func(v *Cluster) ClientConfigurationPtrOutput { return v.ClientConfiguration }).(ClientConfigurationPtrOutput)
+func (o ClusterOutput) ClientConfiguration() ClientConfigurationOutput {
+	return o.ApplyT(func(v *Cluster) ClientConfigurationOutput { return v.ClientConfiguration }).(ClientConfigurationOutput)
 }
 
 // TO DO
@@ -191,8 +191,8 @@ func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
 }
 
 // TO DO
-func (o ClusterOutput) Machines() ApplyMachinesPtrOutput {
-	return o.ApplyT(func(v *Cluster) ApplyMachinesPtrOutput { return v.Machines }).(ApplyMachinesPtrOutput)
+func (o ClusterOutput) Machines() ApplyMachinesOutput {
+	return o.ApplyT(func(v *Cluster) ApplyMachinesOutput { return v.Machines }).(ApplyMachinesOutput)
 }
 
 type ClusterArrayOutput struct{ *pulumi.OutputState }

@@ -80,8 +80,8 @@ func NewTalosCluster(ctx *pulumi.Context, cluster *Cluster, servers []*DeployedS
 
 
 	apply, err := talos.NewApply(ctx, cluster.Name, &talos.ApplyArgs{
-		ClientConfiguration: clu.ClientConfiguration.Elem().ToClientConfigurationOutput(),
-		ApplyMachines: clu.Machines.Elem(),
+		ClientConfiguration: clu.ClientConfiguration,
+		ApplyMachines: clu.Machines,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error apply: %w", err)
