@@ -43,6 +43,10 @@ jobs:
         if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
         with:
           fetch-tags: true
+      - name: Set gcloud auth pulumi
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
       - name: Prepare pulumi environment
         uses: ./.github/actions/prepare-pulumi-env
         if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
