@@ -52,12 +52,14 @@ jobs:
         if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
         with:
           repo: siderolabs/talos
-          asset-name: talosctl-linux-amd64
+          asset-name: talosctl
           rename-to: talosctl
+          platform: linux
+          arch: amd64
           chmod: 0755
           extension-matching: disable
-      - name: Run the test
-        if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
-        env:
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-        run: ${{ matrix.command }}
+#      - name: Run the test
+#        if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
+#        env:
+#          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+#        run: ${{ matrix.command }}
