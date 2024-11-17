@@ -65,6 +65,7 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 		DecryptSecretsInOutput: true,
 		ExpectRefreshChanges:   false,
 		RetryFailedSteps:       false,
+		CloudURL: getEnvIfSet("PULUMI_CLOUD_URL"),
 		// ReportStats: reporter,
 	}
 }
@@ -96,4 +97,15 @@ func getCwd(t *testing.T) string {
 func getTestPrograms(t *testing.T) string {
 	cwd := getCwd(t)
 	return filepath.Join(cwd, "testdata", "programs")
+}
+
+func getEnvIfSet(env string) string {
+	cloud := ""
+
+	// PULUMI_API doesn't work
+	if os.Getenv(env) != "" {
+		cloud = os.Getenv(env)
+	}
+
+	return cloud
 }
