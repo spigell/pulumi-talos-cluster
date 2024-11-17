@@ -59,11 +59,13 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	if err != nil {
 		t.Fatalf("failed to build provider plugin PATH: %v", err)
 	}
+	// reporter := integration.NewS3Reporter("test", "test", "pulumi")
 	return integration.ProgramTestOptions{
 		Env:                    []string{pathEnv},
 		DecryptSecretsInOutput: true,
 		ExpectRefreshChanges:   false,
 		RetryFailedSteps:       false,
+		// ReportStats: reporter,
 	}
 }
 

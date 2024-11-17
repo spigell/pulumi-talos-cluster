@@ -1,4 +1,5 @@
 name: Run integration tests
+
 on:
   push:
     branches:
@@ -17,10 +18,21 @@ on:
         default: 'all'
 
 jobs:
-  TestHcloudClusterGo:
+  run-tests:
     runs-on: ubuntu-latest
-    name: The simple GO private cluster
-    if: contains(fromJson('["all", "TestHcloudClusterGo"]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
+    strategy:
+      matrix:
+        include:
+          - name: Simple test suites (GO)
+            runtime: go
+            test: TestHcloudClusterGo
+            command: make integration_tests_go TEST=TestHcloudClusterGo
+          - name: Simple test suites (JS)
+            runtime: nodejs
+            test: TestHcloudClusterJS
+            command: make integration_tests_go TEST=TestHcloudClusterJS
+    name: ${{ matrix.name }}
+    if: contains(fromJson('["all", matrix.test]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -29,29 +41,18 @@ jobs:
       - name: Prepare pulumi environment
         uses: ./.github/actions/prepare-pulumi-env
         with:
-          runtime: go
+          runtime: ${{ matrix.runtime }}
           with-tests: 'true'
           with-provider: 'false'
-      - name: Run the test
-        env: 
-          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-        run: make integration_tests_go TEST=TestHcloudClusterGo
-  TestHcloudClusterJS:
-    runs-on: ubuntu-latest
-    name: The simple GO private cluster
-    if: contains(fromJson('["all", "TestHcloudClusterJS"]'), inputs.test) || github.ref == 'refs/heads/main'
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
+      - name: Install talosctl
+        uses: jaxxstorm/action-install-gh-release@v1.10.0
         with:
-          fetch-tags: true
-      - name: Prepare pulumi environment
-        uses: ./.github/actions/prepare-pulumi-env
-        with:
-          runtime: nodejs
-          with-tests: 'true'
-          with-provider: 'false'
+          repo: siderolabs/talos
+          asset-name: talosctl-linux-amd64
+          rename-to: talosctl
+          chmod: 0755
+          extension-matching: disable
       - name: Run the test
-        env: 
+        env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-        run: make integration_tests_go TEST=TestHcloudClusterJS
+        run: ${{ matrix.command }}
