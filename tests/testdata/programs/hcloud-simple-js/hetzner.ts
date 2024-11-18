@@ -20,6 +20,12 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
         ipRange: cluster.PrivateSubnetwork,
     });
 
+    const selector = "os=talos,testing=true"
+    const image = hcloud.getImage({
+        withSelector: selector,
+        withArchitecture: 'arm'
+    })
+
     const deployed: DeployedServer[] = [];
 
     for (const machine of cluster.machines) {
@@ -27,7 +33,7 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
         const server = new hcloud.Server(machine.id, {
             name: machine.id,
             serverType: machine.serverType,
-            image: machine.bootTalosImageID, // OS image
+            image: image.then(v => `${v.id}`), // OS image
             location: "nbg1",               // Choose the Hetzner location
             networks: [{
                 networkId: convertedNetID,

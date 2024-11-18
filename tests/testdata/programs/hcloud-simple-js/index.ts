@@ -3,8 +3,6 @@ import * as talos from "@spigell/pulumi-talos-cluster"
 import {Cluster} from './types'
 import {Hetzner} from './hetzner'
 
-// ARM precreated image
-const imageID = '197664791'
 const cluster: Cluster = {
 	name: pulumi.getStack(),
 	kubernetesVersion: 'v1.31.0',
@@ -14,7 +12,6 @@ const cluster: Cluster = {
 		{
 			id: 'controlplane-1',
 			type: talos.MachineTypes.Init,
-			bootTalosImageID: imageID,
 			serverType: 'cax21',
 			privateIP: '10.10.10.2'
 		}

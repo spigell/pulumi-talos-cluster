@@ -23,3 +23,6 @@ bin/
 node_modules
 provider/cmd/pulumi-resource-talos-cluster/schema.go
 __debug*
+
+**/examples/**/**/yarn.lock
+**/tests/**/**/yarn.lock
