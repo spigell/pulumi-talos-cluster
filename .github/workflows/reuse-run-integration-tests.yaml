@@ -1,0 +1,59 @@
+name: The reusable workflow for deploying the exacly one cluster and execute tests
+run-name: The test ${{ inputs.name }} by @${{ github.actor }}
+
+env:
+  PULUMI_BACKEND: gs://spigell-infra-talos-pulumi-states
+  TALOSCLTL_VERSION: v1.8.2
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        required: false
+        type: string
+      runtime:
+        type: string
+        required: true
+        default: go
+      command: 
+        type: string
+        required: true
+    secrets:
+      google-credentials:
+        required: true
+      hcloud-token:
+        required: true
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: Run tests
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - name: Prepare pulumi environment
+        uses: ./.github/actions/prepare-pulumi-env
+        with:
+          runtime: ${{ inputs.runtime }}
+          with-tests: 'true'
+          with-provider: 'false'
+      - name: Set gcloud auth pulumi
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.google-credentials }}'
+      - name: Install talosctl
+        uses: jaxxstorm/action-install-gh-release@v1.10.0
+        with:
+          repo: siderolabs/talos
+          rename-to: talosctl
+          chmod: 0755
+          extension-matching: disable
+          tag: ${{ env.TALOSCTL_VERSION }}
+      - name: Run the test
+        env:
+          HCLOUD_TOKEN: ${{ secrets.hcloud-token }}
+          PULUMI_CLOUD_URL: ${{ env.PULUMI_VERSION }}
+        run: ${{ inputs.command }}
