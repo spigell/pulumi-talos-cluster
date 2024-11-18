@@ -15,6 +15,8 @@ import (
 // Apply the configuration to nodes.
 type Apply struct {
 	pulumi.ResourceState
+
+	Credentials CredentialsOutput `pulumi:"credentials"`
 }
 
 // NewApply registers a new resource with the given unique name, arguments, and options.
@@ -139,6 +141,10 @@ func (o ApplyOutput) ToApplyOutput() ApplyOutput {
 
 func (o ApplyOutput) ToApplyOutputWithContext(ctx context.Context) ApplyOutput {
 	return o
+}
+
+func (o ApplyOutput) Credentials() CredentialsOutput {
+	return o.ApplyT(func(v *Apply) CredentialsOutput { return v.Credentials }).(CredentialsOutput)
 }
 
 type ApplyArrayOutput struct{ *pulumi.OutputState }

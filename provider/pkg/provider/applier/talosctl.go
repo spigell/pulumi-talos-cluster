@@ -109,11 +109,9 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 	}).(pulumi.StringOutput)
 }
 
-func (a *Applier) talosctlUpgradeK8SCMD(m *types.MachineInfo) pulumi.StringOutput {
-	return pulumi.All(a.basicClient().TalosConfig(), m.NodeIP, m.KubernetesVersion).ApplyT(func(args []any) (string, error) {
+func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOutput {
+	return pulumi.All(a.basicClient().TalosConfig()).ApplyT(func(args []any) (string, error) {
 		talosConfig := args[0].(string)
-		ip := args[1].(string)
-		k8sVer := args[2].(string)
 
 		talosctl := a.NewTalosctl()
 		if err := talosctl.prepare(talosConfig); err != nil {
@@ -122,9 +120,14 @@ func (a *Applier) talosctlUpgradeK8SCMD(m *types.MachineInfo) pulumi.StringOutpu
 
 		talosctlFlags := "--with-docs=false --with-examples=false"
 
+		ips := make([]string, 0)
+		for _, m := range ma {
+			ips = append(ips, m.NodeIP)
+		}
+
 		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
 			"%[1]s upgrade-k8s -n %[2]s -e %[2]s --to %s %s",
-		}, " && "), talosctl.BasicCommand, ip, k8sVer, talosctlFlags), "5")
+		}, " && "), talosctl.BasicCommand, strings.Join(ips, " -e "), ma[0].KubernetesVersion, talosctlFlags), "2")
 
 		return command, nil
 	}).(pulumi.StringOutput)

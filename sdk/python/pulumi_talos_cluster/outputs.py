@@ -19,6 +19,7 @@ from ._enums import *
 __all__ = [
     'ApplyMachines',
     'ClientConfiguration',
+    'Credentials',
     'MachineInfo',
 ]
 
@@ -112,6 +113,35 @@ class ClientConfiguration(dict):
         The private key for the client certificate, used for authenticating the client to the Talos API server.
         """
         return pulumi.get(self, "client_key")
+
+
+@pulumi.output_type
+class Credentials(dict):
+    def __init__(__self__, *,
+                 kubeconfig: str,
+                 talosconfig: str):
+        """
+        :param str kubeconfig: The Kubeconfig for cluster
+        :param str talosconfig: The talosconfig with all nodes and controlplanes as endpoints
+        """
+        pulumi.set(__self__, "kubeconfig", kubeconfig)
+        pulumi.set(__self__, "talosconfig", talosconfig)
+
+    @property
+    @pulumi.getter
+    def kubeconfig(self) -> str:
+        """
+        The Kubeconfig for cluster
+        """
+        return pulumi.get(self, "kubeconfig")
+
+    @property
+    @pulumi.getter
+    def talosconfig(self) -> str:
+        """
+        The talosconfig with all nodes and controlplanes as endpoints
+        """
+        return pulumi.get(self, "talosconfig")
 
 
 @pulumi.output_type

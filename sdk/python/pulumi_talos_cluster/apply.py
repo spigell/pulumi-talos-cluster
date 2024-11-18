@@ -13,6 +13,7 @@ if sys.version_info >= (3, 11):
 else:
     from typing_extensions import NotRequired, TypedDict, TypeAlias
 from . import _utilities
+from . import outputs
 from ._inputs import *
 
 __all__ = ['ApplyArgs', 'Apply']
@@ -114,10 +115,16 @@ class Apply(pulumi.ComponentResource):
             if client_configuration is None and not opts.urn:
                 raise TypeError("Missing required property 'client_configuration'")
             __props__.__dict__["client_configuration"] = client_configuration
+            __props__.__dict__["credentials"] = None
         super(Apply, __self__).__init__(
             'talos-cluster:index:Apply',
             resource_name,
             __props__,
             opts,
             remote=True)
+
+    @property
+    @pulumi.getter
+    def credentials(self) -> pulumi.Output['outputs.Credentials']:
+        return pulumi.get(self, "credentials")
 

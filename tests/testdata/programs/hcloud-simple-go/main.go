@@ -71,6 +71,7 @@ func main() {
 		}
 
 		ctx.Export("kubeconfig", talosClu.Kubeconfig)
+		ctx.Export("talosconfig", talosClu.Talosconfig)
 
 		return nil
 	})

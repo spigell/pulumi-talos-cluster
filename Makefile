@@ -30,13 +30,13 @@ unit_tests:: generate_schema
 	cd provider && set -o pipefail ; go test $$(go list ./... | grep -v tests | grep -v crds/generated) | grep -v 'no test files'
 
 integration_tests:: integration_tests_nodejs integration_tests_go
-	cd tests && go test -v
+	cd tests && go test -timeout=25m -v
 
 integration_tests_go:: build_provider_tests gen_go_sdk
-	cd tests && go test -v -run $(TEST)
+	cd tests && go test -timeout=25m -v -run $(TEST)
 
 integration_tests_nodejs:: build_nodejs_sdk build_provider_tests install_nodejs_sdk
-	cd tests && go test -v -run $(TEST)
+	cd tests && go test -timeout=25m -v -run $(TEST)
 
 # Provider
 

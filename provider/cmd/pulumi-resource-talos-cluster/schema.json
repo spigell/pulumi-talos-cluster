@@ -134,6 +134,23 @@
                 "nodeIp"
             ]
         },
+        "talos-cluster:index:credentials": {
+            "properties": {
+                "kubeconfig": {
+                    "type": "string",
+                    "description": "The Kubeconfig for cluster"
+                },
+                "talosconfig": {
+                    "type": "string",
+                    "description": "The talosconfig with all nodes and controlplanes as endpoints"
+                }
+            },
+            "type": "object",
+            "required": [
+                "kubeconfig",
+                "talosconfig"
+            ]
+        },
         "talos-cluster:index:machineInfo": {
             "properties": {
                 "clusterEndpoint": {
@@ -197,6 +214,15 @@
     "resources": {
         "talos-cluster:index:Apply": {
             "description": "Apply the configuration to nodes.",
+            "properties": {
+                "credentials": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:credentials"
+                }
+            },
+            "required": [
+                "credentials"
+            ],
             "inputProperties": {
                 "applyMachines": {
                     "type": "object",

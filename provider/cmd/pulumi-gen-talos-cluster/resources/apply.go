@@ -12,6 +12,8 @@ var (
 	ApplyResourceName         = provider.ApplyType()
 	ApplyTypesMachineInfoKey  = "machineInfo"
 	ApplyTypesMachineInfoPath = provider.ProviderName + ":index:" + ApplyTypesMachineInfoKey
+	ApplyTypesCredentialsKey  = "credentials"
+	ApplyTypesCredentialsPath = provider.ProviderName + ":index:" + ApplyTypesCredentialsKey
 )
 
 var Apply = map[string]schema.ResourceSpec{
@@ -20,6 +22,7 @@ var Apply = map[string]schema.ResourceSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
 			Description: "Apply the configuration to nodes.",
 			Properties:  ApplyProperties(),
+			Required:    []string{ApplyTypesCredentialsKey},
 		},
 		InputProperties: ApplyInputProperties(),
 		RequiredInputs:  ApplyRequiredInputProperties(),
@@ -27,7 +30,14 @@ var Apply = map[string]schema.ResourceSpec{
 }
 
 func ApplyProperties() map[string]schema.PropertySpec {
-	return map[string]schema.PropertySpec{}
+	return map[string]schema.PropertySpec{
+		ApplyTypesCredentialsKey: {
+			TypeSpec: schema.TypeSpec{
+				Type: "object",
+				Ref:  fmt.Sprintf("#types/%s", ApplyTypesCredentialsPath),
+			},
+		},
+	}
 }
 
 func ApplyInputProperties() map[string]schema.PropertySpec {
@@ -49,6 +59,30 @@ func ApplyRequiredInputProperties() []string {
 
 func ApplyTypes() map[string]schema.ComplexTypeSpec {
 	ty := make(map[string]schema.ComplexTypeSpec)
+
+	ty[ApplyTypesCredentialsPath] = schema.ComplexTypeSpec{
+		ObjectTypeSpec: schema.ObjectTypeSpec{
+			Type: "object",
+			Properties: map[string]schema.PropertySpec{
+				types.KubeconfigKey: {
+					TypeSpec: schema.TypeSpec{
+						Type: "string",
+					},
+					Description: "The Kubeconfig for cluster",
+				},
+				types.TalosconfigKey: {
+					TypeSpec: schema.TypeSpec{
+						Type: "string",
+					},
+					Description: "The talosconfig with all nodes and controlplanes as endpoints",
+				},
+			},
+			Required: []string{
+				types.KubeconfigKey,
+				types.TalosconfigKey,
+			},
+		},
+	}
 
 	ty[ApplyTypesMachineInfoPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{

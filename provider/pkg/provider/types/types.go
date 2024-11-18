@@ -12,6 +12,8 @@ const (
 	ConfigurationKey     = "configuration"
 	KubernetesVersionKey = "kubernetesVersion"
 	ClusterEnpointKey    = "clusterEndpoint"
+	KubeconfigKey        = "kubeconfig"
+	TalosconfigKey       = "talosconfig"
 )
 
 type ClusterMachine struct {
