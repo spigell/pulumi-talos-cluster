@@ -121,12 +121,12 @@ func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource) ([]pulu
 	return deps, nil
 }
 
-func (a *Applier) UpgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
-	k8s, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-k8s-version:%s", a.name, m.MachineID), &local.CommandArgs{
-		Create:      a.talosctlUpgradeK8SCMD(m),
+func (a *Applier) UpgradeK8S(ma []*types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	k8s, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-k8s-version:%s", a.name, ma[0].MachineID), &local.CommandArgs{
+		Create:      a.talosctlUpgradeK8SCMD(ma),
 		Interpreter: a.commnanInterpreter,
 		Triggers: pulumi.Array{
-			pulumi.String(m.KubernetesVersion),
+			pulumi.String(ma[0].KubernetesVersion),
 		},
 	}, a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "20m", Update: "20m"}),
@@ -168,6 +168,19 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 func (a *Applier) basicClient() client.GetConfigurationResultOutput {
 	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
 		ClusterName: pulumi.String(a.name),
+		ClientConfiguration: &client.GetConfigurationClientConfigurationArgs{
+			CaCertificate:     a.clientConfiguration.CaCertificate,
+			ClientKey:         a.clientConfiguration.ClientKey,
+			ClientCertificate: a.clientConfiguration.ClientCertificate,
+		},
+	})
+}
+
+func (a *Applier) NewTalosconfig(endpoints []string, nodes []string) client.GetConfigurationResultOutput {
+	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
+		ClusterName: pulumi.String(a.name),
+		Endpoints:   pulumi.ToStringArray(endpoints),
+		Nodes:       pulumi.ToStringArray(nodes),
 		ClientConfiguration: &client.GetConfigurationClientConfigurationArgs{
 			CaCertificate:     a.clientConfiguration.CaCertificate,
 			ClientKey:         a.clientConfiguration.ClientKey,

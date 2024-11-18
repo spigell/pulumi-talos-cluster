@@ -1,11 +1,14 @@
 package provider
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/provider"
+	pulumi_cluster "github.com/pulumiverse/pulumi-talos/sdk/go/talos/cluster"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
 
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier"
@@ -18,7 +21,7 @@ type Apply struct {
 	pulumi.ResourceState
 	ApplyArgs
 
-	O pulumi.StringOutput
+	Credentials pulumi.StringMapOutput `pulumi:"credentials"`
 }
 
 func ApplyType() string {
@@ -49,7 +52,12 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		return nil, err
 	}
 
-	c := pulumi.All(args.ApplyMachines).ApplyT(func(v []any) (string, error) {
+	a.Credentials = pulumi.All(args.ApplyMachines).ApplyT(func(v []any) (pulumi.StringMapOutput, error) {
+		creds := make(pulumi.StringMap, 0)
+		endpoints := make([]string, 0)
+		nodes := make([]string, 0)
+		controlplanes := make([]*types.MachineInfo, 0)
+
 		ma := v[0].(map[string][]any)
 
 		app := applier.New(ctx, name,
@@ -60,10 +68,14 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		init := ma[tmachine.TypeInit.String()]
 
 		if len(init) == 0 {
-			return "", nil
+			return creds.ToStringMapOutput(), fmt.Errorf("init node must exist")
 		}
 
 		i := types.ParseMachineInfo(init[0].(map[string]any))
+
+		endpoints = append(endpoints, i.NodeIP)
+		controlplanes = append(controlplanes, i)
+
 		app.InitNode = &applier.InitNode{
 			Name: i.MachineID,
 			IP:   i.NodeIP,
@@ -71,43 +83,71 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 		inited, err := app.Init(i)
 		if err != nil {
-			return "", nil
+			return creds.ToStringMapOutput(), err
 		}
 		cp := ma[tmachine.TypeControlPlane.String()]
 		for _, m := range cp {
 			ma, ok := m.(map[string]any)
 			if !ok {
-				return "ERROR", nil
+				return creds.ToStringMapOutput(), fmt.Errorf("expected map[string]any, got: %T", m)
 			}
-			applied, err := app.ApplyTo(types.ParseMachineInfo(ma), inited)
+
+			node := types.ParseMachineInfo(ma)
+			controlplanes = append(controlplanes, node)
+
+			endpoints = append(endpoints, node.NodeIP)
+
+			applied, err := app.ApplyTo(node, inited)
 			if err != nil {
-				return "", nil
+				return creds.ToStringMapOutput(), err
 			}
 			inited = append(inited, applied...)
 		}
+
+		// Nodes contains all nodes, including endpoints
+		nodes = append(nodes, endpoints...)
 
 		workers := ma[tmachine.TypeWorker.String()]
 		for _, m := range workers {
 			ma, ok := m.(map[string]any)
 			if !ok {
-				return "ERROR", nil
+				return creds.ToStringMapOutput(), fmt.Errorf("expected map[string]any, got: %T", m)
 			}
-			applied, err := app.ApplyTo(types.ParseMachineInfo(ma), inited)
+			node := types.ParseMachineInfo(ma)
+
+			nodes = append(nodes, node.NodeIP)
+
+			applied, err := app.ApplyTo(node, inited)
 			if err != nil {
-				return "", nil
+				return creds.ToStringMapOutput(), err
 			}
 			inited = append(inited, applied...)
 		}
 
-		_, err = app.UpgradeK8S(types.ParseMachineInfo(init[0].(map[string]any)), inited)
+		upgraded, err := app.UpgradeK8S(controlplanes, inited)
 		if err != nil {
-			return "", nil
+			return creds.ToStringMapOutput(), err
 		}
 
-		return "", nil
-	}).(pulumi.StringOutput)
+		kubeconfig, err := pulumi_cluster.NewKubeconfig(ctx, types.KubeconfigKey, &pulumi_cluster.KubeconfigArgs{
+			Node: pulumi.String(i.NodeIP),
+			ClientConfiguration: &pulumi_cluster.KubeconfigClientConfigurationArgs{
+				CaCertificate:     args.ClientConfiguration.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey)),
+				ClientKey:         args.ClientConfiguration.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey)),
+				ClientCertificate: args.ClientConfiguration.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey)),
+			},
+		}, pulumi.Parent(a),
+			pulumi.DependsOn(upgraded),
+		)
+		if err != nil {
+			return creds.ToStringMapOutput(), err
+		}
 
-	a.O = c
+		creds[types.TalosconfigKey] = app.NewTalosconfig(endpoints, nodes).TalosConfig()
+		creds[types.KubeconfigKey] = kubeconfig.KubeconfigRaw
+
+		return creds.ToStringMapOutput(), nil
+	}).(pulumi.StringMapOutput)
 
 	if err := ctx.RegisterResourceOutputs(a, pulumi.Map{
 		// ApplyResourceKubeconfigKey: kube,

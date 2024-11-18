@@ -15,6 +15,10 @@ namespace Pulumi.TalosCluster
     [TalosClusterResourceType("talos-cluster:index:Apply")]
     public partial class Apply : global::Pulumi.ComponentResource
     {
+        [Output("credentials")]
+        public Output<Outputs.Credentials> Credentials { get; private set; } = null!;
+
+
         /// <summary>
         /// Create a Apply resource with the given unique name, arguments, and options.
         /// </summary>

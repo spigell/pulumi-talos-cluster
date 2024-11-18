@@ -25,6 +25,7 @@ export class Apply extends pulumi.ComponentResource {
         return obj['__pulumiType'] === Apply.__pulumiType;
     }
 
+    public /*out*/ readonly credentials!: pulumi.Output<outputs.Credentials>;
 
     /**
      * Create a Apply resource with the given unique name, arguments, and options.
@@ -45,7 +46,9 @@ export class Apply extends pulumi.ComponentResource {
             }
             resourceInputs["applyMachines"] = args ? args.applyMachines : undefined;
             resourceInputs["clientConfiguration"] = args ? args.clientConfiguration : undefined;
+            resourceInputs["credentials"] = undefined /*out*/;
         } else {
+            resourceInputs["credentials"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Apply.__pulumiType, name, resourceInputs, opts, true /*remote*/);

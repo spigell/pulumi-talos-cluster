@@ -322,6 +322,37 @@ func (o ClusterMachinesArrayOutput) Index(i pulumi.IntInput) ClusterMachinesOutp
 	}).(ClusterMachinesOutput)
 }
 
+type Credentials struct {
+	// The Kubeconfig for cluster
+	Kubeconfig string `pulumi:"kubeconfig"`
+	// The talosconfig with all nodes and controlplanes as endpoints
+	Talosconfig string `pulumi:"talosconfig"`
+}
+
+type CredentialsOutput struct{ *pulumi.OutputState }
+
+func (CredentialsOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*Credentials)(nil)).Elem()
+}
+
+func (o CredentialsOutput) ToCredentialsOutput() CredentialsOutput {
+	return o
+}
+
+func (o CredentialsOutput) ToCredentialsOutputWithContext(ctx context.Context) CredentialsOutput {
+	return o
+}
+
+// The Kubeconfig for cluster
+func (o CredentialsOutput) Kubeconfig() pulumi.StringOutput {
+	return o.ApplyT(func(v Credentials) string { return v.Kubeconfig }).(pulumi.StringOutput)
+}
+
+// The talosconfig with all nodes and controlplanes as endpoints
+func (o CredentialsOutput) Talosconfig() pulumi.StringOutput {
+	return o.ApplyT(func(v Credentials) string { return v.Talosconfig }).(pulumi.StringOutput)
+}
+
 type MachineInfo struct {
 	// cluster endpoint applied to node
 	ClusterEndpoint *string `pulumi:"clusterEndpoint"`
@@ -490,6 +521,7 @@ func init() {
 	pulumi.RegisterOutputType(ClientConfigurationOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesArrayOutput{})
+	pulumi.RegisterOutputType(CredentialsOutput{})
 	pulumi.RegisterOutputType(MachineInfoOutput{})
 	pulumi.RegisterOutputType(MachineInfoArrayOutput{})
 }

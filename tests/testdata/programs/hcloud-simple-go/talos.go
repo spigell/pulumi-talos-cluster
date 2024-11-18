@@ -10,6 +10,7 @@ import (
 
 type TalosCluster struct {
 	Kubeconfig pulumi.StringOutput
+	Talosconfig pulumi.StringOutput
 }
 
 func NewTalosCluster(ctx *pulumi.Context, cluster *Cluster, servers []*DeployedServer) (*TalosCluster, error) {
@@ -87,9 +88,8 @@ func NewTalosCluster(ctx *pulumi.Context, cluster *Cluster, servers []*DeployedS
 		return nil, fmt.Errorf("error apply: %w", err)
 	}
 
-	ctx.Export("cluster", clu)
-	ctx.Export("apply", apply)
-	ctx.Export("config", clu.ClientConfiguration)
-
-	return &TalosCluster{}, err
+	return &TalosCluster{
+		Kubeconfig: apply.Credentials.Kubeconfig(),
+		Talosconfig: apply.Credentials.Talosconfig(),
+	}, err
 }

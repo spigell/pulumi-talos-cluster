@@ -29,6 +29,17 @@ export interface ClientConfiguration {
     clientKey?: string;
 }
 
+export interface Credentials {
+    /**
+     * The Kubeconfig for cluster
+     */
+    kubeconfig: string;
+    /**
+     * The talosconfig with all nodes and controlplanes as endpoints
+     */
+    talosconfig: string;
+}
+
 export interface MachineInfo {
     /**
      * cluster endpoint applied to node
