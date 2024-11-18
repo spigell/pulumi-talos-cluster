@@ -26,8 +26,8 @@ __debug*
 
 **/examples/**/**/yarn.lock
 **/tests/**/**/yarn.lock
-.current_test_dir
 
+.current_test_dir
 kubeconfig
 talosconfig
 kube.yaml
