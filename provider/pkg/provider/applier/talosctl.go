@@ -109,6 +109,32 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 	}).(pulumi.StringOutput)
 }
 
+// talosctlFastReboot returns command talosctl command for rebooting node.
+// It doesn't wait for good node status.
+func (a *Applier) talosctlFastReboot(m *types.MachineInfo) pulumi.StringOutput {
+	return pulumi.All(a.basicClient().TalosConfig()).ApplyT(func(args []any) (string, error) {
+		talosConfig := args[0].(string)
+
+		talosctl := a.NewTalosctl()
+		if err := talosctl.prepare(talosConfig); err != nil {
+			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
+		}
+
+		// Do not wait for succesfull reboot.
+		talosctlFlags := "--wait --debug --timeout=20s"
+
+		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
+			"%[1]s reboot -n %[2]s -e %[2]s %s",
+			// Talosctl exit with code 1 if timeout exceeded.
+			// This code is allowed.
+			"[ $? == 1 ] && exit 0",
+			// Do not retry this command.
+		}, " ; "), talosctl.BasicCommand, m.NodeIP, talosctlFlags), "1")
+
+		return command, nil
+	}).(pulumi.StringOutput)
+}
+
 func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOutput {
 	return pulumi.All(a.basicClient().TalosConfig()).ApplyT(func(args []any) (string, error) {
 		talosConfig := args[0].(string)

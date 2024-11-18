@@ -16,6 +16,7 @@ type Applier struct {
 	clientConfiguration *machine.ClientConfigurationArgs
 	parent              pulumi.ResourceOption
 	commnanInterpreter  pulumi.StringArray
+	skipInitNode        bool
 
 	InitNode *InitNode
 }
@@ -38,7 +39,14 @@ func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationAr
 	}
 }
 
+func (a *Applier) WithSkipedInitApply(skip bool) *Applier {
+	a.skipInitNode = skip
+
+	return a
+}
+
 func (a *Applier) Init(m *types.MachineInfo) ([]pulumi.Resource, error) {
+	// The Init node is special. We need to init by ourselves.
 	applied, err := a.initApply(m, nil)
 	if err != nil {
 		return nil, err
@@ -67,13 +75,35 @@ func (a *Applier) Init(m *types.MachineInfo) ([]pulumi.Resource, error) {
 	return append(deps, cli...), nil
 }
 
-func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
-	inited, err := a.initApply(m, deps)
-	if err != nil {
-		return deps, fmt.Errorf("failed to unmarshal config from string: %w", err)
+func (a *Applier) InitControlplane(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	if !a.skipInitNode {
+		applied, err := a.initApply(m, deps)
+		if err != nil {
+			return nil, err
+		}
+		deps = append(deps, applied)
 	}
 
-	deps = append(deps, inited)
+	return deps, nil
+}
+
+func (a *Applier) ApplyToControlplane(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	cli, err := a.cliApply(m, deps)
+	if err != nil {
+		return deps, err
+	}
+
+	return append(deps, cli...), nil
+}
+
+func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	if !a.skipInitNode {
+		applied, err := a.initApply(m, deps)
+		if err != nil {
+			return nil, err
+		}
+		deps = append(deps, applied)
+	}
 
 	cli, err := a.cliApply(m, deps)
 	if err != nil {
@@ -140,7 +170,7 @@ func (a *Applier) UpgradeK8S(ma []*types.MachineInfo, deps []pulumi.Resource) ([
 }
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	return machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
+	apply, err := machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
 		Node:                      pulumi.String(m.NodeIP),
 		MachineConfigurationInput: pulumi.String(m.Configuration),
 		// Staged is not supported in maintenance.
@@ -161,6 +191,19 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 		// Generated configuration has a contract with immutable talos version and sometimes new options can be skipped.
 		pulumi.IgnoreChanges([]string{"machineConfigurationInput", "applyMode"}),
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m", Update: "1m"}),
+		pulumi.DependsOn(deps),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	deps = append(deps, apply)
+
+	return local.NewCommand(a.ctx, fmt.Sprintf("%s:reboot:%s", a.name, m.MachineID), &local.CommandArgs{
+		Create:      a.talosctlFastReboot(m),
+		Interpreter: a.commnanInterpreter,
+	}, a.parent,
+		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "5m", Update: "5m"}),
 		pulumi.DependsOn(deps),
 	)
 }

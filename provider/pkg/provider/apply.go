@@ -15,8 +15,6 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
-var ApplyResourceKubeconfigKey = "kubeconfig"
-
 type Apply struct {
 	pulumi.ResourceState
 	ApplyArgs
@@ -31,6 +29,7 @@ func ApplyType() string {
 type ApplyArgs struct {
 	ClientConfiguration pulumi.StringMapOutput `pulumi:"clientConfiguration"`
 	ApplyMachines       pulumi.ArrayMapOutput  `pulumi:"applyMachines"`
+	SkipInitApply       pulumi.BoolOutput      `pulumi:"skipInitApply"`
 }
 
 type ApplyMachines struct {
@@ -52,7 +51,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		return nil, err
 	}
 
-	a.Credentials = pulumi.All(args.ApplyMachines).ApplyT(func(v []any) (pulumi.StringMapOutput, error) {
+	a.Credentials = pulumi.All(args.ApplyMachines, args.SkipInitApply).ApplyT(func(v []any) (pulumi.StringMapOutput, error) {
 		creds := make(pulumi.StringMap, 0)
 		endpoints := make([]string, 0)
 		nodes := make([]string, 0)
@@ -63,12 +62,12 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		app := applier.New(ctx, name,
 			buildClientConfigurationFromMap(args.ClientConfiguration),
 			pulumi.Parent(a),
-		)
+		).WithSkipedInitApply(v[1].(bool))
 
 		init := ma[tmachine.TypeInit.String()]
 
 		if len(init) == 0 {
-			return creds.ToStringMapOutput(), fmt.Errorf("init node must exist")
+			return creds.ToStringMapOutput(), fmt.Errorf("a init node must exist")
 		}
 
 		i := types.ParseMachineInfo(init[0].(map[string]any))
@@ -86,6 +85,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			return creds.ToStringMapOutput(), err
 		}
 		cp := ma[tmachine.TypeControlPlane.String()]
+		controlplanesReady := inited
 		for _, m := range cp {
 			ma, ok := m.(map[string]any)
 			if !ok {
@@ -97,11 +97,19 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 			endpoints = append(endpoints, node.NodeIP)
 
-			applied, err := app.ApplyTo(node, inited)
+			i, err := app.InitControlplane(node, inited)
 			if err != nil {
 				return creds.ToStringMapOutput(), err
 			}
-			inited = append(inited, applied...)
+
+			controlplanesReady = append(controlplanesReady, i...)
+
+			applied, err := app.ApplyToControlplane(node, controlplanesReady)
+			if err != nil {
+				return creds.ToStringMapOutput(), err
+			}
+
+			controlplanesReady = append(controlplanesReady, applied...)
 		}
 
 		// Nodes contains all nodes, including endpoints
@@ -117,14 +125,13 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 			nodes = append(nodes, node.NodeIP)
 
-			applied, err := app.ApplyTo(node, inited)
+			_, err := app.ApplyTo(node, inited)
 			if err != nil {
 				return creds.ToStringMapOutput(), err
 			}
-			inited = append(inited, applied...)
 		}
 
-		upgraded, err := app.UpgradeK8S(controlplanes, inited)
+		upgraded, err := app.UpgradeK8S(controlplanes, controlplanesReady)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}

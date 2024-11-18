@@ -233,6 +233,11 @@
                     "type": "object",
                     "$ref": "#types/talos-cluster:index:clientConfiguration",
                     "description": "Client configuration for bootstrapping and applying resources."
+                },
+                "skipInitApply": {
+                    "type": "boolean",
+                    "description": "skipInitApply indicates that machines will be managed or configured by external tools. \nFor example, it can serve as a source for userdata in cloud provider setups. \nThis option helps accelerate node provisioning. \nDefault is false.",
+                    "default": false
                 }
             },
             "requiredInputs": [

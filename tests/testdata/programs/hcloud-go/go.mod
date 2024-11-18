@@ -3,9 +3,10 @@ module pulumi-talos-hcloud-simple-go
 go 1.23.1
 
 require (
-	github.com/pulumi/pulumi-hcloud/sdk v1.20.5
+	github.com/pulumi/pulumi-hcloud/sdk v1.21.0
 	github.com/pulumi/pulumi/sdk/v3 v3.138.0
 	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-00010101000000-000000000000
+	github.com/spigell/pulumi-talos-cluster/tests v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -90,3 +91,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	lukechampine.com/frand v1.5.1 // indirect
 )
+
+replace github.com/spigell/pulumi-talos-cluster/sdk => ../../../../sdk
+
+replace github.com/spigell/pulumi-talos-cluster/tests => ../../../../tests

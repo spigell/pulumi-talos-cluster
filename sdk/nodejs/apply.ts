@@ -46,6 +46,7 @@ export class Apply extends pulumi.ComponentResource {
             }
             resourceInputs["applyMachines"] = args ? args.applyMachines : undefined;
             resourceInputs["clientConfiguration"] = args ? args.clientConfiguration : undefined;
+            resourceInputs["skipInitApply"] = (args ? args.skipInitApply : undefined) ?? false;
             resourceInputs["credentials"] = undefined /*out*/;
         } else {
             resourceInputs["credentials"] = undefined /*out*/;
@@ -67,4 +68,11 @@ export interface ApplyArgs {
      * Client configuration for bootstrapping and applying resources.
      */
     clientConfiguration: pulumi.Input<inputs.ClientConfigurationArgs>;
+    /**
+     * skipInitApply indicates that machines will be managed or configured by external tools. 
+     * For example, it can serve as a source for userdata in cloud provider setups. 
+     * This option helps accelerate node provisioning. 
+     * Default is false.
+     */
+    skipInitApply?: pulumi.Input<boolean>;
 }

@@ -22,14 +22,23 @@ __all__ = ['ApplyArgs', 'Apply']
 class ApplyArgs:
     def __init__(__self__, *,
                  apply_machines: pulumi.Input['ApplyMachinesArgs'],
-                 client_configuration: pulumi.Input['ClientConfigurationArgs']):
+                 client_configuration: pulumi.Input['ClientConfigurationArgs'],
+                 skip_init_apply: Optional[pulumi.Input[bool]] = None):
         """
         The set of arguments for constructing a Apply resource.
         :param pulumi.Input['ApplyMachinesArgs'] apply_machines: The machine configurations to apply.
         :param pulumi.Input['ClientConfigurationArgs'] client_configuration: Client configuration for bootstrapping and applying resources.
+        :param pulumi.Input[bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
+               For example, it can serve as a source for userdata in cloud provider setups. 
+               This option helps accelerate node provisioning. 
+               Default is false.
         """
         pulumi.set(__self__, "apply_machines", apply_machines)
         pulumi.set(__self__, "client_configuration", client_configuration)
+        if skip_init_apply is None:
+            skip_init_apply = False
+        if skip_init_apply is not None:
+            pulumi.set(__self__, "skip_init_apply", skip_init_apply)
 
     @property
     @pulumi.getter(name="applyMachines")
@@ -55,6 +64,21 @@ class ApplyArgs:
     def client_configuration(self, value: pulumi.Input['ClientConfigurationArgs']):
         pulumi.set(self, "client_configuration", value)
 
+    @property
+    @pulumi.getter(name="skipInitApply")
+    def skip_init_apply(self) -> Optional[pulumi.Input[bool]]:
+        """
+        skipInitApply indicates that machines will be managed or configured by external tools. 
+        For example, it can serve as a source for userdata in cloud provider setups. 
+        This option helps accelerate node provisioning. 
+        Default is false.
+        """
+        return pulumi.get(self, "skip_init_apply")
+
+    @skip_init_apply.setter
+    def skip_init_apply(self, value: Optional[pulumi.Input[bool]]):
+        pulumi.set(self, "skip_init_apply", value)
+
 
 class Apply(pulumi.ComponentResource):
     @overload
@@ -63,6 +87,7 @@ class Apply(pulumi.ComponentResource):
                  opts: Optional[pulumi.ResourceOptions] = None,
                  apply_machines: Optional[pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
                  client_configuration: Optional[pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
+                 skip_init_apply: Optional[pulumi.Input[bool]] = None,
                  __props__=None):
         """
         Apply the configuration to nodes.
@@ -71,6 +96,10 @@ class Apply(pulumi.ComponentResource):
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']] apply_machines: The machine configurations to apply.
         :param pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']] client_configuration: Client configuration for bootstrapping and applying resources.
+        :param pulumi.Input[bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
+               For example, it can serve as a source for userdata in cloud provider setups. 
+               This option helps accelerate node provisioning. 
+               Default is false.
         """
         ...
     @overload
@@ -98,6 +127,7 @@ class Apply(pulumi.ComponentResource):
                  opts: Optional[pulumi.ResourceOptions] = None,
                  apply_machines: Optional[pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
                  client_configuration: Optional[pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
+                 skip_init_apply: Optional[pulumi.Input[bool]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -115,6 +145,9 @@ class Apply(pulumi.ComponentResource):
             if client_configuration is None and not opts.urn:
                 raise TypeError("Missing required property 'client_configuration'")
             __props__.__dict__["client_configuration"] = client_configuration
+            if skip_init_apply is None:
+                skip_init_apply = False
+            __props__.__dict__["skip_init_apply"] = skip_init_apply
             __props__.__dict__["credentials"] = None
         super(Apply, __self__).__init__(
             'talos-cluster:index:Apply',
