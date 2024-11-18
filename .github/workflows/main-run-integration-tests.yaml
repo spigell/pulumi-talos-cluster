@@ -17,9 +17,6 @@ on:
         required: true
         default: 'TestHcloudClusterGo'
 
-env:
-  PULUMI_BACKEND: gs://spigell-infra-talos-pulumi-states
-
 jobs:
   TestHcloudClusterGo:
     if: contains(fromJson('["all", "TestHcloudClusterGo"]'), inputs.test) || github.ref == ${{ github.event.repository.default_branch }}
@@ -28,7 +25,6 @@ jobs:
       name: ${{ inputs.test }}
       runtime: go
       command: make integration_tests_go ${{ inputs.test }}
-      pulumi-backend: ${{ env.PULUMI_BACKEND }}
     secrets:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
@@ -39,7 +35,6 @@ jobs:
       name: ${{ inputs.test }}
       runtime: nodejs
       command: make integration_tests_js ${{ inputs.test }}
-      pulumi-backend: ${{ env.PULUMI_BACKEND }}
     secrets:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
