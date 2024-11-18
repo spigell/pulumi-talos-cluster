@@ -12,7 +12,6 @@ export type Cluster = {
 export type ClusterMachine = {
 	id: string
 	type: talos.MachineTypes
-	bootTalosImageID: string
 	serverType: string
 	privateIP: string
 }
