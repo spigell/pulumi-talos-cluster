@@ -99,9 +99,11 @@ build_nodejs_sdk:: gen_nodejs_sdk
 		cp ${WORKING_DIR}/README.md package.json yarn.lock ./bin/ && \
 		sed -i -e "s/\$${VERSION}/$(VERSION)/g" ./bin/package.json
 
-install_nodejs_sdk:: build_nodejs_sdk
-	yarn unlink pulumi-${PACK} || true
+install_nodejs_sdk:: build_nodejs_sdk link_nodejs_sdk
+
+link_nodejs_sdk::
 	yarn link --cwd ${WORKING_DIR}/sdk/nodejs/bin
+
 
 
 # Python SDK
