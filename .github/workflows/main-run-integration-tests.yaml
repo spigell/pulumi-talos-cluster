@@ -24,7 +24,7 @@ jobs:
     with:
       name: ${{ inputs.test }}
       runtime: go
-      command: make integration_tests_go ${{ inputs.test }}
+      command: make integration_tests_go TestHcloudClusterGo
     secrets:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
@@ -34,7 +34,7 @@ jobs:
     with:
       name: ${{ inputs.test }}
       runtime: nodejs
-      command: make integration_tests_js ${{ inputs.test }}
+      command: make integration_tests_nodejs TestHcloudClusterJS
     secrets:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
