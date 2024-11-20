@@ -49,9 +49,11 @@ func (a *Applier) talosctlApplyCMD(m *types.MachineInfo) pulumi.StringOutput {
 		ip := args[2].(string)
 		machineConfig := args[3].(string)
 
+		name := "apply-config"
+
 		// Initialize the Talos CLI and prepare a temporary home directory.
 		var config v1alpha1.Config
-		talosctl := a.NewTalosctl()
+		talosctl := a.NewTalosctl(name + "-" + m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -109,9 +111,9 @@ func (a *Applier) talosctlApplyCMD(m *types.MachineInfo) pulumi.StringOutput {
 
 		// Construct the Talos CLI command to apply the configuration to the machine
 		// `withBashRetry` ensures command retry in case the machine isn't ready yet
-		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
+		command := talosctl.withCleanCommand(withBashRetry(fmt.Sprintf(strings.Join([]string{
 			"%[1]s apply-config -n %[2]s -e %[2]s -f %s",
-		}, " && "), talosctl.BasicCommand, ip, configPath), "5")
+		}, " && "), talosctl.BasicCommand, ip, configPath), "5"))
 
 		return command, nil
 	}).(pulumi.StringOutput)

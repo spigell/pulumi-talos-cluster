@@ -27,9 +27,9 @@ type TalosctlHome struct {
 	Dir string
 }
 
-func (a *Applier) NewTalosctl() *Talosctl {
+func (a *Applier) NewTalosctl(name string) *Talosctl {
 	binary := "talosctl"
-	home := filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-for-%s", a.name))
+	home := filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-%s-step-%s", a.name, name))
 
 	return &Talosctl{
 		Binary:       binary,
@@ -96,14 +96,14 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 			return "", fmt.Errorf("failed to unmarshal config from string: %w", err)
 		}
 
-		talosctl := a.NewTalosctl()
+		talosctl := a.NewTalosctl("upgrade-" + m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
 
-		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
+		command := talosctl.withCleanCommand(withBashRetry(fmt.Sprintf(strings.Join([]string{
 			"%[1]s upgrade --debug -n %[2]s -e %[2]s --image %s",
-		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "5")
+		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "5"))
 
 		return command, nil
 	}).(pulumi.StringOutput)
@@ -115,7 +115,9 @@ func (a *Applier) talosctlFastReboot(m *types.MachineInfo) pulumi.StringOutput {
 	return pulumi.All(a.basicClient().TalosConfig()).ApplyT(func(args []any) (string, error) {
 		talosConfig := args[0].(string)
 
-		talosctl := a.NewTalosctl()
+		name := "reboot"
+
+		talosctl := a.NewTalosctl(name + "-" + m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -123,13 +125,13 @@ func (a *Applier) talosctlFastReboot(m *types.MachineInfo) pulumi.StringOutput {
 		// Do not wait for succesfull reboot.
 		talosctlFlags := "--wait --debug --timeout=20s"
 
-		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
-			"%[1]s reboot -n %[2]s -e %[2]s %s",
+		command := talosctl.withCleanCommand(withBashRetry(fmt.Sprintf(strings.Join([]string{
+			"%[1]s %[2]s -n %[3]s -e %[3]s %s",
 			// Talosctl exit with code 1 if timeout exceeded.
 			// This code is allowed.
-			"[ $? == 1 ] && exit 0",
+			"[ $? == 1 ] && true",
 			// Do not retry this command.
-		}, " ; "), talosctl.BasicCommand, m.NodeIP, talosctlFlags), "1")
+		}, " ; "), talosctl.BasicCommand, name, m.NodeIP, talosctlFlags), "1"))
 
 		return command, nil
 	}).(pulumi.StringOutput)
@@ -139,7 +141,9 @@ func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOu
 	return pulumi.All(a.basicClient().TalosConfig()).ApplyT(func(args []any) (string, error) {
 		talosConfig := args[0].(string)
 
-		talosctl := a.NewTalosctl()
+		name := "upgrade-k8s"
+
+		talosctl := a.NewTalosctl(name + "-" + ma[0].MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -151,9 +155,9 @@ func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOu
 			ips = append(ips, m.NodeIP)
 		}
 
-		command := withBashRetry(fmt.Sprintf(strings.Join([]string{
-			"%[1]s upgrade-k8s -n %[2]s -e %[2]s --to %s %s",
-		}, " && "), talosctl.BasicCommand, strings.Join(ips, " -e "), ma[0].KubernetesVersion, talosctlFlags), "2")
+		command := talosctl.withCleanCommand(withBashRetry(fmt.Sprintf(strings.Join([]string{
+			"%[1]s %[2]s -n %[3]s -e %[3]s --to %s %s",
+		}, " && "), talosctl.BasicCommand, name, strings.Join(ips, " -e "), ma[0].KubernetesVersion, talosctlFlags), "2"))
 
 		return command, nil
 	}).(pulumi.StringOutput)
@@ -214,7 +218,7 @@ func withBashRetry(cmd string, retryCount string) string {
 		"done",
 		// Exiting with 0 if command succeeded.
 		// Otherwise exit with 10 exit code.
-		"[ $n -ge %[1]s ] && exit 10 || exit 0",
+		"[ $n -ge %[1]s ] && exit 10 || true",
 	}, " ; "), retryCount, cmd)
 }
 
@@ -228,6 +232,13 @@ func withBashRetryAndHiddenStdErr(cmd string) string {
 		"done",
 		// Exiting with 0 if command succeeded.
 		// Otherwise exit with 10 exit code.
-		"[ $n -ge 5 ] && exit 10 || exit 0",
+		"[ $n -ge 5 ] && exit 10 || true",
 	}, " ; "), cmd)
+}
+
+func (t *Talosctl) withCleanCommand(cmd string) string {
+	return fmt.Sprintf(strings.Join([]string{
+		"%s",
+		"rm -rf %s",
+	}, " ; "), cmd, t.Home.Dir)
 }
