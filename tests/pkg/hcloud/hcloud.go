@@ -1,16 +1,19 @@
 package hcloud
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
 	"strconv"
 
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/spigell/pulumi-talos-cluster/tests/pkg/cluster"
+	"golang.org/x/crypto/ssh"
 )
 
 const (
-	sshPubKey         = "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBJgyB/EEX/fsSICjyHha9Pnt1IM7brDsFelakF1hTNdKjA+qdvojKWSNraGN81ewf4nxexV6E6e5fEeyr2IIcAQ="
 	location          = "nbg1"
 	datacenter        = "nbg1-dc3"
 	testImageSelector = "os=talos,testing=true"
@@ -41,9 +44,14 @@ type Deployed struct {
 func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error) {
 	servers := make([]*Server, 0)
 
+	pubKey, err := generateECDSAPubKey()
+	if err != nil {
+		return nil, err
+	}
+
 	sshKey, err := hcloud.NewSshKey(ctx, "sshKey", &hcloud.SshKeyArgs{
-		PublicKey: pulumi.String(sshPubKey),
-	})
+		PublicKey: pulumi.String(pubKey),
+	}, pulumi.IgnoreChanges([]string{"publicKey"}))
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +170,10 @@ func (h *Hetzner) Up() (*Deployed, error) {
 	for _, s := range h.Servers {
 		s.args.Image = pulumi.Sprintf("%d", image.Id)
 		// Define the server
-		server, err := hcloud.NewServer(h.ctx, s.ID, s.args, pulumi.DependsOn(deps))
+		server, err := hcloud.NewServer(h.ctx, s.ID, s.args,
+			pulumi.DependsOn(deps),
+			pulumi.IgnoreChanges([]string{"sshKeys"}),
+		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating server: %w", err)
 		}
@@ -184,4 +195,22 @@ func (s *Server) WithUserdata(userdata pulumi.StringOutput) *Server {
 	s.args.UserData = userdata
 
 	return s
+}
+
+
+// generatePrivateKey creates a RSA Private Key of specified byte size.
+func generateECDSAPubKey() (string, error) {
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return "", err
+	}
+
+	publicRsaKey, err := ssh.NewPublicKey(&privateKey.PublicKey)
+	if err != nil {
+		return "", err
+	}
+
+	pubKeyBytes := ssh.MarshalAuthorizedKey(publicRsaKey)
+
+	return string(pubKeyBytes), nil
 }
