@@ -197,7 +197,6 @@ func (s *Server) WithUserdata(userdata pulumi.StringOutput) *Server {
 	return s
 }
 
-
 // generatePrivateKey creates a RSA Private Key of specified byte size.
 func generateECDSAPubKey() (string, error) {
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
