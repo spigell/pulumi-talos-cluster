@@ -103,7 +103,7 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 
 		command := talosctl.withCleanCommand(withBashRetry(fmt.Sprintf(strings.Join([]string{
 			"%[1]s upgrade --debug -n %[2]s -e %[2]s --image %s",
-		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "5"))
+		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "10"))
 
 		return command, nil
 	}).(pulumi.StringOutput)

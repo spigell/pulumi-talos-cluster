@@ -15,8 +15,7 @@
     },
     "dependencies": {
         "@pulumi/command": "v1.0.1",
-        "@pulumi/pulumi": "^3.0.0",
-        "@pulumiverse/talos": "v0.4.1"
+        "@pulumi/pulumi": "^3.0.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
@@ -26,6 +25,5 @@
         "resource": true,
         "name": "talos-cluster",
         "server": "github://api.github.com/spigell/pulumi-talos-cluster"
-    },
-    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+    }
 }

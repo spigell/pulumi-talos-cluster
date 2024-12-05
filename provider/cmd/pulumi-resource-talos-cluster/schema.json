@@ -98,10 +98,6 @@
         },
         "talos-cluster:index:clusterMachines": {
             "properties": {
-                "clusterEndpoint": {
-                    "type": "string",
-                    "description": "cluster endpoint generated"
-                },
                 "configPatches": {
                     "type": "string",
                     "description": "User-provided machine configuration to apply. \nMust be a valid YAML string. \nFor structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/"
@@ -123,8 +119,8 @@
                 },
                 "talosImage": {
                     "type": "string",
-                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.",
-                    "default": "ghcr.io/siderolabs/installer:v1.8.2"
+                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.0-beta.0.",
+                    "default": "ghcr.io/siderolabs/installer:v1.9.0-beta.0"
                 }
             },
             "type": "object",
@@ -294,8 +290,8 @@
                 },
                 "talosVersionContract": {
                     "type": "string",
-                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.8.2.",
-                    "default": "v1.8.2"
+                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.9.0-beta.0.",
+                    "default": "v1.9.0-beta.0"
                 }
             },
             "requiredInputs": [
