@@ -12,6 +12,7 @@ on:
         options:
           - TestHcloudClusterGo
           - TestHcloudClusterJS
+          - TestHcloudHAClusterGo
           - all
         description: "The test to run. Defaults to `all`"
         required: true
@@ -25,6 +26,16 @@ jobs:
       name: ${{ inputs.test }}
       runtime: go
       command: make integration_tests_go TEST=TestHcloudClusterGo
+    secrets:
+      google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+      hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
+  TestHcloudHAClusterGo:
+    if: contains(fromJson('["all", "TestHcloudHAClusterGo"]'), inputs.test) || github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/reuse-run-integration-tests.yaml
+    with:
+      name: ${{ inputs.test }}
+      runtime: go
+      command: make integration_tests_go TEST=TestHcloudHAClusterGo
     secrets:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}

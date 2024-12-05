@@ -31,10 +31,6 @@ export interface ClientConfigurationArgs {
 
 export interface ClusterMachinesArgs {
     /**
-     * cluster endpoint generated
-     */
-    clusterEndpoint?: pulumi.Input<string>;
-    /**
      * User-provided machine configuration to apply. 
      * Must be a valid YAML string. 
      * For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
@@ -55,7 +51,7 @@ export interface ClusterMachinesArgs {
     /**
      * Talos OS installation image. 
      * Used in the `install` configuration and set via CLI. 
-     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.
+     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.0-beta.0.
      */
     talosImage?: pulumi.Input<string>;
 }
@@ -65,7 +61,7 @@ export interface ClusterMachinesArgs {
 export function clusterMachinesArgsProvideDefaults(val: ClusterMachinesArgs): ClusterMachinesArgs {
     return {
         ...val,
-        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.8.2",
+        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.9.0-beta.0",
     };
 }
 

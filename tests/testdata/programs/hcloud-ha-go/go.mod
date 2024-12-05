@@ -1,11 +1,13 @@
-module pulumi-talos-hcloud-simple-go
+module pulumi-talos-hcloud-ha-go
 
 go 1.23.1
 
+toolchain go1.23.3
+
 require (
-	github.com/pulumi/pulumi-hcloud/sdk v1.20.5
-	github.com/pulumi/pulumi/sdk/v3 v3.138.0
-	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-00010101000000-000000000000
+	github.com/pulumi/pulumi/sdk/v3 v3.139.0
+	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20241118134831-1c5d2fb584b6
+	github.com/spigell/pulumi-talos-cluster/tests v0.0.0-20241118134831-1c5d2fb584b6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -20,7 +22,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/charmbracelet/bubbles v0.20.0 // indirect
-	github.com/charmbracelet/bubbletea v1.2.1 // indirect
+	github.com/charmbracelet/bubbletea v1.2.2 // indirect
 	github.com/charmbracelet/lipgloss v1.0.0 // indirect
 	github.com/charmbracelet/x/ansi v0.4.5 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
@@ -40,7 +42,7 @@ require (
 	github.com/grpc-ecosystem/grpc-opentracing v0.0.0-20180507213350-8e809c8a8645 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/hcl/v2 v2.22.0 // indirect
+	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
@@ -61,6 +63,7 @@ require (
 	github.com/pkg/term v1.1.0 // indirect
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
 	github.com/pulumi/esc v0.11.1 // indirect
+	github.com/pulumi/pulumi-hcloud/sdk v1.21.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
@@ -84,9 +87,9 @@ require (
 	golang.org/x/term v0.26.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
 	golang.org/x/tools v0.27.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241113202542-65e8d215514f // indirect
 	google.golang.org/grpc v1.68.0 // indirect
-	google.golang.org/protobuf v1.35.1 // indirect
+	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	lukechampine.com/frand v1.5.1 // indirect
 )

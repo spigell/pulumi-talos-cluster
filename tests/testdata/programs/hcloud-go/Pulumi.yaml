@@ -1,4 +1,4 @@
-name: pulumi-talos-hcloud-simple-go
+name: pulumi-talos-hcloud-go
 runtime: go
 description: A minimal Go Pulumi program
 config:

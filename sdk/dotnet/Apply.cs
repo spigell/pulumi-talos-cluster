@@ -59,8 +59,18 @@ namespace Pulumi.TalosCluster
         [Input("clientConfiguration", required: true)]
         public Input<Inputs.ClientConfigurationArgs> ClientConfiguration { get; set; } = null!;
 
+        /// <summary>
+        /// skipInitApply indicates that machines will be managed or configured by external tools. 
+        /// For example, it can serve as a source for userdata in cloud provider setups. 
+        /// This option helps accelerate node provisioning. 
+        /// Default is false.
+        /// </summary>
+        [Input("skipInitApply")]
+        public Input<bool>? SkipInitApply { get; set; }
+
         public ApplyArgs()
         {
+            SkipInitApply = false;
         }
         public static new ApplyArgs Empty => new ApplyArgs();
     }

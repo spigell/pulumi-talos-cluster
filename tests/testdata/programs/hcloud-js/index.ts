@@ -27,7 +27,7 @@ cluster.machines.forEach(v => machines.push({
 	machineType: v.type
 }))
 
-export const clu = new talos.Cluster(cluster.name, {
+const clu = new talos.Cluster(cluster.name, {
 	kubernetesVersion: cluster.kubernetesVersion,
 	clusterEndpoint: pulumi.interpolate `https://${servers[0].ip}:6443`,
 	clusterName: cluster.name,

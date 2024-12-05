@@ -49,6 +49,16 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 			},
 			Description: "The machine configurations to apply.",
 		},
+		"skipInitApply": {
+			TypeSpec: schema.TypeSpec{
+				Type: "boolean",
+			},
+			Description: "skipInitApply indicates that machines will be managed or configured by external tools. \n" +
+				"For example, it can serve as a source for userdata in cloud provider setups. \n" +
+				"This option helps accelerate node provisioning. \n" +
+				"Default is false.",
+			Default: false,
+		},
 		provider.ClusterResourceOutputsClientConfiguration: ClusterProperties()[provider.ClusterResourceOutputsClientConfiguration],
 	}
 }

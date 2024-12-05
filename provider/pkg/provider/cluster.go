@@ -120,6 +120,10 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		case tmachine.TypeWorker.String():
 			workers = append(workers, m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration()))
 		case tmachine.TypeInit.String():
+			if len(c.Machines) == 1 {
+				return nil, fmt.Errorf("only one init node should present. Please use 'controlplane' type for %s", m.MachineID)
+			}
+
 			c.Machines[tmachine.TypeInit.String()] = pulumi.Array{m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration())}
 		default:
 			return nil, fmt.Errorf("unknown machine type %s", m.MachineType)
