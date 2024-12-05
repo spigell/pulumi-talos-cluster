@@ -111,6 +111,7 @@ func main() {
 
 		created, err := talos.NewCluster(ctx, clu.Name, &talos.ClusterArgs{
 			ClusterEndpoint:   pulumi.Sprintf("https://%s:6443", up.Servers[0].IP),
+			TalosVersionContract: pulumi.String("v1.8.3"),
 			ClusterName:       clu.Name,
 			KubernetesVersion: pulumi.String(clu.KubernetesVersion),
 			ClusterMachines:   machines,
