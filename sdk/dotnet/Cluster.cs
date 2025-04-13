@@ -101,7 +101,7 @@ namespace Pulumi.TalosCluster
         /// Used in NewSecrets() and GetConfigurationOutput() resources. 
         /// This property is immutable to prevent version conflicts across provider updates. 
         /// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-        /// The default value is based on gendata.VersionTag, current: v1.8.2.
+        /// The default value is based on gendata.VersionTag, current: v1.9.5.
         /// </summary>
         [Input("talosVersionContract")]
         public Input<string>? TalosVersionContract { get; set; }
@@ -109,7 +109,7 @@ namespace Pulumi.TalosCluster
         public ClusterArgs()
         {
             KubernetesVersion = "v1.31.0";
-            TalosVersionContract = "v1.8.2";
+            TalosVersionContract = "v1.9.5";
         }
         public static new ClusterArgs Empty => new ClusterArgs();
     }

@@ -13,12 +13,6 @@ namespace Pulumi.TalosCluster.Inputs
     public sealed class ClusterMachinesArgs : global::Pulumi.ResourceArgs
     {
         /// <summary>
-        /// cluster endpoint generated
-        /// </summary>
-        [Input("clusterEndpoint")]
-        public Input<string>? ClusterEndpoint { get; set; }
-
-        /// <summary>
         /// User-provided machine configuration to apply. 
         /// Must be a valid YAML string. 
         /// For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
@@ -47,14 +41,14 @@ namespace Pulumi.TalosCluster.Inputs
         /// <summary>
         /// Talos OS installation image. 
         /// Used in the `install` configuration and set via CLI. 
-        /// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.8.2.
+        /// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.5.
         /// </summary>
         [Input("talosImage")]
         public Input<string>? TalosImage { get; set; }
 
         public ClusterMachinesArgs()
         {
-            TalosImage = "ghcr.io/siderolabs/installer:v1.8.2";
+            TalosImage = "ghcr.io/siderolabs/installer:v1.9.5";
         }
         public static new ClusterMachinesArgs Empty => new ClusterMachinesArgs();
     }

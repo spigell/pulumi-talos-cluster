@@ -105,6 +105,7 @@ func main() {
 				MachineId:     server.ID,
 				NodeIp:        server.IP,
 				MachineType:   talos.MachineTypes(m.Type),
+				TalosImage: pulumi.String("ghcr.io/siderolabs/installer:v1.9.2"),
 				ConfigPatches: pulumi.String(rendered),
 			})
 		}

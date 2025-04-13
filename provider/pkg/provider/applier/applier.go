@@ -130,7 +130,7 @@ func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource) ([]pulu
 	}
 	deps = append(deps, set)
 
-	cmd := a.talosctlApplyCMD(m)
+	cmd := a.talosctlApplyCMD(m, deps)
 	apply, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-apply:%s", a.name, m.MachineID), &local.CommandArgs{
 		Create: cmd,
 		Triggers: pulumi.Array{

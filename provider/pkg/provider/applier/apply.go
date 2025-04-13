@@ -41,7 +41,7 @@ func NewK8SImages(config *v1alpha1.Config) *K8SImages {
 // This function merges base machine configuration with user-provided patches and ensures
 // that Kubernetes image versions in the configuration align with the currently running
 // versions to prevent accidental downgrades (Talos does not support downgrades via specifying images in the config).
-func (a *Applier) talosctlApplyCMD(m *types.MachineInfo) pulumi.StringOutput {
+func (a *Applier) talosctlApplyCMD(m *types.MachineInfo, deps []pulumi.Resource) pulumi.StringOutput {
 	return pulumi.All(a.basicClient().TalosConfig(), m.UserConfigPatches, m.NodeIP, m.Configuration).ApplyT(func(args []any) (string, error) {
 		// Unpack asynchronous values required for the configuration.
 		talosConfig := args[0].(string)
@@ -53,7 +53,7 @@ func (a *Applier) talosctlApplyCMD(m *types.MachineInfo) pulumi.StringOutput {
 
 		// Initialize the Talos CLI and prepare a temporary home directory.
 		var config v1alpha1.Config
-		talosctl := a.NewTalosctl(name + "-" + m.MachineID)
+		talosctl := a.NewTalosctl(a.ctx, name + "-" + m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -74,20 +74,15 @@ func (a *Applier) talosctlApplyCMD(m *types.MachineInfo) pulumi.StringOutput {
 		// In the dry-run mode this values will be used in initial configuration files.
 		newK8SImages := NewK8SImages(&config)
 
-		// If not in dry-run mode, retrieve the current machine configuration.
-		// This function will run in async way with retry so we hope that the init node will be ready soon.
-		// Not very safe way.
-		if !a.ctx.DryRun() {
-			current, err := talosctl.getCurrentMachineConfig(a.InitNode.IP)
-			if err != nil {
-				return "", fmt.Errorf("failed to get current machine info: %w", err)
-			}
-
-			// Extract current images to use instead of any potential downgraded images
-			oldK8SImages := NewK8SImages(current)
-			a.ctx.Log.Debug(fmt.Sprintf("overwriting k8s images version %+v with %+v", newK8SImages, oldK8SImages), nil)
-			newK8SImages = oldK8SImages
+		current, err := talosctl.getCurrentMachineConfig(a.InitNode.IP, deps)
+		if err != nil {
+			return "", fmt.Errorf("failed to get current machine info: %w", err)
 		}
+
+		// Extract current images to use instead of any potential downgraded images
+		oldK8SImages := NewK8SImages(current)
+		a.ctx.Log.Debug(fmt.Sprintf("overwriting k8s images version %+v with %+v", newK8SImages, oldK8SImages), nil)
+		newK8SImages = oldK8SImages
 
 		config.MachineConfig.MachineKubelet.KubeletImage = newK8SImages.Kubelet
 		if config.MachineConfig.MachineType == machine.TypeControlPlane.String() || config.MachineConfig.MachineType == machine.TypeInit.String() {

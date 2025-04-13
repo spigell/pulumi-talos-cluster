@@ -3,10 +3,10 @@ package applier
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
@@ -18,6 +18,7 @@ const (
 )
 
 type Talosctl struct {
+	ctx *pulumi.Context
 	Binary       string
 	BasicCommand string
 	Home         *TalosctlHome
@@ -27,11 +28,12 @@ type TalosctlHome struct {
 	Dir string
 }
 
-func (a *Applier) NewTalosctl(name string) *Talosctl {
+func (a *Applier) NewTalosctl(ctx *pulumi.Context, name string) *Talosctl {
 	binary := "talosctl"
 	home := filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-%s-step-%s", a.name, name))
 
 	return &Talosctl{
+		ctx: ctx,
 		Binary:       binary,
 		BasicCommand: fmt.Sprintf("%s --talosconfig %s/%s", binary, home, TalosctlConfigName),
 		Home: &TalosctlHome{
@@ -47,18 +49,22 @@ type MachineConfig struct {
 
 // getCurrentMachineConfig retrieves current machineconfig fron running cluster.
 // BEWARE: this function should be used with caution. Do not call unprovised nodes!
-func (t *Talosctl) getCurrentMachineConfig(node string) (*v1alpha1.Config, error) {
+func (t *Talosctl) getCurrentMachineConfig(node string, deps []pulumi.Resource) (*v1alpha1.Config, error) {
 	command := withBashRetryAndHiddenStdErr(fmt.Sprintf("%s get machineconfig -n %[2]s -e %[2]s -oyaml",
 		t.BasicCommand, node,
 	))
-	cmd := exec.Command("bash", "-c", command)
-	output, err := cmd.CombinedOutput()
+	cmd, err := local.Run(t.ctx, &local.RunArgs{
+		Command: command,
+	}, pulumi.DependsOn(deps))
+
+	output := cmd.Stdout
+
 	if err != nil {
 		return nil, fmt.Errorf("error executing command: %w, output: %s", err, string(output))
 	}
 
 	var config MachineConfig
-	if err := yaml.Unmarshal(output, &config); err != nil {
+	if err := yaml.Unmarshal([]byte(output), &config); err != nil {
 		return nil, fmt.Errorf("error parsing YAML output: %w", err)
 	}
 
@@ -96,7 +102,7 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 			return "", fmt.Errorf("failed to unmarshal config from string: %w", err)
 		}
 
-		talosctl := a.NewTalosctl("upgrade-" + m.MachineID)
+		talosctl := a.NewTalosctl(a.ctx, "upgrade-" + m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -117,7 +123,7 @@ func (a *Applier) talosctlFastReboot(m *types.MachineInfo) pulumi.StringOutput {
 
 		name := "reboot"
 
-		talosctl := a.NewTalosctl(name + "-" + m.MachineID)
+		talosctl := a.NewTalosctl(a.ctx, name + "-" + m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -143,7 +149,7 @@ func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOu
 
 		name := "upgrade-k8s"
 
-		talosctl := a.NewTalosctl(name + "-" + ma[0].MachineID)
+		talosctl := a.NewTalosctl(a.ctx, name + "-" + ma[0].MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -164,7 +170,7 @@ func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOu
 }
 
 func mergeYAML(yaml1, yaml2 string) (string, error) {
-	var data1, data2 map[string]interface{}
+	var data1, data2 map[string]any
 
 	// Unmarshal first YAML string
 	if err := yaml.Unmarshal([]byte(yaml1), &data1); err != nil {
