@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	location          = "nbg1"
-	datacenter        = "nbg1-dc3"
+	defaultDatacenter        = "nbg1-dc3"
 	testImageSelector = "os=talos,testing=true"
 )
 
@@ -57,9 +56,13 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 	}
 
 	for _, s := range cluster.Machines {
+		if s.Datacenter == "" {
+			s.Datacenter = defaultDatacenter
+		}
+
 		ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", s.ID), &hcloud.PrimaryIpArgs{
 			Name:         pulumi.Sprintf("%s-%s-ipv4", cluster.Name, s.ID),
-			Datacenter:   pulumi.String(datacenter),
+			Datacenter:   pulumi.String(s.Datacenter),
 			Type:         pulumi.String("ipv4"),
 			AssigneeType: pulumi.String("server"),
 			AutoDelete:   pulumi.Bool(true),
@@ -70,7 +73,7 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 
 		ipv6, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv6", s.ID), &hcloud.PrimaryIpArgs{
 			Name:         pulumi.Sprintf("%s-%s-ipv6", cluster.Name, s.ID),
-			Datacenter:   pulumi.String(datacenter),
+			Datacenter:   pulumi.String(s.Datacenter),
 			Type:         pulumi.String("ipv6"),
 			AssigneeType: pulumi.String("server"),
 			AutoDelete:   pulumi.Bool(true),
@@ -78,6 +81,7 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 		if err != nil {
 			return nil, err
 		}
+
 
 		servers = append(servers, &Server{
 			ID:        s.ID,
@@ -88,7 +92,7 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 					sshKey.ID(),
 				},
 				ServerType: pulumi.String(s.ServerType),
-				Datacenter: pulumi.String(datacenter),
+				Datacenter: pulumi.String(s.Datacenter),
 				PublicNets: hcloud.ServerPublicNetArray{
 					&hcloud.ServerPublicNetArgs{
 						//nolint: gocritic // this is the only way to convert string to int

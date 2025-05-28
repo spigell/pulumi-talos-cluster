@@ -197,6 +197,7 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 		return nil, err
 	}
 
+
 	deps = append(deps, apply)
 
 	return local.NewCommand(a.ctx, fmt.Sprintf("%s:reboot:%s", a.name, m.MachineID), &local.CommandArgs{

@@ -12,5 +12,7 @@ type Machine struct {
 	ID         string
 	Type       string
 	ServerType string
+	TalosImage string
 	PrivateIP  string
+	Datacenter string
 }

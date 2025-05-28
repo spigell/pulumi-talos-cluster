@@ -86,6 +86,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		}
 		cp := ma[tmachine.TypeControlPlane.String()]
 		controlplanesReady := inited
+
 		for _, m := range cp {
 			ma, ok := m.(map[string]any)
 			if !ok {

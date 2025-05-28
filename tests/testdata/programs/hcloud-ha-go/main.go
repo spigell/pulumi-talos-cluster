@@ -27,18 +27,21 @@ var (
 				Type:       string(talos.MachineTypesControlplane),
 				ServerType: "cx22",
 				PrivateIP:  "10.10.10.2",
+				Datacenter:   "fsn1-dc14",
 			},
 			{
 				ID:         "controlplane-3",
 				Type:       string(talos.MachineTypesControlplane),
 				ServerType: "cx22",
 				PrivateIP:  "10.10.10.10",
+				Datacenter:   "fsn1-dc14",
 			},
 			{
 				ID:         "worker-1",
 				Type:       "worker",
 				ServerType: "cx22",
 				PrivateIP:  "10.10.10.3",
+				Datacenter:   "fsn1-dc14",
 			},
 		},
 	}

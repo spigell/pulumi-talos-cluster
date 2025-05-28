@@ -68,11 +68,11 @@ jobs:
           skip-cache: true
           working-directory: provider
           args: --timeout=10m --exclude schema.go
-          version: v1.62.0
+          version: v2.1.6
       - uses: golangci/golangci-lint-action@v6
         name: Run the linter (tests)
         with:
           skip-cache: true
           working-directory: tests
           args: --timeout=10m
-          version: v1.62.0
+          version: v2.1.6

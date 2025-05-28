@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  TALOS_VERSION: 'v1.8.3'
+  TALOS_VERSION: 'v1.10.0'
 
 jobs:
   build-hcloud-image:

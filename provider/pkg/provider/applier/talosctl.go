@@ -109,7 +109,7 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 
 		command := talosctl.withCleanCommand(withBashRetry(fmt.Sprintf(strings.Join([]string{
 			"%[1]s upgrade --debug -n %[2]s -e %[2]s --image %s",
-		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "10"))
+		}, " && "), talosctl.BasicCommand, ip, config.MachineConfig.Install().Image()), "30"))
 
 		return command, nil
 	}).(pulumi.StringOutput)
@@ -195,13 +195,13 @@ func mergeYAML(yaml1, yaml2 string) (string, error) {
 }
 
 // mergeMaps merges map2 into map1 recursively, with map2 overwriting map1's values for duplicate keys.
-func mergeMaps(map1, map2 map[string]interface{}) map[string]interface{} {
+func mergeMaps(map1, map2 map[string]any) map[string]any {
 	for k, v := range map2 {
-		if vMap, ok := v.(map[string]interface{}); ok {
+		if vMap, ok := v.(map[string]any); ok {
 			// Handle nested maps by recursive merging
 			if map1[k] == nil {
 				map1[k] = vMap
-			} else if map1Map, ok := map1[k].(map[string]interface{}); ok {
+			} else if map1Map, ok := map1[k].(map[string]any); ok {
 				map1[k] = mergeMaps(map1Map, vMap)
 			} else {
 				map1[k] = vMap
