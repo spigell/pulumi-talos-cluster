@@ -14,7 +14,7 @@ var (
 			PrivateNetwork:    "10.10.10.0/24",
 			PrivateSubnetwork: "10.10.10.0/25",
 			KubernetesVersion: "v1.31.0",
-			TalosImage: "ghcr.io/siderolabs/installer:v10.0.3",
+			TalosImage: "ghcr.io/siderolabs/installer:v1.10.2",
 			Machines: []*cluster.Machine{
 				{
 					ID:       "controlplane-1",
