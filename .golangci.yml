@@ -1,4 +1,5 @@
 version: "2"
+
 run:
   build-tags:
     - bench
@@ -58,9 +59,7 @@ linters:
           - gosec
         path: _test\.go
     paths:
-      - third_party$
-      - builtin$
-      - examples$
+      - provider/cmd/pulumi-resource-talos-cluster/schema.json$
 formatters:
   enable:
     - gofmt
