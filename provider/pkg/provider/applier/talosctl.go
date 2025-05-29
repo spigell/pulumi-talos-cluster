@@ -18,7 +18,7 @@ const (
 )
 
 type Talosctl struct {
-	ctx *pulumi.Context
+	ctx          *pulumi.Context
 	Binary       string
 	BasicCommand string
 	Home         *TalosctlHome
@@ -33,7 +33,7 @@ func (a *Applier) NewTalosctl(ctx *pulumi.Context, name string) *Talosctl {
 	home := filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-%s-step-%s", a.name, name))
 
 	return &Talosctl{
-		ctx: ctx,
+		ctx:          ctx,
 		Binary:       binary,
 		BasicCommand: fmt.Sprintf("%s --talosconfig %s/%s", binary, home, TalosctlConfigName),
 		Home: &TalosctlHome{
@@ -60,7 +60,7 @@ func (t *Talosctl) getCurrentMachineConfig(node string, deps []pulumi.Resource) 
 	output := cmd.Stdout
 
 	if err != nil {
-		return nil, fmt.Errorf("error executing command: %w, output: %s", err, string(output))
+		return nil, fmt.Errorf("error executing command: %w, output: %s", err, output)
 	}
 
 	var config MachineConfig
@@ -102,7 +102,7 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo) pulumi.StringOutput {
 			return "", fmt.Errorf("failed to unmarshal config from string: %w", err)
 		}
 
-		talosctl := a.NewTalosctl(a.ctx, "upgrade-" + m.MachineID)
+		talosctl := a.NewTalosctl(a.ctx, "upgrade-"+m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -123,7 +123,7 @@ func (a *Applier) talosctlFastReboot(m *types.MachineInfo) pulumi.StringOutput {
 
 		name := "reboot"
 
-		talosctl := a.NewTalosctl(a.ctx, name + "-" + m.MachineID)
+		talosctl := a.NewTalosctl(a.ctx, name+"-"+m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
@@ -149,7 +149,7 @@ func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOu
 
 		name := "upgrade-k8s"
 
-		talosctl := a.NewTalosctl(a.ctx, name + "-" + ma[0].MachineID)
+		talosctl := a.NewTalosctl(a.ctx, name+"-"+ma[0].MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}

@@ -53,7 +53,7 @@ func (a *Applier) talosctlApplyCMD(m *types.MachineInfo, deps []pulumi.Resource)
 
 		// Initialize the Talos CLI and prepare a temporary home directory.
 		var config v1alpha1.Config
-		talosctl := a.NewTalosctl(a.ctx, name + "-" + m.MachineID)
+		talosctl := a.NewTalosctl(a.ctx, name+"-"+m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
