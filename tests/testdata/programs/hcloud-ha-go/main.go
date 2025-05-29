@@ -15,6 +15,7 @@ var (
 		PrivateNetwork:    "10.10.10.0/24",
 		PrivateSubnetwork: "10.10.10.0/25",
 		KubernetesVersion: "v1.31.0",
+		TalosImage: "ghcr.io/siderolabs/installer:v10.0.3",
 		Machines: []*cluster.Machine{
 			{
 				ID:         "controlplane-1",
@@ -108,7 +109,7 @@ func main() {
 				MachineId:     server.ID,
 				NodeIp:        server.IP,
 				MachineType:   talos.MachineTypes(m.Type),
-				TalosImage: pulumi.String("ghcr.io/siderolabs/installer:v1.9.2"),
+				TalosImage: pulumi.String(clu.TalosImage),
 				ConfigPatches: pulumi.String(rendered),
 			})
 		}

@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultDatacenter        = "nbg1-dc3"
+	defaultDatacenter = "nbg1-dc3"
 	testImageSelector = "os=talos,testing=true"
 )
 
@@ -81,7 +81,6 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 		if err != nil {
 			return nil, err
 		}
-
 
 		servers = append(servers, &Server{
 			ID:        s.ID,

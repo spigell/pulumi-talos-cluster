@@ -5,6 +5,7 @@ type Cluster struct {
 	PrivateNetwork    string
 	PrivateSubnetwork string
 	KubernetesVersion string
+	TalosImage        string
 	Machines          []*Machine
 }
 
