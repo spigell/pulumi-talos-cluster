@@ -62,14 +62,14 @@ jobs:
       - name: Generate schema
         shell: bash
         run: make generate_schema
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v8
         name: Run the linter (provider)
         with:
           skip-cache: true
           working-directory: provider
           args: --timeout=10m --exclude schema.go
           version: v2.1.6
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v8
         name: Run the linter (tests)
         with:
           skip-cache: true
