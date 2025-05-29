@@ -16,7 +16,7 @@ jobs:
     env:
       MAX_SNAPSHOTS: 1 # Max count for every arch
     name: Clean
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - name: Install Hetzner Cloud CLI

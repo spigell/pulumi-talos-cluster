@@ -11,7 +11,7 @@ permissions:
 jobs:
   component-release:
     name: "Release binaries"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: github.event.base_ref == ${{ github.event.repository.default_branch }}
     steps:
       - uses: jlumbroso/free-disk-space@main
