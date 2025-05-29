@@ -55,5 +55,5 @@ jobs:
       - name: Run the test
         env:
           HCLOUD_TOKEN: ${{ secrets.hcloud-token }}
-          PULUMI_CLOUD_URL: ${{ env.PULUMI_VERSION }}
+          PULUMI_CLOUD_URL: ${{ env.PULUMI_BACKEND }}
         run: ${{ inputs.command }}
