@@ -63,14 +63,14 @@ start_delve:
 
 gen_go_sdk::
 	rm -rf sdk/go
-	cd provider/cmd/${CODEGEN} && go run . go ../../../sdk/go ${SCHEMA_PATH} $(VERSION)
+	pulumi package gen-sdk ${SCHEMA_PATH} --language go
 
 
 # .NET SDK
 
 gen_dotnet_sdk::
 	rm -rf sdk/dotnet
-	cd provider/cmd/${CODEGEN} && go run . dotnet ../../../sdk/dotnet ${SCHEMA_PATH} $(VERSION)
+	pulumi package gen-sdk ${SCHEMA_PATH} --language dotnet
 
 build_dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl get version --language dotnet)
 build_dotnet_sdk:: gen_dotnet_sdk
@@ -88,7 +88,7 @@ install_dotnet_sdk:: build_dotnet_sdk
 
 gen_nodejs_sdk::
 	rm -rf sdk/nodejs
-	cd provider/cmd/${CODEGEN} && go run . nodejs ../../../sdk/nodejs ${SCHEMA_PATH} $(VERSION)
+	pulumi package gen-sdk ${SCHEMA_PATH} --language nodejs
 
 build_nodejs_sdk:: VERSION := $(shell pulumictl get version --language javascript)
 build_nodejs_sdk:: gen_nodejs_sdk
@@ -110,7 +110,7 @@ link_nodejs_sdk::
 
 gen_python_sdk::
 	rm -rf sdk/python
-	cd provider/cmd/${CODEGEN} && go run . python ../../../sdk/python ${SCHEMA_PATH} $(VERSION)
+	pulumi package gen-sdk ${SCHEMA_PATH} --language python
 	cp ${WORKING_DIR}/README.md sdk/python
 
 build_python_sdk:: PYPI_VERSION := $(shell pulumictl get version --language python)

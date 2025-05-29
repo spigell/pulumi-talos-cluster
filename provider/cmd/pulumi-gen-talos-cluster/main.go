@@ -8,11 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	dotnetgen "github.com/pulumi/pulumi/pkg/v3/codegen/dotnet"
-	gogen "github.com/pulumi/pulumi/pkg/v3/codegen/go"
-	nodejsgen "github.com/pulumi/pulumi/pkg/v3/codegen/nodejs"
-	pygen "github.com/pulumi/pulumi/pkg/v3/codegen/python"
-
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
 
@@ -20,62 +15,24 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider"
 )
 
-const tool = "Pulumi SDK Generator"
-
-// Language is the SDK language.
-type Language string
-
-const (
-	NodeJS Language = "nodejs"
-	DotNet Language = "dotnet"
-	Go     Language = "go"
-	Python Language = "python"
-	Schema Language = "schema"
-)
-
 func main() {
-	printUsage := func() {
-		fmt.Printf("Usage: %s <language> <out-dir> [schema-file] [version]\n", os.Args[0])
-	}
-
-	args := os.Args[1:]
-	if len(args) < 2 {
-		printUsage()
+	if len(os.Args) != 3 {
+		fmt.Printf("Usage: %s schema <out-dir>\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	language, outdir := Language(args[0]), args[1]
-
-	var schemaFile string
-	var version string
-	if language != Schema {
-		if len(args) < 4 {
-			printUsage()
-			os.Exit(1)
-		}
-		schemaFile, version = args[2], args[3]
+	language, outdir := os.Args[1], os.Args[2]
+	if language != "schema" {
+		fmt.Printf("Only 'schema' generation is supported. Got: %s\n", language)
+		os.Exit(1)
 	}
 
-	switch language {
-	case NodeJS:
-		genNodeJS(readSchema(schemaFile, version), outdir)
-	case DotNet:
-		genDotNet(readSchema(schemaFile, version), outdir)
-	case Go:
-		genGo(readSchema(schemaFile, version), outdir)
-	case Python:
-		genPython(readSchema(schemaFile, version), outdir)
-	case Schema:
-		pkgSpec := generateSchema()
-		mustWritePulumiSchema(pkgSpec, outdir)
-	default:
-		panic(fmt.Sprintf("Unrecognized language %q", language))
-	}
+	pkgSpec := generateSchema()
+	mustWritePulumiSchema(pkgSpec, outdir)
 }
 
 func generateSchema() schema.PackageSpec {
 	types := make(map[string]schema.ComplexTypeSpec)
-
 	maps.Insert(types, maps.All(resources.ClusterTypes()))
 	maps.Insert(types, maps.All(resources.BasicTypes()))
 	maps.Insert(types, maps.All(resources.ApplyTypes()))
@@ -125,7 +82,7 @@ func generateSchema() schema.PackageSpec {
 					"@pulumiverse/talos": "v0.4.1",
 				},
 			}),
-			"go": rawMessage(map[string]interface{}{
+			"go": rawMessage(map[string]any{
 				"generateResourceContainerTypes": true,
 				"importBasePath":                 fmt.Sprintf("github.com/spigell/pulumi-%s/sdk/go/talos-cluster", provider.ProviderName),
 			}),
@@ -133,80 +90,10 @@ func generateSchema() schema.PackageSpec {
 	}
 }
 
-func rawMessage(v interface{}) schema.RawMessage {
+func rawMessage(v any) schema.RawMessage {
 	bytes, err := json.Marshal(v)
 	contract.Assertf(err == nil, "error in marshaling json")
 	return bytes
-}
-
-func readSchema(schemaPath string, version string) *schema.Package {
-	// Read in, decode, and import the schema.
-	schemaBytes, err := os.ReadFile(schemaPath)
-	if err != nil {
-		panic(err)
-	}
-
-	var pkgSpec schema.PackageSpec
-	if err = json.Unmarshal(schemaBytes, &pkgSpec); err != nil {
-		panic(err)
-	}
-	pkgSpec.Version = version
-
-	pkg, err := schema.ImportSpec(pkgSpec, nil)
-	if err != nil {
-		panic(err)
-	}
-	return pkg
-}
-
-func genDotNet(pkg *schema.Package, outdir string) {
-	files, err := dotnetgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil)
-	if err != nil {
-		panic(err)
-	}
-	mustWriteFiles(outdir, files)
-}
-
-func genGo(pkg *schema.Package, outdir string) {
-	files, err := gogen.GeneratePackage(tool, pkg, nil)
-	if err != nil {
-		panic(err)
-	}
-	mustWriteFiles(outdir, files)
-}
-
-func genPython(pkg *schema.Package, outdir string) {
-	files, err := pygen.GeneratePackage(tool, pkg, map[string][]byte{})
-	if err != nil {
-		panic(err)
-	}
-	mustWriteFiles(outdir, files)
-}
-
-func genNodeJS(pkg *schema.Package, outdir string) {
-	files, err := nodejsgen.GeneratePackage(tool, pkg, map[string][]byte{}, nil, false)
-	if err != nil {
-		panic(err)
-	}
-	mustWriteFiles(outdir, files)
-}
-
-func mustWriteFiles(rootDir string, files map[string][]byte) {
-	for filename, contents := range files {
-		mustWriteFile(rootDir, filename, contents)
-	}
-}
-
-func mustWriteFile(rootDir, filename string, contents []byte) {
-	outPath := filepath.Join(rootDir, filename)
-
-	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
-		panic(err)
-	}
-	err := os.WriteFile(outPath, contents, 0o600)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func mustWritePulumiSchema(pkgSpec schema.PackageSpec, outdir string) {
@@ -215,4 +102,14 @@ func mustWritePulumiSchema(pkgSpec schema.PackageSpec, outdir string) {
 		panic(errors.Wrap(err, "marshaling Pulumi schema"))
 	}
 	mustWriteFile(outdir, "schema.json", schemaJSON)
+}
+
+func mustWriteFile(rootDir, filename string, contents []byte) {
+	outPath := filepath.Join(rootDir, filename)
+	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(outPath, contents, 0o600); err != nil {
+		panic(err)
+	}
 }

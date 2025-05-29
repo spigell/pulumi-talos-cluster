@@ -119,8 +119,8 @@
                 },
                 "talosImage": {
                     "type": "string",
-                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.5.",
-                    "default": "ghcr.io/siderolabs/installer:v1.9.5"
+                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.",
+                    "default": "ghcr.io/siderolabs/installer:v1.10.2"
                 }
             },
             "type": "object",
@@ -290,8 +290,8 @@
                 },
                 "talosVersionContract": {
                     "type": "string",
-                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.9.5.",
-                    "default": "v1.9.5"
+                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.10.2.",
+                    "default": "v1.10.2"
                 }
             },
             "requiredInputs": [
