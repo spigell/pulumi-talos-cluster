@@ -57,11 +57,11 @@ func (t *Talosctl) getCurrentMachineConfig(node string, deps []pulumi.Resource) 
 		Command: command,
 	}, pulumi.DependsOn(deps))
 
-	output := cmd.Stdout
-
 	if err != nil {
-		return nil, fmt.Errorf("error executing command: %w, output: %s", err, output)
+		return nil, fmt.Errorf("error executing command: %w, cmd: %+v", err, cmd)
 	}
+
+	output := cmd.Stdout
 
 	var config MachineConfig
 	if err := yaml.Unmarshal([]byte(output), &config); err != nil {

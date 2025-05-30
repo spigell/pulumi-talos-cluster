@@ -71,6 +71,7 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 			MachineId:  server.ID,
 			NodeIp: server.IP,
 			MachineType:   talos.MachineTypes(m.Type),
+			TalosImage: pulumi.String(clu.TalosImage),
 			ConfigPatches: pulumi.String(rendered),
 		})
 	}

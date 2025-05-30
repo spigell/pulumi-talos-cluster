@@ -21,12 +21,14 @@ var (
 					Type:       "init",
 					ServerType: "cx22",
 					PrivateIP:  "10.10.10.5",
+					Datacenter:   "fsn1-dc14",
 				},
 				{
 					ID:       "worker-1",
 					Type:       "worker",
 					ServerType: "cx22",
 					PrivateIP:  "10.10.10.3",
+					Datacenter:   "fsn1-dc14",
 				},
 			},
 		}
