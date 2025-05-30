@@ -1,8 +1,13 @@
 import * as hcloud from "@pulumi/hcloud";
 import * as pulumi from "@pulumi/pulumi";
+import * as forge from 'node-forge';
 import {Cluster, DeployedServer} from './types'
 
 export function Hetzner (cluster: Cluster): DeployedServer[] {
+    const sshKey = new hcloud.SshKey("ssh", {
+        publicKey: generateSSHKey().then(keys => keys.publicKey),
+    }, {ignoreChanges: ["publicKey"]})
+
     // Create the private network
     const network = new hcloud.Network("private-network", {
         name: pulumi.interpolate`private-network-${cluster.name}`,
@@ -35,11 +40,12 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
             serverType: machine.serverType,
             image: image.then(v => `${v.id}`), // OS image
             location: "nbg1",               // Choose the Hetzner location
+            sshKeys: [sshKey.id],
             networks: [{
                 networkId: convertedNetID,
                 ip: machine.privateIP,
             }],
-        });
+        }, {ignoreChanges: ['sshKeys']});
 
         deployed.push({
             id: machine.id,
@@ -48,4 +54,22 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
     }
 
     return deployed;
+}
+
+async function generateSSHKey(): Promise<{ publicKey: string }> {
+    return new Promise((resolve, reject) => {
+        try {
+            // Generate an RSA key pair
+            const keypair = forge.pki.rsa.generateKeyPair(2048);
+
+            // Convert to PEM format
+            const publicKeyForge = forge.ssh.publicKeyToOpenSSH(keypair.publicKey);
+
+            const publicKey = `${publicKeyForge}`;
+
+            resolve({ publicKey });
+        } catch (error) {
+            reject(`Error generating SSH keys: ${error}`);
+        }
+    });
 }

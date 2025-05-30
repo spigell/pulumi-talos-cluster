@@ -95,12 +95,6 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 						"The default is generated based on the Talos machinery version, current: %s.", provider.GenerateDefaultInstallerImage()),
 					Default: provider.GenerateDefaultInstallerImage(),
 				},
-				types.ClusterEnpointKey: {
-					TypeSpec: schema.TypeSpec{
-						Type: "string",
-					},
-					Description: "cluster endpoint generated",
-				},
 				"configPatches": {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",

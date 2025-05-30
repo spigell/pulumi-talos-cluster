@@ -9,20 +9,24 @@ on:
   workflow_dispatch:
 
 env:
-  TALOS_VERSION: 'v1.8.3'
+  TALOS_VERSION: 'v1.10.3'
 
 jobs:
   build-hcloud-image:
     name: Build hcloud image with talos for tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    - name: Install required packages
+    - name: Add HashiCorp APT repository and install Packer
       run: |
+        # Add the GPG key
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        # Add the repository
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+        # Update and install dependencies
         sudo apt-get update && sudo apt-get install -y curl jq packer
-
     # Step 3: Read schematic from YAML file and create schematic via Talos Image Factory API
     - name: Create Talos schematic
       id: create_schematic

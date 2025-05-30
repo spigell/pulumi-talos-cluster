@@ -48,30 +48,10 @@ runs:
       shell: bash
       run: make install_nodejs_sdk
       if: startsWith(inputs.runtime, 'nodejs')
-    - name: Wait for builds
-      uses: lewagon/wait-on-check-action@v1.3.1
-      with:
-        ref: ${{ github.ref }}
-        check-name: "Build and save component binary"
-        repo-token: ${{ github.token }}
-        wait-interval: 10
     - name: Install pulumi cli
       uses: pulumi/actions@v4
       with:
-        pulumi-version: v3.139.0
-    - name: Download artifact
-      id: download-artifact
-      uses: dawidd6/action-download-artifact@v3
-      with:
-        workflow: all-build-component.yaml
-        workflow_conclusion: success
-    - name: Add component to pulumi plugin directory
-      run: |
-        mv -v pulumi-component-*/pulumi-resource-talos-cluster talos-cluster && \
-        chmod +x talos-cluster && \
-        stat talos-cluster && \
-        pulumi plugin install resource talos-cluster $(pulumictl get version) -f talos-cluster
-      shell: bash
+        pulumi-version: v3.171.0
     - name: Downloading GO dependencies (tests)
       shell: bash
       run: go mod download
