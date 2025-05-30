@@ -56,7 +56,6 @@ func (t *Talosctl) getCurrentMachineConfig(node string, deps []pulumi.Resource) 
 	cmd, err := local.Run(t.ctx, &local.RunArgs{
 		Command: command,
 	}, pulumi.DependsOn(deps))
-
 	if err != nil {
 		return nil, fmt.Errorf("error executing command: %w, cmd: %+v", err, cmd)
 	}
