@@ -1,7 +1,7 @@
 [project]
   name = "pulumi_talos_cluster"
   description = "Create and manage Talos kubernetes cluster"
-  dependencies = ["parver>=0.2.1", "pulumi>=3.0.0,<4.0.0", "pulumi-command1.0.1", "pulumiverse-talos0.4.1", "semver>=2.8.1", "typing-extensions>=4.11,<5; python_version < \"3.11\""]
+  dependencies = ["parver>=0.2.1", "pulumi>=3.0.0,<4.0.0", "pulumi-command1.1.0", "pulumiverse-talos0.6.0", "semver>=2.8.1", "typing-extensions>=4.11,<5; python_version < \"3.11\""]
   keywords = ["pulumi", "talos", "category/infrastructure", "kind/component", "kubernetes"]
   readme = "README.md"
   requires-python = ">=3.9"
