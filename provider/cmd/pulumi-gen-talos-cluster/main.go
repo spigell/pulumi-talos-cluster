@@ -55,14 +55,14 @@ func generateSchema() schema.PackageSpec {
 			"csharp": rawMessage(map[string]any{
 				"packageReferences": map[string]string{
 					"Pulumi":         "3.*",
-					"Pulumi.Command": "1.1.0-alpha.1727883369",
+					"Pulumi.Command": "1.1.0",
 				},
 			}),
 			"python": rawMessage(map[string]any{
 				"requires": map[string]string{
 					"pulumi":            ">=3.0.0,<4.0.0",
-					"pulumiverse-talos": "0.4.1",
-					"pulumi-command":    "1.0.1",
+					"pulumiverse-talos": "0.6.0",
+					"pulumi-command":    "1.1.0",
 				},
 				"usesIOClasses":                true,
 				"liftSingleValueMethodReturns": true,
@@ -78,8 +78,8 @@ func generateSchema() schema.PackageSpec {
 				},
 				"dependencies": map[string]any{
 					"@pulumi/pulumi":     "^3.0.0",
-					"@pulumi/command":    "v1.0.1",
-					"@pulumiverse/talos": "v0.4.1",
+					"@pulumi/command":    "v1.1.0",
+					"@pulumiverse/talos": "v0.6.0",
 				},
 			}),
 			"go": rawMessage(map[string]any{

@@ -16,7 +16,7 @@
         "csharp": {
             "packageReferences": {
                 "Pulumi": "3.*",
-                "Pulumi.Command": "1.1.0-alpha.1727883369"
+                "Pulumi.Command": "1.1.0"
             }
         },
         "go": {
@@ -25,9 +25,9 @@
         },
         "nodejs": {
             "dependencies": {
-                "@pulumi/command": "v1.0.1",
+                "@pulumi/command": "v1.1.0",
                 "@pulumi/pulumi": "^3.0.0",
-                "@pulumiverse/talos": "v0.4.1"
+                "@pulumiverse/talos": "v0.6.0"
             },
             "devDependencies": {
                 "@types/node": "^20.0.0",
@@ -42,8 +42,8 @@
             },
             "requires": {
                 "pulumi": "\u003e=3.0.0,\u003c4.0.0",
-                "pulumi-command": "1.0.1",
-                "pulumiverse-talos": "0.4.1"
+                "pulumi-command": "1.1.0",
+                "pulumiverse-talos": "0.6.0"
             },
             "usesIOClasses": true
         }
