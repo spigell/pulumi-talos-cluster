@@ -146,9 +146,9 @@ func (o ClientConfigurationOutput) ClientKey() pulumi.StringPtrOutput {
 
 type ClusterMachines struct {
 	// User-provided machine configuration to apply.
-	// Must be a valid YAML string.
+	// Must be a valid array of YAML strings.
 	// For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
-	ConfigPatches *string `pulumi:"configPatches"`
+	ConfigPatches []string `pulumi:"configPatches"`
 	// ID or name of the machine.
 	MachineId string `pulumi:"machineId"`
 	// Type of the machine.
@@ -157,7 +157,7 @@ type ClusterMachines struct {
 	NodeIp string `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
-	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.5.
+	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
 	TalosImage *string `pulumi:"talosImage"`
 }
 
@@ -168,7 +168,7 @@ func (val *ClusterMachines) Defaults() *ClusterMachines {
 	}
 	tmp := *val
 	if tmp.TalosImage == nil {
-		talosImage_ := "ghcr.io/siderolabs/installer:v1.9.5"
+		talosImage_ := "ghcr.io/siderolabs/installer:v1.10.5"
 		tmp.TalosImage = &talosImage_
 	}
 	return &tmp
@@ -187,9 +187,9 @@ type ClusterMachinesInput interface {
 
 type ClusterMachinesArgs struct {
 	// User-provided machine configuration to apply.
-	// Must be a valid YAML string.
+	// Must be a valid array of YAML strings.
 	// For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
-	ConfigPatches pulumi.StringPtrInput `pulumi:"configPatches"`
+	ConfigPatches pulumi.StringArrayInput `pulumi:"configPatches"`
 	// ID or name of the machine.
 	MachineId string `pulumi:"machineId"`
 	// Type of the machine.
@@ -198,7 +198,7 @@ type ClusterMachinesArgs struct {
 	NodeIp pulumi.StringInput `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
-	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.5.
+	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
 	TalosImage pulumi.StringPtrInput `pulumi:"talosImage"`
 }
 
@@ -209,7 +209,7 @@ func (val *ClusterMachinesArgs) Defaults() *ClusterMachinesArgs {
 	}
 	tmp := *val
 	if tmp.TalosImage == nil {
-		tmp.TalosImage = pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.9.5")
+		tmp.TalosImage = pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.10.5")
 	}
 	return &tmp
 }
@@ -265,10 +265,10 @@ func (o ClusterMachinesOutput) ToClusterMachinesOutputWithContext(ctx context.Co
 }
 
 // User-provided machine configuration to apply.
-// Must be a valid YAML string.
+// Must be a valid array of YAML strings.
 // For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
-func (o ClusterMachinesOutput) ConfigPatches() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v ClusterMachines) *string { return v.ConfigPatches }).(pulumi.StringPtrOutput)
+func (o ClusterMachinesOutput) ConfigPatches() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v ClusterMachines) []string { return v.ConfigPatches }).(pulumi.StringArrayOutput)
 }
 
 // ID or name of the machine.
@@ -288,7 +288,7 @@ func (o ClusterMachinesOutput) NodeIp() pulumi.StringOutput {
 
 // Talos OS installation image.
 // Used in the `install` configuration and set via CLI.
-// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.9.5.
+// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
 func (o ClusterMachinesOutput) TalosImage() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v ClusterMachines) *string { return v.TalosImage }).(pulumi.StringPtrOutput)
 }

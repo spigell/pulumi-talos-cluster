@@ -97,10 +97,13 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 				},
 				"configPatches": {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: "array",
+						Items: &schema.TypeSpec{
+							Type: "string",
+						},
 					},
 					Description: "User-provided machine configuration to apply. \n" +
-						"Must be a valid YAML string. \n" +
+						"Must be a valid array of YAML strings. \n" +
 						"For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/",
 				},
 			},

@@ -5,8 +5,8 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/hcloud"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/cluster"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	"gopkg.in/yaml.v3"
 )
 
@@ -65,6 +65,13 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 			}
 		}
 
+		timePatch, _ := yaml.Marshal(map[string]any{
+			"machine": map[string]any{
+				"time": map[string]any{
+					"disabled": false,
+				},
+		}})
+
 		rendered, _ := yaml.Marshal(patches)
 
 		machines = append(machines, &talos.ClusterMachinesArgs{
@@ -72,7 +79,7 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 			NodeIp: server.IP,
 			MachineType:   talos.MachineTypes(m.Type),
 			TalosImage: pulumi.String(clu.TalosImage),
-			ConfigPatches: pulumi.String(rendered),
+			ConfigPatches: pulumi.StringArray{pulumi.String(rendered), pulumi.String(timePatch)},
 		})
 	}
 
