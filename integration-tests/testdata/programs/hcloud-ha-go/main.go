@@ -10,43 +10,41 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	clu = &cluster.Cluster{
-		PrivateNetwork:    "10.10.10.0/24",
-		PrivateSubnetwork: "10.10.10.0/25",
-		KubernetesVersion: "v1.31.0",
-		TalosImage: "ghcr.io/siderolabs/installer:v1.10.3",
-		Machines: []*cluster.Machine{
-			{
-				ID:         "controlplane-1",
-				Type:       "init",
-				ServerType: "cx22",
-				PrivateIP:  "10.10.10.5",
-			},
-			{
-				ID:         "controlplane-2",
-				Type:       string(talos.MachineTypesControlplane),
-				ServerType: "cx22",
-				PrivateIP:  "10.10.10.2",
-				Datacenter:   "fsn1-dc14",
-			},
-			{
-				ID:         "controlplane-3",
-				Type:       string(talos.MachineTypesControlplane),
-				ServerType: "cx22",
-				PrivateIP:  "10.10.10.10",
-				Datacenter:   "fsn1-dc14",
-			},
-			{
-				ID:         "worker-1",
-				Type:       "worker",
-				ServerType: "cx22",
-				PrivateIP:  "10.10.10.3",
-				Datacenter:   "fsn1-dc14",
-			},
+var clu = &cluster.Cluster{
+	PrivateNetwork:    "10.10.10.0/24",
+	PrivateSubnetwork: "10.10.10.0/25",
+	KubernetesVersion: "v1.31.0",
+	TalosImage:        "ghcr.io/siderolabs/installer:v1.10.3",
+	Machines: []*cluster.Machine{
+		{
+			ID:         "controlplane-1",
+			Type:       "init",
+			ServerType: "cx22",
+			PrivateIP:  "10.10.10.5",
 		},
-	}
-)
+		{
+			ID:         "controlplane-2",
+			Type:       string(talos.MachineTypesControlplane),
+			ServerType: "cx22",
+			PrivateIP:  "10.10.10.2",
+			Datacenter: "fsn1-dc14",
+		},
+		{
+			ID:         "controlplane-3",
+			Type:       string(talos.MachineTypesControlplane),
+			ServerType: "cx22",
+			PrivateIP:  "10.10.10.10",
+			Datacenter: "fsn1-dc14",
+		},
+		{
+			ID:         "worker-1",
+			Type:       "worker",
+			ServerType: "cx22",
+			PrivateIP:  "10.10.10.3",
+			Datacenter: "fsn1-dc14",
+		},
+	},
+}
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
@@ -109,7 +107,7 @@ func main() {
 				MachineId:     server.ID,
 				NodeIp:        server.IP,
 				MachineType:   talos.MachineTypes(m.Type),
-				TalosImage: pulumi.String(clu.TalosImage),
+				TalosImage:    pulumi.String(clu.TalosImage),
 				ConfigPatches: pulumi.String(rendered),
 			})
 		}
