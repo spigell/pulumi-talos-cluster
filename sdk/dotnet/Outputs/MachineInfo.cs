@@ -23,7 +23,7 @@ namespace Pulumi.TalosCluster.Outputs
         /// </summary>
         public readonly string Configuration;
         /// <summary>
-        /// TO DO
+        /// Kubernetes version to install or upgrade on the node.
         /// </summary>
         public readonly string? KubernetesVersion;
         /// <summary>
@@ -35,7 +35,7 @@ namespace Pulumi.TalosCluster.Outputs
         /// </summary>
         public readonly string NodeIp;
         /// <summary>
-        /// TO DO
+        /// Talos OS image to install or upgrade on the node.
         /// </summary>
         public readonly string? TalosImage;
         /// <summary>

@@ -350,13 +350,13 @@ type MachineInfo struct {
 	// Configuration settings for machines to apply.
 	// This can be retrieved from the cluster resource.
 	Configuration string `pulumi:"configuration"`
-	// TO DO
+	// Kubernetes version to install or upgrade on the node.
 	KubernetesVersion *string `pulumi:"kubernetesVersion"`
 	// ID or name of the machine.
 	MachineId string `pulumi:"machineId"`
 	// The IP address of the node where configuration will be applied.
 	NodeIp string `pulumi:"nodeIp"`
-	// TO DO
+	// Talos OS image to install or upgrade on the node.
 	TalosImage *string `pulumi:"talosImage"`
 	// User-provided machine configuration to apply.
 	// This can be retrieved from the cluster resource.
@@ -380,13 +380,13 @@ type MachineInfoArgs struct {
 	// Configuration settings for machines to apply.
 	// This can be retrieved from the cluster resource.
 	Configuration pulumi.StringInput `pulumi:"configuration"`
-	// TO DO
+	// Kubernetes version to install or upgrade on the node.
 	KubernetesVersion pulumi.StringPtrInput `pulumi:"kubernetesVersion"`
 	// ID or name of the machine.
 	MachineId pulumi.StringInput `pulumi:"machineId"`
 	// The IP address of the node where configuration will be applied.
 	NodeIp pulumi.StringInput `pulumi:"nodeIp"`
-	// TO DO
+	// Talos OS image to install or upgrade on the node.
 	TalosImage pulumi.StringPtrInput `pulumi:"talosImage"`
 	// User-provided machine configuration to apply.
 	// This can be retrieved from the cluster resource.
@@ -455,7 +455,7 @@ func (o MachineInfoOutput) Configuration() pulumi.StringOutput {
 	return o.ApplyT(func(v MachineInfo) string { return v.Configuration }).(pulumi.StringOutput)
 }
 
-// TO DO
+// Kubernetes version to install or upgrade on the node.
 func (o MachineInfoOutput) KubernetesVersion() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v MachineInfo) *string { return v.KubernetesVersion }).(pulumi.StringPtrOutput)
 }
@@ -470,7 +470,7 @@ func (o MachineInfoOutput) NodeIp() pulumi.StringOutput {
 	return o.ApplyT(func(v MachineInfo) string { return v.NodeIp }).(pulumi.StringOutput)
 }
 
-// TO DO
+// Talos OS image to install or upgrade on the node.
 func (o MachineInfoOutput) TalosImage() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v MachineInfo) *string { return v.TalosImage }).(pulumi.StringPtrOutput)
 }

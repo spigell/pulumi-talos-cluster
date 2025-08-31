@@ -20,9 +20,9 @@ type Cluster struct {
 
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfigurationOutput `pulumi:"clientConfiguration"`
-	// TO DO
+	// Generated machine configuration YAML keyed by machine ID.
 	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
-	// TO DO
+	// Machine information grouped by machine type.
 	Machines ApplyMachinesOutput `pulumi:"machines"`
 }
 
@@ -185,12 +185,12 @@ func (o ClusterOutput) ClientConfiguration() ClientConfigurationOutput {
 	return o.ApplyT(func(v *Cluster) ClientConfigurationOutput { return v.ClientConfiguration }).(ClientConfigurationOutput)
 }
 
-// TO DO
+// Generated machine configuration YAML keyed by machine ID.
 func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.GeneratedConfigurations }).(pulumi.StringMapOutput)
 }
 
-// TO DO
+// Machine information grouped by machine type.
 func (o ClusterOutput) Machines() ApplyMachinesOutput {
 	return o.ApplyT(func(v *Cluster) ApplyMachinesOutput { return v.Machines }).(ApplyMachinesOutput)
 }

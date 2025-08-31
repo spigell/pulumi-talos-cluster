@@ -32,10 +32,10 @@ export interface ClientConfigurationArgs {
 export interface ClusterMachinesArgs {
     /**
      * User-provided machine configuration to apply. 
-     * Must be a valid YAML string. 
+     * Must be a valid array of YAML strings. 
      * For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
      */
-    configPatches?: pulumi.Input<string>;
+    configPatches?: pulumi.Input<pulumi.Input<string>[]>;
     /**
      * ID or name of the machine.
      */
@@ -51,7 +51,7 @@ export interface ClusterMachinesArgs {
     /**
      * Talos OS installation image. 
      * Used in the `install` configuration and set via CLI. 
-     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.
+     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
      */
     talosImage?: pulumi.Input<string>;
 }
@@ -61,7 +61,7 @@ export interface ClusterMachinesArgs {
 export function clusterMachinesArgsProvideDefaults(val: ClusterMachinesArgs): ClusterMachinesArgs {
     return {
         ...val,
-        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.10.2",
+        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.10.5",
     };
 }
 
@@ -76,7 +76,7 @@ export interface MachineInfoArgs {
      */
     configuration: pulumi.Input<string>;
     /**
-     * TO DO
+     * Kubernetes version to install or upgrade on the node.
      */
     kubernetesVersion?: pulumi.Input<string>;
     /**
@@ -88,7 +88,7 @@ export interface MachineInfoArgs {
      */
     nodeIp: pulumi.Input<string>;
     /**
-     * TO DO
+     * Talos OS image to install or upgrade on the node.
      */
     talosImage?: pulumi.Input<string>;
     /**

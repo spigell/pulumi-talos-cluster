@@ -162,7 +162,7 @@
                 },
                 "kubernetesVersion": {
                     "type": "string",
-                    "description": "TO DO"
+                    "description": "Kubernetes version to install or upgrade on the node."
                 },
                 "machineId": {
                     "type": "string",
@@ -174,7 +174,7 @@
                 },
                 "talosImage": {
                     "type": "string",
-                    "description": "TO DO"
+                    "description": "Talos OS image to install or upgrade on the node."
                 },
                 "userConfigPatches": {
                     "type": "string",
@@ -255,12 +255,12 @@
                 },
                 "generatedConfigurations": {
                     "type": "object",
-                    "description": "TO DO"
+                    "description": "Generated machine configuration YAML keyed by machine ID."
                 },
                 "machines": {
                     "type": "object",
                     "$ref": "#types/talos-cluster:index:applyMachines",
-                    "description": "TO DO"
+                    "description": "Machine information grouped by machine type."
                 }
             },
             "required": [
