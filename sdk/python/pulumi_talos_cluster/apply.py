@@ -32,6 +32,7 @@ class ApplyArgs:
         :param pulumi.Input[builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
                For example, it can serve as a source for userdata in cloud provider setups. 
                This option helps accelerate node provisioning. 
+               Note: init node is always applied. 
                Default is false.
         """
         pulumi.set(__self__, "apply_machines", apply_machines)
@@ -72,6 +73,7 @@ class ApplyArgs:
         skipInitApply indicates that machines will be managed or configured by external tools. 
         For example, it can serve as a source for userdata in cloud provider setups. 
         This option helps accelerate node provisioning. 
+        Note: init node is always applied. 
         Default is false.
         """
         return pulumi.get(self, "skip_init_apply")
@@ -101,6 +103,7 @@ class Apply(pulumi.ComponentResource):
         :param pulumi.Input[builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
                For example, it can serve as a source for userdata in cloud provider setups. 
                This option helps accelerate node provisioning. 
+               Note: init node is always applied. 
                Default is false.
         """
         ...

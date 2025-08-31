@@ -9,7 +9,7 @@ import (
 
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/cluster"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -175,7 +175,7 @@ func (h *Hetzner) Up() (*Deployed, error) {
 		// Define the server
 		server, err := hcloud.NewServer(h.ctx, s.ID, s.args,
 			pulumi.DependsOn(deps),
-			pulumi.IgnoreChanges([]string{"sshKeys"}),
+			pulumi.IgnoreChanges([]string{"sshKeys", "userData"}),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating server: %w", err)

@@ -20,9 +20,9 @@ type Cluster struct {
 
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfigurationOutput `pulumi:"clientConfiguration"`
-	// TO DO
+	// Generated machine configuration YAML keyed by machine ID.
 	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
-	// TO DO
+	// Machine information grouped by machine type.
 	Machines ApplyMachinesOutput `pulumi:"machines"`
 }
 
@@ -43,7 +43,7 @@ func NewCluster(ctx *pulumi.Context,
 		args.KubernetesVersion = pulumi.StringPtr("v1.31.0")
 	}
 	if args.TalosVersionContract == nil {
-		args.TalosVersionContract = pulumi.StringPtr("v1.9.5")
+		args.TalosVersionContract = pulumi.StringPtr("v1.10.5")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Cluster
@@ -69,7 +69,7 @@ type clusterArgs struct {
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
-	// The default value is based on gendata.VersionTag, current: v1.9.5.
+	// The default value is based on gendata.VersionTag, current: v1.10.5.
 	TalosVersionContract *string `pulumi:"talosVersionContract"`
 }
 
@@ -89,7 +89,7 @@ type ClusterArgs struct {
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
-	// The default value is based on gendata.VersionTag, current: v1.9.5.
+	// The default value is based on gendata.VersionTag, current: v1.10.5.
 	TalosVersionContract pulumi.StringPtrInput
 }
 
@@ -185,12 +185,12 @@ func (o ClusterOutput) ClientConfiguration() ClientConfigurationOutput {
 	return o.ApplyT(func(v *Cluster) ClientConfigurationOutput { return v.ClientConfiguration }).(ClientConfigurationOutput)
 }
 
-// TO DO
+// Generated machine configuration YAML keyed by machine ID.
 func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.GeneratedConfigurations }).(pulumi.StringMapOutput)
 }
 
-// TO DO
+// Machine information grouped by machine type.
 func (o ClusterOutput) Machines() ApplyMachinesOutput {
 	return o.ApplyT(func(v *Cluster) ApplyMachinesOutput { return v.Machines }).(ApplyMachinesOutput)
 }

@@ -56,6 +56,7 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 			Description: "skipInitApply indicates that machines will be managed or configured by external tools. \n" +
 				"For example, it can serve as a source for userdata in cloud provider setups. \n" +
 				"This option helps accelerate node provisioning. \n" +
+				"Note: init node is always applied. \n" +
 				"Default is false.",
 			Default: false,
 		},
@@ -128,13 +129,13 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
-					Description: "TO DO",
+					Description: "Talos OS image to install or upgrade on the node.",
 				},
 				types.KubernetesVersionKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",
 					},
-					Description: "TO DO",
+					Description: "Kubernetes version to install or upgrade on the node.",
 				},
 				types.ClusterEnpointKey: {
 					TypeSpec: schema.TypeSpec{

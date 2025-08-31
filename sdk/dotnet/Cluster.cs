@@ -24,13 +24,13 @@ namespace Pulumi.TalosCluster
         public Output<Outputs.ClientConfiguration> ClientConfiguration { get; private set; } = null!;
 
         /// <summary>
-        /// TO DO
+        /// Generated machine configuration YAML keyed by machine ID.
         /// </summary>
         [Output("generatedConfigurations")]
         public Output<ImmutableDictionary<string, string>> GeneratedConfigurations { get; private set; } = null!;
 
         /// <summary>
-        /// TO DO
+        /// Machine information grouped by machine type.
         /// </summary>
         [Output("machines")]
         public Output<Outputs.ApplyMachines> Machines { get; private set; } = null!;
@@ -101,7 +101,7 @@ namespace Pulumi.TalosCluster
         /// Used in NewSecrets() and GetConfigurationOutput() resources. 
         /// This property is immutable to prevent version conflicts across provider updates. 
         /// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-        /// The default value is based on gendata.VersionTag, current: v1.10.2.
+        /// The default value is based on gendata.VersionTag, current: v1.10.5.
         /// </summary>
         [Input("talosVersionContract")]
         public Input<string>? TalosVersionContract { get; set; }
@@ -109,7 +109,7 @@ namespace Pulumi.TalosCluster
         public ClusterArgs()
         {
             KubernetesVersion = "v1.31.0";
-            TalosVersionContract = "v1.10.2";
+            TalosVersionContract = "v1.10.5";
         }
         public static new ClusterArgs Empty => new ClusterArgs();
     }

@@ -40,7 +40,7 @@ class ClusterArgs:
                Used in NewSecrets() and GetConfigurationOutput() resources. 
                This property is immutable to prevent version conflicts across provider updates. 
                See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-               The default value is based on gendata.VersionTag, current: v1.10.2.
+               The default value is based on gendata.VersionTag, current: v1.10.5.
         """
         pulumi.set(__self__, "cluster_endpoint", cluster_endpoint)
         pulumi.set(__self__, "cluster_machines", cluster_machines)
@@ -50,7 +50,7 @@ class ClusterArgs:
         if kubernetes_version is not None:
             pulumi.set(__self__, "kubernetes_version", kubernetes_version)
         if talos_version_contract is None:
-            talos_version_contract = 'v1.10.2'
+            talos_version_contract = 'v1.10.5'
         if talos_version_contract is not None:
             pulumi.set(__self__, "talos_version_contract", talos_version_contract)
 
@@ -112,7 +112,7 @@ class ClusterArgs:
         Used in NewSecrets() and GetConfigurationOutput() resources. 
         This property is immutable to prevent version conflicts across provider updates. 
         See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-        The default value is based on gendata.VersionTag, current: v1.10.2.
+        The default value is based on gendata.VersionTag, current: v1.10.5.
         """
         return pulumi.get(self, "talos_version_contract")
 
@@ -150,7 +150,7 @@ class Cluster(pulumi.ComponentResource):
                Used in NewSecrets() and GetConfigurationOutput() resources. 
                This property is immutable to prevent version conflicts across provider updates. 
                See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-               The default value is based on gendata.VersionTag, current: v1.10.2.
+               The default value is based on gendata.VersionTag, current: v1.10.5.
         """
         ...
     @overload
@@ -207,7 +207,7 @@ class Cluster(pulumi.ComponentResource):
                 kubernetes_version = 'v1.31.0'
             __props__.__dict__["kubernetes_version"] = kubernetes_version
             if talos_version_contract is None:
-                talos_version_contract = 'v1.10.2'
+                talos_version_contract = 'v1.10.5'
             __props__.__dict__["talos_version_contract"] = talos_version_contract
             __props__.__dict__["client_configuration"] = None
             __props__.__dict__["generated_configurations"] = None
@@ -231,7 +231,7 @@ class Cluster(pulumi.ComponentResource):
     @pulumi.getter(name="generatedConfigurations")
     def generated_configurations(self) -> pulumi.Output[Mapping[str, builtins.str]]:
         """
-        TO DO
+        Generated machine configuration YAML keyed by machine ID.
         """
         return pulumi.get(self, "generated_configurations")
 
@@ -239,7 +239,7 @@ class Cluster(pulumi.ComponentResource):
     @pulumi.getter
     def machines(self) -> pulumi.Output['outputs.ApplyMachines']:
         """
-        TO DO
+        Machine information grouped by machine type.
         """
         return pulumi.get(self, "machines")
 

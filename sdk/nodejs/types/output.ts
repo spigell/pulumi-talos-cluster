@@ -51,7 +51,7 @@ export interface MachineInfo {
      */
     configuration: string;
     /**
-     * TO DO
+     * Kubernetes version to install or upgrade on the node.
      */
     kubernetesVersion?: string;
     /**
@@ -63,7 +63,7 @@ export interface MachineInfo {
      */
     nodeIp: string;
     /**
-     * TO DO
+     * Talos OS image to install or upgrade on the node.
      */
     talosImage?: string;
     /**

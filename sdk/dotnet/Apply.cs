@@ -63,6 +63,7 @@ namespace Pulumi.TalosCluster
         /// skipInitApply indicates that machines will be managed or configured by external tools. 
         /// For example, it can serve as a source for userdata in cloud provider setups. 
         /// This option helps accelerate node provisioning. 
+        /// Note: init node is always applied. 
         /// Default is false.
         /// </summary>
         [Input("skipInitApply")]

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/cluster"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/hcloud"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 )
 
 
@@ -48,11 +48,13 @@ func main() {
 			return err
 		}
 
+		ctx.Export("clusterMachineConfigs", talosClu.Cluster.GeneratedConfigurations)
+
 		for i, s := range hetzner.Servers {
 			hetzner.Servers[i] = s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
 				pulumi.String(s.ID),
 			).ToStringOutput().ApplyT(func (v string) string {
-				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: %s", s.ID, v), nil)
+				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID, v), nil)
 				return v
 			}).(pulumi.StringOutput))
 		}

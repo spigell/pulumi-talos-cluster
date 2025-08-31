@@ -5,8 +5,8 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/hcloud"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/cluster"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	"gopkg.in/yaml.v3"
 )
 
@@ -50,7 +50,7 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 					},
 				},
 				"time": map[string]any{
-					"disabled": false,
+					"disabled": true,
 				},
 			},
 		}
@@ -67,12 +67,29 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 
 		rendered, _ := yaml.Marshal(patches)
 
+		timePatch, _ := yaml.Marshal(map[string]any{
+			"machine": map[string]any{
+				"time": map[string]any{
+					"disabled": false,
+				},
+		}})
+
+		extPatch := `apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: cloudflared
+environment:
+  - TUNNEL_TOKEN=CHANGE_ME_AGAIN
+  - TUNNEL_METRICS=localhost:2001
+  - TUNNEL_EDGE_IP_VERSION=auto
+`
+
+
 		machines = append(machines, &talos.ClusterMachinesArgs{
 			MachineId:  server.ID,
 			NodeIp: server.IP,
 			MachineType:   talos.MachineTypes(m.Type),
 			TalosImage: pulumi.String(clu.TalosImage),
-			ConfigPatches: pulumi.String(rendered),
+			ConfigPatches: pulumi.StringArray{pulumi.String(rendered), pulumi.String(timePatch), pulumi.String(extPatch)},
 		})
 	}
 

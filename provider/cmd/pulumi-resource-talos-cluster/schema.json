@@ -99,8 +99,11 @@
         "talos-cluster:index:clusterMachines": {
             "properties": {
                 "configPatches": {
-                    "type": "string",
-                    "description": "User-provided machine configuration to apply. \nMust be a valid YAML string. \nFor structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "User-provided machine configuration to apply. \nMust be a valid array of YAML strings. \nFor structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/"
                 },
                 "machineId": {
                     "type": "string",
@@ -119,8 +122,8 @@
                 },
                 "talosImage": {
                     "type": "string",
-                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.",
-                    "default": "ghcr.io/siderolabs/installer:v1.10.2"
+                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.",
+                    "default": "ghcr.io/siderolabs/installer:v1.10.5"
                 }
             },
             "type": "object",
@@ -159,7 +162,7 @@
                 },
                 "kubernetesVersion": {
                     "type": "string",
-                    "description": "TO DO"
+                    "description": "Kubernetes version to install or upgrade on the node."
                 },
                 "machineId": {
                     "type": "string",
@@ -171,7 +174,7 @@
                 },
                 "talosImage": {
                     "type": "string",
-                    "description": "TO DO"
+                    "description": "Talos OS image to install or upgrade on the node."
                 },
                 "userConfigPatches": {
                     "type": "string",
@@ -232,7 +235,7 @@
                 },
                 "skipInitApply": {
                     "type": "boolean",
-                    "description": "skipInitApply indicates that machines will be managed or configured by external tools. \nFor example, it can serve as a source for userdata in cloud provider setups. \nThis option helps accelerate node provisioning. \nDefault is false.",
+                    "description": "skipInitApply indicates that machines will be managed or configured by external tools. \nFor example, it can serve as a source for userdata in cloud provider setups. \nThis option helps accelerate node provisioning. \nNote: init node is always applied. \nDefault is false.",
                     "default": false
                 }
             },
@@ -252,12 +255,12 @@
                 },
                 "generatedConfigurations": {
                     "type": "object",
-                    "description": "TO DO"
+                    "description": "Generated machine configuration YAML keyed by machine ID."
                 },
                 "machines": {
                     "type": "object",
                     "$ref": "#types/talos-cluster:index:applyMachines",
-                    "description": "TO DO"
+                    "description": "Machine information grouped by machine type."
                 }
             },
             "required": [
@@ -290,8 +293,8 @@
                 },
                 "talosVersionContract": {
                     "type": "string",
-                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.10.2.",
-                    "default": "v1.10.2"
+                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.10.5.",
+                    "default": "v1.10.5"
                 }
             },
             "requiredInputs": [

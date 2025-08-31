@@ -1,6 +1,8 @@
 package types
 
 import (
+	"strings"
+
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -17,17 +19,20 @@ const (
 )
 
 type ClusterMachine struct {
-	MachineID     string                `pulumi:"machineId"`
-	MachineType   string                `pulumi:"machineType"`
-	NodeIP        pulumi.StringPtrInput `pulumi:"nodeIp"`
-	TalosImage    pulumi.StringPtrInput `pulumi:"talosImage"`
-	ConfigPatches pulumi.StringPtrInput `pulumi:"configPatches"`
+	MachineID     string                  `pulumi:"machineId"`
+	MachineType   string                  `pulumi:"machineType"`
+	NodeIP        pulumi.StringPtrInput   `pulumi:"nodeIp"`
+	TalosImage    pulumi.StringPtrInput   `pulumi:"talosImage"`
+	ConfigPatches pulumi.StringArrayInput `pulumi:"configPatches"`
 }
 
 func (m *ClusterMachine) ToMachineInfoMap(clusterEndpoint pulumi.StringInput, k8sVer pulumi.StringInput, config pulumi.StringOutput) *pulumi.Map {
 	return &pulumi.Map{
-		MachineIDKey:         pulumi.String(m.MachineID),
-		UserConfigPatchesKey: m.ConfigPatches.ToStringPtrOutput().Elem(),
+		MachineIDKey: pulumi.String(m.MachineID),
+		UserConfigPatchesKey: m.ConfigPatches.ToStringArrayOutput().
+			ApplyT(func(arr []string) string {
+				return strings.Join(arr, "\n---\n")
+			}).(pulumi.StringOutput),
 		KubernetesVersionKey: k8sVer.ToStringPtrOutput().Elem(),
 		NodeIPKey:            m.NodeIP.ToStringPtrOutput().Elem(),
 		TalosImageKey:        m.TalosImage.ToStringPtrOutput().Elem(),

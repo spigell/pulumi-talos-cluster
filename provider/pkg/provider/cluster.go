@@ -91,7 +91,7 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		}
 
 		if m.ConfigPatches == nil {
-			m.ConfigPatches = pulumi.String("")
+			m.ConfigPatches = pulumi.StringArray{pulumi.String("")}
 		}
 
 		// Required and Defaults do not work for nested structs in Components?
@@ -105,10 +105,19 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 			ClusterEndpoint:   args.ClusterEndpoint,
 			KubernetesVersion: args.KubernetesVersion,
 			TalosVersion:      compareContractVersionWithNotify(ctx, secrets.TalosVersion, args.TalosVersionContract.ToStringOutput()),
-			ConfigPatches: pulumi.StringArray{
-				m.ConfigPatches.ToStringPtrOutput().Elem(),
-				configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()),
-			},
+			ConfigPatches: pulumi.All(
+				m.ConfigPatches, // StringArrayInput  -> []string in ApplyT
+				configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()), // StringInput -> string in ApplyT
+			).ApplyT(func(args []any) []string {
+				base := args[0].([]string) // from m.ConfigPatches
+				extra := args[1].(string)  // from configureTalosInstall(...)
+				// append safely (copy if you care about not aliasing base)
+				out := make([]string, 0, len(base)+1)
+				out = append(out, base...)
+				out = append(out, extra)
+				return out
+			}).(pulumi.StringArrayOutput),
+
 			MachineSecrets: secrets.ToSecretsOutput().MachineSecrets(),
 		}, nil)
 

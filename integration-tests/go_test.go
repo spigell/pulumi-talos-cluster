@@ -39,7 +39,7 @@ func getGoBaseOptions(t *testing.T) integration.ProgramTestOptions {
 		Dependencies: []string{
 			// Path to GO SDK
 			getCwd(t) + "../../sdk",
-			getCwd(t) + "../../tests",
+			getCwd(t) + "../../integration-tests",
 		},
 		Verbose: true,
 	})

@@ -163,17 +163,17 @@ if not MYPY:
         """
         The IP address of the node where configuration will be applied.
         """
-        config_patches: NotRequired[pulumi.Input[builtins.str]]
+        config_patches: NotRequired[pulumi.Input[Sequence[pulumi.Input[builtins.str]]]]
         """
         User-provided machine configuration to apply. 
-        Must be a valid YAML string. 
+        Must be a valid array of YAML strings. 
         For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         """
         talos_image: NotRequired[pulumi.Input[builtins.str]]
         """
         Talos OS installation image. 
         Used in the `install` configuration and set via CLI. 
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.
+        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
         """
 elif False:
     ClusterMachinesArgsDict: TypeAlias = Mapping[str, Any]
@@ -184,18 +184,18 @@ class ClusterMachinesArgs:
                  machine_id: builtins.str,
                  machine_type: 'MachineTypes',
                  node_ip: pulumi.Input[builtins.str],
-                 config_patches: Optional[pulumi.Input[builtins.str]] = None,
+                 config_patches: Optional[pulumi.Input[Sequence[pulumi.Input[builtins.str]]]] = None,
                  talos_image: Optional[pulumi.Input[builtins.str]] = None):
         """
         :param builtins.str machine_id: ID or name of the machine.
         :param 'MachineTypes' machine_type: Type of the machine.
         :param pulumi.Input[builtins.str] node_ip: The IP address of the node where configuration will be applied.
-        :param pulumi.Input[builtins.str] config_patches: User-provided machine configuration to apply. 
-               Must be a valid YAML string. 
+        :param pulumi.Input[Sequence[pulumi.Input[builtins.str]]] config_patches: User-provided machine configuration to apply. 
+               Must be a valid array of YAML strings. 
                For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         :param pulumi.Input[builtins.str] talos_image: Talos OS installation image. 
                Used in the `install` configuration and set via CLI. 
-               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.
+               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
         """
         pulumi.set(__self__, "machine_id", machine_id)
         pulumi.set(__self__, "machine_type", machine_type)
@@ -203,7 +203,7 @@ class ClusterMachinesArgs:
         if config_patches is not None:
             pulumi.set(__self__, "config_patches", config_patches)
         if talos_image is None:
-            talos_image = 'ghcr.io/siderolabs/installer:v1.10.2'
+            talos_image = 'ghcr.io/siderolabs/installer:v1.10.5'
         if talos_image is not None:
             pulumi.set(__self__, "talos_image", talos_image)
 
@@ -245,16 +245,16 @@ class ClusterMachinesArgs:
 
     @property
     @pulumi.getter(name="configPatches")
-    def config_patches(self) -> Optional[pulumi.Input[builtins.str]]:
+    def config_patches(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[builtins.str]]]]:
         """
         User-provided machine configuration to apply. 
-        Must be a valid YAML string. 
+        Must be a valid array of YAML strings. 
         For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         """
         return pulumi.get(self, "config_patches")
 
     @config_patches.setter
-    def config_patches(self, value: Optional[pulumi.Input[builtins.str]]):
+    def config_patches(self, value: Optional[pulumi.Input[Sequence[pulumi.Input[builtins.str]]]]):
         pulumi.set(self, "config_patches", value)
 
     @property
@@ -263,7 +263,7 @@ class ClusterMachinesArgs:
         """
         Talos OS installation image. 
         Used in the `install` configuration and set via CLI. 
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.
+        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
         """
         return pulumi.get(self, "talos_image")
 
@@ -293,11 +293,11 @@ if not MYPY:
         """
         kubernetes_version: NotRequired[pulumi.Input[builtins.str]]
         """
-        TO DO
+        Kubernetes version to install or upgrade on the node.
         """
         talos_image: NotRequired[pulumi.Input[builtins.str]]
         """
-        TO DO
+        Talos OS image to install or upgrade on the node.
         """
         user_config_patches: NotRequired[pulumi.Input[builtins.str]]
         """
@@ -323,8 +323,8 @@ class MachineInfoArgs:
         :param pulumi.Input[builtins.str] machine_id: ID or name of the machine.
         :param pulumi.Input[builtins.str] node_ip: The IP address of the node where configuration will be applied.
         :param pulumi.Input[builtins.str] cluster_endpoint: cluster endpoint applied to node
-        :param pulumi.Input[builtins.str] kubernetes_version: TO DO
-        :param pulumi.Input[builtins.str] talos_image: TO DO
+        :param pulumi.Input[builtins.str] kubernetes_version: Kubernetes version to install or upgrade on the node.
+        :param pulumi.Input[builtins.str] talos_image: Talos OS image to install or upgrade on the node.
         :param pulumi.Input[builtins.str] user_config_patches: User-provided machine configuration to apply. 
                This can be retrieved from the cluster resource.
         """
@@ -393,7 +393,7 @@ class MachineInfoArgs:
     @pulumi.getter(name="kubernetesVersion")
     def kubernetes_version(self) -> Optional[pulumi.Input[builtins.str]]:
         """
-        TO DO
+        Kubernetes version to install or upgrade on the node.
         """
         return pulumi.get(self, "kubernetes_version")
 
@@ -405,7 +405,7 @@ class MachineInfoArgs:
     @pulumi.getter(name="talosImage")
     def talos_image(self) -> Optional[pulumi.Input[builtins.str]]:
         """
-        TO DO
+        Talos OS image to install or upgrade on the node.
         """
         return pulumi.get(self, "talos_image")
 

@@ -32,11 +32,11 @@ export class Cluster extends pulumi.ComponentResource {
      */
     public /*out*/ readonly clientConfiguration!: pulumi.Output<outputs.ClientConfiguration>;
     /**
-     * TO DO
+     * Generated machine configuration YAML keyed by machine ID.
      */
     public /*out*/ readonly generatedConfigurations!: pulumi.Output<{[key: string]: string}>;
     /**
-     * TO DO
+     * Machine information grouped by machine type.
      */
     public /*out*/ readonly machines!: pulumi.Output<outputs.ApplyMachines>;
 
@@ -64,7 +64,7 @@ export class Cluster extends pulumi.ComponentResource {
             resourceInputs["clusterMachines"] = args ? args.clusterMachines : undefined;
             resourceInputs["clusterName"] = args ? args.clusterName : undefined;
             resourceInputs["kubernetesVersion"] = (args ? args.kubernetesVersion : undefined) ?? "v1.31.0";
-            resourceInputs["talosVersionContract"] = (args ? args.talosVersionContract : undefined) ?? "v1.10.2";
+            resourceInputs["talosVersionContract"] = (args ? args.talosVersionContract : undefined) ?? "v1.10.5";
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
@@ -105,7 +105,7 @@ export interface ClusterArgs {
      * Used in NewSecrets() and GetConfigurationOutput() resources. 
      * This property is immutable to prevent version conflicts across provider updates. 
      * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-     * The default value is based on gendata.VersionTag, current: v1.10.2.
+     * The default value is based on gendata.VersionTag, current: v1.10.5.
      */
     talosVersionContract?: pulumi.Input<string>;
 }

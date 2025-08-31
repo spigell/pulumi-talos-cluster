@@ -188,8 +188,8 @@ class MachineInfo(dict):
         :param builtins.str machine_id: ID or name of the machine.
         :param builtins.str node_ip: The IP address of the node where configuration will be applied.
         :param builtins.str cluster_endpoint: cluster endpoint applied to node
-        :param builtins.str kubernetes_version: TO DO
-        :param builtins.str talos_image: TO DO
+        :param builtins.str kubernetes_version: Kubernetes version to install or upgrade on the node.
+        :param builtins.str talos_image: Talos OS image to install or upgrade on the node.
         :param builtins.str user_config_patches: User-provided machine configuration to apply. 
                This can be retrieved from the cluster resource.
         """
@@ -242,7 +242,7 @@ class MachineInfo(dict):
     @pulumi.getter(name="kubernetesVersion")
     def kubernetes_version(self) -> Optional[builtins.str]:
         """
-        TO DO
+        Kubernetes version to install or upgrade on the node.
         """
         return pulumi.get(self, "kubernetes_version")
 
@@ -250,7 +250,7 @@ class MachineInfo(dict):
     @pulumi.getter(name="talosImage")
     def talos_image(self) -> Optional[builtins.str]:
         """
-        TO DO
+        Talos OS image to install or upgrade on the node.
         """
         return pulumi.get(self, "talos_image")
 

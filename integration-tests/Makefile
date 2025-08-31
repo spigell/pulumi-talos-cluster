@@ -8,22 +8,20 @@ dev-go-testprog: clean
 	echo $(PROG) > .current_test_dir
 	@cd $(PROG) && \
 	go mod edit -replace=github.com/spigell/pulumi-talos-cluster/sdk=../../../../sdk && \
-	go mod edit -replace=github.com/spigell/pulumi-talos-cluster/tests=../../../../tests
-	@echo "Now you can create stack for test project in test-project directory"
-
-# sed -i '/\@spigell\/pulumi-talos-cluster/d' package.json && \
+	go mod edit -replace=github.com/spigell/pulumi-talos-cluster/integration-tests=../../../../integration-tests
+	@echo "Now you can create stack for test project in the testdata directory"
 
 dev-ts-testprog: clean
 	cd .. && $(MAKE) install_nodejs_sdk
 	cd $(PROG) && \
 	yarn link "@spigell/pulumi-talos-cluster" && \
 	yarn install
-	@echo "Now you can create stack for test project in test-project directory"
+	@echo "Now you can create stack for test project in the testdata directory"
 
 clean: export PROG=$(shell cat .current_test_dir || true)
 clean:
 	cd $(PROG) && go mod edit -dropreplace=github.com/spigell/pulumi-talos-cluster/sdk || true
-	cd $(PROG) && go mod edit -dropreplace=github.com/spigell/pulumi-talos-cluster/tests || true
+	cd $(PROG) && go mod edit -dropreplace=github.com/spigell/pulumi-talos-cluster/integration-tests || true
 	yarn unlink --cwd ../sdk/nodejs/bin || true
 	rm -rf .current_test_dir
 
