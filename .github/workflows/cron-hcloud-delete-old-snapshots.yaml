@@ -27,6 +27,6 @@ jobs:
         chmod +x hcloud
         sudo mv hcloud /usr/local/bin/
     - name: Auto-clean old snapshots
-      run: tests/packer/hcloud-clean-old-snapshots.sh ${{ env.MAX_SNAPSHOTS }} ${{ matrix.arch }}
+      run: integration-tests/packer/hcloud-clean-old-snapshots.sh ${{ env.MAX_SNAPSHOTS }} ${{ matrix.arch }}
       env:
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
