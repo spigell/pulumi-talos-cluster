@@ -11,6 +11,7 @@ jobs:
     name: Tests and linting for provider directory
     uses: spigell/my-shared-workflows/.github/workflows/golang-test-lint.yaml@main
     with:
+      setup-action: 'setup-pulumi-env'
       working-directory: provider
 
   tests:
