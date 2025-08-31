@@ -148,7 +148,7 @@ func GuardUnmodifyK8sImages(img *K8SImages) Guard {
 	}
 }
 
-// ----- Internals -----
+// ----- Internals -----.
 func normalize(v any) any {
 	switch t := v.(type) {
 	case map[any]any:

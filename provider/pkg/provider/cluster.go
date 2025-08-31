@@ -60,7 +60,6 @@ func GenerateDefaultInstallerImage() string {
 func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	args *ClusterArgs, inputs provider.ConstructInputs, opts ...pulumi.ResourceOption,
 ) (*provider.ConstructResult, error) {
-	//runtime.Breakpoint()
 	// Blit the inputs onto the arguments struct.
 	if err := inputs.CopyTo(args); err != nil {
 		return nil, errors.Wrap(err, "setting args")
