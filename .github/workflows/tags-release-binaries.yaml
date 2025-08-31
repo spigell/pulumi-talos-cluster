@@ -13,5 +13,6 @@ jobs:
     with:
       setup-action: 'setup-pulumi-env'
       working-directory: provider
+      config-path: ../.goreleaser.yaml
     secrets:
       gh-token: ${{ secrets.GITHUB_TOKEN }}
