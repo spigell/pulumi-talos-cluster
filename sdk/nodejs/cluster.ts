@@ -30,15 +30,15 @@ export class Cluster extends pulumi.ComponentResource {
     /**
      * Client configuration for bootstrapping and applying resources.
      */
-    declare public /*out*/ readonly clientConfiguration: pulumi.Output<outputs.ClientConfiguration>;
+    public /*out*/ readonly clientConfiguration!: pulumi.Output<outputs.ClientConfiguration>;
     /**
      * Generated machine configuration YAML keyed by machine ID.
      */
-    declare public /*out*/ readonly generatedConfigurations: pulumi.Output<{[key: string]: string}>;
+    public /*out*/ readonly generatedConfigurations!: pulumi.Output<{[key: string]: string}>;
     /**
      * Machine information grouped by machine type.
      */
-    declare public /*out*/ readonly machines: pulumi.Output<outputs.ApplyMachines>;
+    public /*out*/ readonly machines!: pulumi.Output<outputs.ApplyMachines>;
 
     /**
      * Create a Cluster resource with the given unique name, arguments, and options.
@@ -51,20 +51,20 @@ export class Cluster extends pulumi.ComponentResource {
         let resourceInputs: pulumi.Inputs = {};
         opts = opts || {};
         if (!opts.id) {
-            if (args?.clusterEndpoint === undefined && !opts.urn) {
+            if ((!args || args.clusterEndpoint === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'clusterEndpoint'");
             }
-            if (args?.clusterMachines === undefined && !opts.urn) {
+            if ((!args || args.clusterMachines === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'clusterMachines'");
             }
-            if (args?.clusterName === undefined && !opts.urn) {
+            if ((!args || args.clusterName === undefined) && !opts.urn) {
                 throw new Error("Missing required property 'clusterName'");
             }
-            resourceInputs["clusterEndpoint"] = args?.clusterEndpoint;
-            resourceInputs["clusterMachines"] = args?.clusterMachines;
-            resourceInputs["clusterName"] = args?.clusterName;
-            resourceInputs["kubernetesVersion"] = (args?.kubernetesVersion) ?? "v1.31.0";
-            resourceInputs["talosVersionContract"] = (args?.talosVersionContract) ?? "v1.10.5";
+            resourceInputs["clusterEndpoint"] = args ? args.clusterEndpoint : undefined;
+            resourceInputs["clusterMachines"] = args ? args.clusterMachines : undefined;
+            resourceInputs["clusterName"] = args ? args.clusterName : undefined;
+            resourceInputs["kubernetesVersion"] = (args ? args.kubernetesVersion : undefined) ?? "v1.31.0";
+            resourceInputs["talosVersionContract"] = (args ? args.talosVersionContract : undefined) ?? "v1.10.5";
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
