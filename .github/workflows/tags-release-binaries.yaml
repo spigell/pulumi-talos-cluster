@@ -5,45 +5,13 @@ on:
     tags:
       - '*'
 
-permissions:
-  contents: write
-
 jobs:
   component-release:
-    name: "Release binaries"
-    runs-on: ubuntu-24.04
-    if: github.event.base_ref == ${{ github.event.repository.default_branch }}
-    steps:
-      - uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: false
-          docker-images: false
-          swap-storage: false
-      - uses: actions/checkout@v3
-      - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.10.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repo: pulumi/pulumictl
-      - name: Setup Go ✨
-        uses: actions/setup-go@v4
-        with:
-          cache: false
-          go-version-file: provider/go.mod
-      - name: Generate schema for component
-        run: make generate_schema
-      - name: Release required binaries
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          args: release --clean --verbose
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: spigell/my-shared-workflows/.github/workflows/golang-binary-release.yaml@main
+    permissions:
+      contents: write
+    with:
+      setup-action: 'setup-pulumi-env'
+      working-directory: provider
+    secrets:
+      gh-token: ${{ secrets.GITHUB_TOKEN }}
