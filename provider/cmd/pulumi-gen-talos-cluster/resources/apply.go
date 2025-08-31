@@ -56,6 +56,7 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 			Description: "skipInitApply indicates that machines will be managed or configured by external tools. \n" +
 				"For example, it can serve as a source for userdata in cloud provider setups. \n" +
 				"This option helps accelerate node provisioning. \n" +
+				"Note: init node is always applied. \n" +
 				"Default is false.",
 			Default: false,
 		},

@@ -21,7 +21,7 @@ dev-ts-testprog: clean
 clean: export PROG=$(shell cat .current_test_dir || true)
 clean:
 	cd $(PROG) && go mod edit -dropreplace=github.com/spigell/pulumi-talos-cluster/sdk || true
-	cd $(PROG) && go mod edit -dropreplace=github.com/spigell/pulumi-talos-cluster/tests || true
+	cd $(PROG) && go mod edit -dropreplace=github.com/spigell/pulumi-talos-cluster/integration-tests || true
 	yarn unlink --cwd ../sdk/nodejs/bin || true
 	rm -rf .current_test_dir
 

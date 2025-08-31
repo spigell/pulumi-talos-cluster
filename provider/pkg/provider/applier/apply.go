@@ -10,7 +10,6 @@ import (
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
-	"gopkg.in/yaml.v3"
 )
 
 type K8SImages struct {
@@ -52,55 +51,29 @@ func (a *Applier) talosctlApplyCMD(m *types.MachineInfo, deps []pulumi.Resource)
 		name := "apply-config"
 
 		// Initialize the Talos CLI and prepare a temporary home directory.
-		var config v1alpha1.Config
 		talosctl := a.NewTalosctl(a.ctx, name+"-"+m.MachineID)
 		if err := talosctl.prepare(talosConfig); err != nil {
 			return "", fmt.Errorf("failed to prepare temp home for talos cli: %w", err)
 		}
 
-		// Merge the base machine configuration with user-provided patches.
-		// This combines the configs into a single YAML representation.
-		merged, err := mergeYAML(machineConfig, userPatches)
-		if err != nil {
-			return "", fmt.Errorf("failed merge yaml strings: %w", err)
-		}
-
-		err = yaml.Unmarshal([]byte(merged), &config)
-		if err != nil {
-			return "", fmt.Errorf("failed to unmarshal config from string: %w", err)
-		}
-
-		// Initialize new Kubernetes image set from the current configuration.
-		// In the dry-run mode this values will be used in initial configuration files.
-		newK8SImages := NewK8SImages(&config)
-
+		// Extract current images to use instead of any potential downgraded images
 		current, err := talosctl.getCurrentMachineConfig(a.InitNode.IP, deps)
 		if err != nil {
 			return "", fmt.Errorf("failed to get current machine info: %w", err)
 		}
-
-		// Extract current images to use instead of any potential downgraded images
 		oldK8SImages := NewK8SImages(current)
-		a.ctx.Log.Debug(fmt.Sprintf("overwriting k8s images version %+v with %+v", newK8SImages, oldK8SImages), nil)
-		newK8SImages = oldK8SImages
 
-		config.MachineConfig.MachineKubelet.KubeletImage = newK8SImages.Kubelet
-		if config.MachineConfig.MachineType == machine.TypeControlPlane.String() || config.MachineConfig.MachineType == machine.TypeInit.String() {
-			config.ClusterConfig.APIServerConfig.ContainerImage = newK8SImages.APIServer
-			config.ClusterConfig.ProxyConfig.ContainerImage = newK8SImages.KubeProxy
-			config.ClusterConfig.ControllerManagerConfig.ContainerImage = newK8SImages.ControllerManager
-			config.ClusterConfig.SchedulerConfig.ContainerImage = newK8SImages.Scheduler
-		}
+		// Merge the base machine configuration with user-provided patches.
+		// This combines the configs into a single YAML representation.
 
-		// Marshal the modified configuration back to YAML format to write to a file
-		marshalled, err := yaml.Marshal(&config)
+		merged, err := MergeYAML(machineConfig, userPatches).WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
 		if err != nil {
-			return "", fmt.Errorf("failed to marshal merged YAML: %w", err)
+			return "", fmt.Errorf("failed merge yaml strings: %w", err)
 		}
 
 		// Write the marshalled YAML to a temporary file for Talos CLI to apply
 		configPath := filepath.Join(talosctl.Home.Dir, fmt.Sprintf("machineconfig-%s.yaml", m.MachineID))
-		if err := os.WriteFile(configPath, marshalled, 0o600); err != nil {
+		if err := os.WriteFile(configPath, []byte(merged), 0o600); err != nil {
 			return "", fmt.Errorf("failed to write machine config: %w", err)
 		}
 

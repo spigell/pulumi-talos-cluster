@@ -50,7 +50,7 @@ type MachineConfig struct {
 // getCurrentMachineConfig retrieves current machineconfig fron running cluster.
 // BEWARE: this function should be used with caution. Do not call unprovised nodes!
 func (t *Talosctl) getCurrentMachineConfig(node string, deps []pulumi.Resource) (*v1alpha1.Config, error) {
-	command := withBashRetryAndHiddenStdErr(fmt.Sprintf("%s get machineconfig -n %[2]s -e %[2]s -oyaml",
+	command := withBashRetryAndHiddenStdErr(fmt.Sprintf("%s get machineconfig v1alpha1 -n %[2]s -e %[2]s -oyaml",
 		t.BasicCommand, node,
 	))
 	cmd, err := local.Run(t.ctx, &local.RunArgs{
@@ -168,51 +168,6 @@ func (a *Applier) talosctlUpgradeK8SCMD(ma []*types.MachineInfo) pulumi.StringOu
 	}).(pulumi.StringOutput)
 }
 
-func mergeYAML(yaml1, yaml2 string) (string, error) {
-	var data1, data2 map[string]any
-
-	// Unmarshal first YAML string
-	if err := yaml.Unmarshal([]byte(yaml1), &data1); err != nil {
-		return "", fmt.Errorf("failed to parse yaml1: %w", err)
-	}
-
-	// Unmarshal second YAML string
-	if err := yaml.Unmarshal([]byte(yaml2), &data2); err != nil {
-		return "", fmt.Errorf("failed to parse yaml2: %w", err)
-	}
-
-	// Merge data2 into data1
-	mergedData := mergeMaps(data1, data2)
-
-	// Marshal merged data back to YAML
-	mergedYAML, err := yaml.Marshal(mergedData)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal merged YAML: %w", err)
-	}
-
-	return string(mergedYAML), nil
-}
-
-// mergeMaps merges map2 into map1 recursively, with map2 overwriting map1's values for duplicate keys.
-func mergeMaps(map1, map2 map[string]any) map[string]any {
-	for k, v := range map2 {
-		if vMap, ok := v.(map[string]any); ok {
-			// Handle nested maps by recursive merging
-			if map1[k] == nil {
-				map1[k] = vMap
-			} else if map1Map, ok := map1[k].(map[string]any); ok {
-				map1[k] = mergeMaps(map1Map, vMap)
-			} else {
-				map1[k] = vMap
-			}
-		} else {
-			// For non-map values, map2 overwrites map1
-			map1[k] = v
-		}
-	}
-	return map1
-}
-
 func withBashRetry(cmd string, retryCount string) string {
 	return fmt.Sprintf(strings.Join([]string{
 		"n=0",
@@ -244,6 +199,6 @@ func withBashRetryAndHiddenStdErr(cmd string) string {
 func (t *Talosctl) withCleanCommand(cmd string) string {
 	return fmt.Sprintf(strings.Join([]string{
 		"%s",
-		"rm -rf %s",
+		"rm -rfv %s",
 	}, " ; "), cmd, t.Home.Dir)
 }

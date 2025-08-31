@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	//"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -107,21 +106,17 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 			ClusterEndpoint:   args.ClusterEndpoint,
 			KubernetesVersion: args.KubernetesVersion,
 			TalosVersion:      compareContractVersionWithNotify(ctx, secrets.TalosVersion, args.TalosVersionContract.ToStringOutput()),
-			//ConfigPatches: pulumi.StringArray{
-			//	m.ConfigPatches,
-			//	configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()),
-			//},
 			ConfigPatches: pulumi.All(
-			    m.ConfigPatches, // StringArrayInput  -> []string in ApplyT
-			    configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()), // StringInput -> string in ApplyT
+				m.ConfigPatches, // StringArrayInput  -> []string in ApplyT
+				configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()), // StringInput -> string in ApplyT
 			).ApplyT(func(args []any) []string {
-			    base := args[0].([]string) // from m.ConfigPatches
-			    extra := args[1].(string)  // from configureTalosInstall(...)
-			    // append safely (copy if you care about not aliasing base)
-			    out := make([]string, 0, len(base)+1)
-			    out = append(out, base...)
-			    out = append(out, extra)
-			    return out
+				base := args[0].([]string) // from m.ConfigPatches
+				extra := args[1].(string)  // from configureTalosInstall(...)
+				// append safely (copy if you care about not aliasing base)
+				out := make([]string, 0, len(base)+1)
+				out = append(out, base...)
+				out = append(out, extra)
+				return out
 			}).(pulumi.StringArrayOutput),
 
 			MachineSecrets: secrets.ToSecretsOutput().MachineSecrets(),

@@ -235,7 +235,7 @@
                 },
                 "skipInitApply": {
                     "type": "boolean",
-                    "description": "skipInitApply indicates that machines will be managed or configured by external tools. \nFor example, it can serve as a source for userdata in cloud provider setups. \nThis option helps accelerate node provisioning. \nDefault is false.",
+                    "description": "skipInitApply indicates that machines will be managed or configured by external tools. \nFor example, it can serve as a source for userdata in cloud provider setups. \nThis option helps accelerate node provisioning. \nNote: init node is always applied. \nDefault is false.",
                     "default": false
                 }
             },

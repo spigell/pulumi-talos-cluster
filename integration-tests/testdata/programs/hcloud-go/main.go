@@ -54,7 +54,7 @@ func main() {
 			hetzner.Servers[i] = s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
 				pulumi.String(s.ID),
 			).ToStringOutput().ApplyT(func (v string) string {
-				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: %s", s.ID, v), nil)
+				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID, v), nil)
 				return v
 			}).(pulumi.StringOutput))
 		}

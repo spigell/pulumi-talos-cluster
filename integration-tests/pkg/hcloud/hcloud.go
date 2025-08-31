@@ -175,7 +175,7 @@ func (h *Hetzner) Up() (*Deployed, error) {
 		// Define the server
 		server, err := hcloud.NewServer(h.ctx, s.ID, s.args,
 			pulumi.DependsOn(deps),
-			pulumi.IgnoreChanges([]string{"sshKeys", "userdata"}),
+			pulumi.IgnoreChanges([]string{"sshKeys", "userData"}),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error creating server: %w", err)
