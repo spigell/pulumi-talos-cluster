@@ -127,19 +127,19 @@ func ClusterProperties() map[string]schema.PropertySpec {
 			},
 			Description: "Client configuration for bootstrapping and applying resources.",
 		},
-		provider.ClusterResourceOutputsGeneratedConfigurations: {
-			TypeSpec: schema.TypeSpec{
-				Type: "object",
-			},
-			Description: "TO DO",
-		},
-		provider.ClusterResourceOutputsMachines: {
-			TypeSpec: schema.TypeSpec{
-				Type: "object",
-				Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
-			},
-			Description: "TO DO",
-		},
+                provider.ClusterResourceOutputsGeneratedConfigurations: {
+                        TypeSpec: schema.TypeSpec{
+                                Type: "object",
+                        },
+                        Description: "Generated machine configuration YAML keyed by machine ID.",
+                },
+                provider.ClusterResourceOutputsMachines: {
+                        TypeSpec: schema.TypeSpec{
+                                Type: "object",
+                                Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
+                        },
+                        Description: "Machine information grouped by machine type.",
+                },
 	}
 }
 

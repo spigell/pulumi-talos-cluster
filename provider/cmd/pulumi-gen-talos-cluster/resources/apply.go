@@ -125,18 +125,18 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 					Description: "User-provided machine configuration to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
-				types.TalosImageKey: {
-					TypeSpec: schema.TypeSpec{
-						Type: "string",
-					},
-					Description: "TO DO",
-				},
-				types.KubernetesVersionKey: {
-					TypeSpec: schema.TypeSpec{
-						Type: "string",
-					},
-					Description: "TO DO",
-				},
+                                types.TalosImageKey: {
+                                        TypeSpec: schema.TypeSpec{
+                                                Type: "string",
+                                        },
+                                        Description: "Talos OS image to install or upgrade on the node.",
+                                },
+                                types.KubernetesVersionKey: {
+                                        TypeSpec: schema.TypeSpec{
+                                                Type: "string",
+                                        },
+                                        Description: "Kubernetes version to install or upgrade on the node.",
+                                },
 				types.ClusterEnpointKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: "string",

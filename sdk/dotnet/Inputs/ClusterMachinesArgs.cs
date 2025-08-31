@@ -12,13 +12,19 @@ namespace Pulumi.TalosCluster.Inputs
 
     public sealed class ClusterMachinesArgs : global::Pulumi.ResourceArgs
     {
+        [Input("configPatches")]
+        private InputList<string>? _configPatches;
+
         /// <summary>
         /// User-provided machine configuration to apply. 
-        /// Must be a valid YAML string. 
+        /// Must be a valid array of YAML strings. 
         /// For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         /// </summary>
-        [Input("configPatches")]
-        public Input<string>? ConfigPatches { get; set; }
+        public InputList<string> ConfigPatches
+        {
+            get => _configPatches ?? (_configPatches = new InputList<string>());
+            set => _configPatches = value;
+        }
 
         /// <summary>
         /// ID or name of the machine.
@@ -41,14 +47,14 @@ namespace Pulumi.TalosCluster.Inputs
         /// <summary>
         /// Talos OS installation image. 
         /// Used in the `install` configuration and set via CLI. 
-        /// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.2.
+        /// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.10.5.
         /// </summary>
         [Input("talosImage")]
         public Input<string>? TalosImage { get; set; }
 
         public ClusterMachinesArgs()
         {
-            TalosImage = "ghcr.io/siderolabs/installer:v1.10.2";
+            TalosImage = "ghcr.io/siderolabs/installer:v1.10.5";
         }
         public static new ClusterMachinesArgs Empty => new ClusterMachinesArgs();
     }

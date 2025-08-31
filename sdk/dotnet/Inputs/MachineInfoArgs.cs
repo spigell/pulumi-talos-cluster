@@ -26,7 +26,7 @@ namespace Pulumi.TalosCluster.Inputs
         public Input<string> Configuration { get; set; } = null!;
 
         /// <summary>
-        /// TO DO
+        /// Kubernetes version to install or upgrade on the node.
         /// </summary>
         [Input("kubernetesVersion")]
         public Input<string>? KubernetesVersion { get; set; }
@@ -44,7 +44,7 @@ namespace Pulumi.TalosCluster.Inputs
         public Input<string> NodeIp { get; set; } = null!;
 
         /// <summary>
-        /// TO DO
+        /// Talos OS image to install or upgrade on the node.
         /// </summary>
         [Input("talosImage")]
         public Input<string>? TalosImage { get; set; }
