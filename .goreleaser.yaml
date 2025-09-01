@@ -1,12 +1,12 @@
+version: 2
 archives:
   - id: pulumi-archive
     name_template: '{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}'
-    builds:
+    ids:
       - pulumi-component
 builds:
   - binary: pulumi-resource-talos-cluster
     id: pulumi-component
-    dir: provider
     env:
       - CGO_ENABLED=0
       - GO111MODULE=on
@@ -24,4 +24,4 @@ changelog:
 release:
   disable: false
 snapshot:
-  name_template: '{{ .Tag }}-SNAPSHOT'
+  version_template: '{{ .Tag }}-SNAPSHOT'
