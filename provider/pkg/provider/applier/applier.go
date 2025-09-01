@@ -2,6 +2,7 @@ package applier
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -169,7 +170,33 @@ func (a *Applier) UpgradeK8S(ma []*types.MachineInfo, deps []pulumi.Resource) ([
 	return append(deps, k8s), nil
 }
 
+func etcdReady(args *pulumi.ResourceHookArgs) error {
+	// Since this is an after hook, we'll have access to the new outputs of the
+	// resource.
+	ip := args.NewOutputs["node"].StringValue()
+
+	// Attempt to fetch health.json from the instance's public endpoint, backing
+	// off linearly if it is not yet available.
+	maxRetries := 30
+	for i := range maxRetries {
+		fmt.Println(ip)
+		fmt.Printf("Health check attempt %d failed: \n", i+1)
+
+		// Linear backoff - wait (i + 1) seconds before next attempt
+		time.Sleep(time.Duration(i+1) * time.Second)
+	}
+
+	return fmt.Errorf("health check failed after %d attempts", maxRetries)
+}
+
+
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
+	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", etcdReady, nil)
+	if err != nil {
+		return nil, err
+	}
+	hooks := []*pulumi.ResourceHook{etcdReadyHook}
+
 	apply, err := machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
 		Node:                      pulumi.String(m.NodeIP),
 		MachineConfigurationInput: pulumi.String(m.Configuration),
@@ -192,6 +219,10 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 		pulumi.IgnoreChanges([]string{"machineConfigurationInput", "applyMode"}),
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m", Update: "1m"}),
 		pulumi.DependsOn(deps),
+		pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
+			BeforeCreate: hooks,
+			BeforeUpdate: hooks,
+		}),
 	)
 	if err != nil {
 		return nil, err
