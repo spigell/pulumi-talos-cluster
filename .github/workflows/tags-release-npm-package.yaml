@@ -7,25 +7,10 @@ on:
 
 jobs:
   sdk-nodejs-release:
-    name: "Release NodeJS SDK"
-    runs-on: ubuntu-24.04
-    if: github.event.base_ref == ${{ github.event.repository.default_branch }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Setup Go ✨
-        uses: actions/setup-go@v4
-        with:
-          cache: false
-      - name: Install pulumictl
-        uses: jaxxstorm/action-install-gh-release@v1.10.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repo: pulumi/pulumictl
-      - name: Generate nodejs sdk package
-        run: make build_nodejs_sdk
-      - name: Publish package to npm
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          package: sdk/nodejs/bin
-          token: ${{ secrets.NPM_TOKEN }}
-          dry-run: false
+    uses: spigell/my-shared-workflows/.github/workflows/nodejs-package-release.yaml@main
+    with:
+      package-directory: 'sdk/nodejs/bin'
+      build-command: make build_nodejs_sdk
+      setup-action: setup-pulumi-env
+    secrets:
+      token: ${{ secrets.NPM_TOKEN }}
