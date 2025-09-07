@@ -1,0 +1,58 @@
+# This replace is used as an example for kustomize. And also for my homelab.
+
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pulumi-talos-cluster-workbench
+  namespace: pulumi-talos-cluster-dev
+spec:
+  # NFS do not supports user namespaces.
+  hostUsers: true
+  volumes:
+    - $patch: replace
+    - name: projects
+      nfs:
+        server: 192.168.1.48
+        path: /home/spigell/projects
+    - name: tmp
+      emptyDir: {}
+    - name: bootstrap
+      configMap:
+        name: workbench-bootstrap
+        defaultMode: 0755
+  initContainers:
+    - name: plugin
+      command: ["/bin/bash","-c","/opt/bootstrap/user-bootstrap.sh init"]
+      # command: ['sleep', 'infinity']
+      securityContext:
+        capabilities:
+            drop: ["ALL"]
+            add:
+            - CHOWN
+            - FOWNER
+            - SETGID
+            - SETFCAP
+            - SETUID
+            - DAC_OVERRIDE
+      volumeMounts:
+        - name: bootstrap
+          mountPath: /opt/bootstrap
+          readOnly: true
+  containers:
+    - name: workbench
+      command: ["/bin/bash","-c","/opt/bootstrap/user-bootstrap.sh main"]
+      securityContext:
+        capabilities:
+            drop: ["ALL"]
+            add:
+            - CHOWN
+            - FOWNER
+            - SETGID
+            - SETFCAP
+            - SETUID
+            - DAC_OVERRIDE
+      volumeMounts:
+        - name: bootstrap
+          mountPath: /opt/bootstrap
+          readOnly: true
