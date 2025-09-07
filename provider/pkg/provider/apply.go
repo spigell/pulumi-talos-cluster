@@ -66,6 +66,8 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 		init := ma[tmachine.TypeInit.String()]
 
+		cp := ma[tmachine.TypeControlPlane.String()]
+
 		if len(init) == 0 {
 			return creds.ToStringMapOutput(), fmt.Errorf("a init node must exist")
 		}
@@ -80,11 +82,15 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			IP:   i.NodeIP,
 		}
 
+		app.WithEtcdMembersCount(1)
+
 		inited, err := app.Init(i)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
-		cp := ma[tmachine.TypeControlPlane.String()]
+
+		app.WithEtcdMembersCount(len(cp) + 1)
+
 		controlplanesReady := inited
 
 		for _, m := range cp {

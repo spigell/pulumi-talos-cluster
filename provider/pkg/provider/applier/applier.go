@@ -1,7 +1,9 @@
 package applier
 
 import (
+	"encoding/json"
 	"fmt"
+	"os/exec"
 	"time"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
@@ -18,6 +20,8 @@ type Applier struct {
 	parent              pulumi.ResourceOption
 	commnanInterpreter  pulumi.StringArray
 	skipInitNode        bool
+
+	etcdMembers int
 
 	InitNode *InitNode
 }
@@ -42,6 +46,12 @@ func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationAr
 
 func (a *Applier) WithSkipedInitApply(skip bool) *Applier {
 	a.skipInitNode = skip
+
+	return a
+}
+
+func (a *Applier) WithEtcdMembersCount(count int) *Applier {
+	a.etcdMembers = count
 
 	return a
 }
@@ -115,7 +125,7 @@ func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulum
 }
 
 func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
-	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", etcdReady, nil)
+	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", a.etcdReady, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -180,25 +190,46 @@ func (a *Applier) UpgradeK8S(ma []*types.MachineInfo, deps []pulumi.Resource) ([
 	return append(deps, k8s), nil
 }
 
-func etcdReady(args *pulumi.ResourceHookArgs) error {
-	// Since this is an after hook, we'll have access to the new outputs of the
-	// resource.
+func (a *Applier) etcdReady(args *pulumi.ResourceHookArgs) error {
 	ip := args.NewOutputs["node"].StringValue()
 
-	// Attempt to fetch health.json from the instance's public endpoint, backing
-	// off linearly if it is not yet available.
 	maxRetries := 30
-	for i := range maxRetries {
-		fmt.Println(ip)
-		fmt.Printf("Health check attempt %d failed: \n", i+1)
+	for i := 0; i < maxRetries; i++ {
+		health := exec.Command("talosctl", "-n", ip, "-e", ip, "etcd", "health")
+		if err := health.Run(); err != nil {
+			fmt.Printf("Health check attempt %d failed: %v\n", i+1, err)
+			time.Sleep(time.Duration(i+1) * time.Second)
+			continue
+		}
 
-		// Linear backoff - wait (i + 1) seconds before next attempt
-		time.Sleep(time.Duration(i+1) * time.Second)
+		membersCmd := exec.Command("talosctl", "-n", ip, "-e", ip, "etcd", "member", "list", "-o", "json")
+		out, err := membersCmd.Output()
+		if err != nil {
+			fmt.Printf("Health check attempt %d failed: %v\n", i+1, err)
+			time.Sleep(time.Duration(i+1) * time.Second)
+			continue
+		}
+
+		var members struct {
+			Members []any `json:"members"`
+		}
+		if err := json.Unmarshal(out, &members); err != nil {
+			fmt.Printf("Health check attempt %d failed: %v\n", i+1, err)
+			time.Sleep(time.Duration(i+1) * time.Second)
+			continue
+		}
+
+		if len(members.Members) != a.etcdMembers {
+			fmt.Printf("Health check attempt %d failed: expected %d members, got %d\n", i+1, a.etcdMembers, len(members.Members))
+			time.Sleep(time.Duration(i+1) * time.Second)
+			continue
+		}
+
+		return nil
 	}
 
 	return fmt.Errorf("health check failed after %d attempts", maxRetries)
 }
-
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 
