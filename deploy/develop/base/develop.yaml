@@ -49,7 +49,6 @@ spec:
           cpu: "2"
         limits:
           memory: "1Gi"
-          cpu: "2"
       # ---- Health checks: gate main container on delve port readiness ----
       startupProbe:
         tcpSocket:
@@ -116,10 +115,10 @@ spec:
       resources:
         requests:
           memory: "2Gi"
-          cpu: "2"
+          cpu: "4"
         limits:
           memory: "4Gi"
-          cpu: "2"
+          cpu: "4"
       securityContext:
         # runAsNonRoot: false
         allowPrivilegeEscalation: false

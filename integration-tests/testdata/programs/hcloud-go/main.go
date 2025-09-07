@@ -13,7 +13,7 @@ var (
 	clu = &cluster.Cluster{
 			PrivateNetwork:    "10.10.10.0/24",
 			PrivateSubnetwork: "10.10.10.0/25",
-			KubernetesVersion: "v1.31.0",
+			//KubernetesVersion: "1.32.0",
 			TalosImage: "ghcr.io/siderolabs/installer:v1.10.2",
 			Machines: []*cluster.Machine{
 				{
@@ -48,7 +48,6 @@ func main() {
 			return err
 		}
 
-		ctx.Export("clusterMachineConfigs", talosClu.Cluster.GeneratedConfigurations)
 
 		for i, s := range hetzner.Servers {
 			hetzner.Servers[i] = s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
@@ -69,6 +68,7 @@ func main() {
 			return err
 		}
 
+		ctx.Export("clusterMachineConfigs", talosClu.Cluster.GeneratedConfigurations)
 		ctx.Export("kubeconfig", applied.Kubeconfig)
 		ctx.Export("talosconfig", applied.Talosconfig)
 

@@ -22,16 +22,25 @@ $ make build && make install_provider # It generates all SDKs and build provider
 $ export PATH=$PATH:~/go/bin
 ```
 
-### Example
+### Prepare for releasing
+To build the provider and all SDKs (Go, Node.js, Python, .NET) in one step.
+Set the desired version explicitly, for example `v0.7.0`:
 
-Refer to the `examples/` directory for sample Pulumi programs using the `pulumi-talos-cluster` component.
+```bash
+VERSION=v0.7.0 make build
+git add .
+git commit -m 'regenerate'
+VERSION=v0.7.0 make build
+git add .
+git commit -m 'release'
+```
 
+## Example
+Refer to the `integration-tests/testdata` directory for sample Pulumi programs using the `pulumi-talos-cluster` component.
+ 
 ## Roadmap
-
 The following features and improvements are planned for future releases:
-
 - [x] **Kubernetes Version Configuration**: Allow setting the Kubernetes version directly via CLI
-
 - [ ] **Tests and Continuous Integration**: Implement tests and CI/CD pipelines to ensure code quality and stability.
 - [ ] **Multi-language Examples**: Provide usage examples in four languages (TypeScript, Python, Go, and .NET).
 - [ ] **Comprehensive Documentation**: Enhance documentation with detailed setup, customization, and troubleshooting guides.

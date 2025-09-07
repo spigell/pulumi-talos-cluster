@@ -90,7 +90,7 @@ namespace Pulumi.TalosCluster
 
         /// <summary>
         /// Kubernetes version to install. 
-        /// Default is v1.31.0.
+        /// Default is v1.33.0.
         /// </summary>
         [Input("kubernetesVersion")]
         public Input<string>? KubernetesVersion { get; set; }
@@ -101,15 +101,15 @@ namespace Pulumi.TalosCluster
         /// Used in NewSecrets() and GetConfigurationOutput() resources. 
         /// This property is immutable to prevent version conflicts across provider updates. 
         /// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-        /// The default value is based on gendata.VersionTag, current: v1.10.5.
+        /// The default value is based on gendata.VersionTag, current: v1.11.0.
         /// </summary>
         [Input("talosVersionContract")]
         public Input<string>? TalosVersionContract { get; set; }
 
         public ClusterArgs()
         {
-            KubernetesVersion = "v1.31.0";
-            TalosVersionContract = "v1.10.5";
+            KubernetesVersion = "v1.33.0";
+            TalosVersionContract = "v1.11.0";
         }
         public static new ClusterArgs Empty => new ClusterArgs();
     }

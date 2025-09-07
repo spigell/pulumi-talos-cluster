@@ -25,7 +25,7 @@ export class Apply extends pulumi.ComponentResource {
         return obj['__pulumiType'] === Apply.__pulumiType;
     }
 
-    public /*out*/ readonly credentials!: pulumi.Output<outputs.Credentials>;
+    declare public /*out*/ readonly credentials: pulumi.Output<outputs.Credentials>;
 
     /**
      * Create a Apply resource with the given unique name, arguments, and options.
@@ -38,15 +38,15 @@ export class Apply extends pulumi.ComponentResource {
         let resourceInputs: pulumi.Inputs = {};
         opts = opts || {};
         if (!opts.id) {
-            if ((!args || args.applyMachines === undefined) && !opts.urn) {
+            if (args?.applyMachines === undefined && !opts.urn) {
                 throw new Error("Missing required property 'applyMachines'");
             }
-            if ((!args || args.clientConfiguration === undefined) && !opts.urn) {
+            if (args?.clientConfiguration === undefined && !opts.urn) {
                 throw new Error("Missing required property 'clientConfiguration'");
             }
-            resourceInputs["applyMachines"] = args ? args.applyMachines : undefined;
-            resourceInputs["clientConfiguration"] = args ? args.clientConfiguration : undefined;
-            resourceInputs["skipInitApply"] = (args ? args.skipInitApply : undefined) ?? false;
+            resourceInputs["applyMachines"] = args?.applyMachines;
+            resourceInputs["clientConfiguration"] = args?.clientConfiguration;
+            resourceInputs["skipInitApply"] = (args?.skipInitApply) ?? false;
             resourceInputs["credentials"] = undefined /*out*/;
         } else {
             resourceInputs["credentials"] = undefined /*out*/;

@@ -24,6 +24,34 @@ EOF
 [ -f /usr/share/bash-completion/completions/make ] && source /usr/share/bash-completion/completions/make
 command -v pulumi >/dev/null 2>&1 && source <(pulumi gen-completion bash) || true
 command -v talosctl >/dev/null 2>&1 && source <(talosctl completion bash) || true
+
+pdebug() {
+  local log="/tmp/pulumi-provider.log"
+  if [[ ! -s "$log" ]]; then
+    echo "pdebug: provider log '$log' not found or empty" >&2
+    return 1
+  fi
+
+  # last non-empty line
+  local port
+  port="$(awk 'NF{last=$0} END{print last}' "$log")"
+
+  if [[ ! "$port" =~ ^[0-9]+$ ]]; then
+    echo "pdebug: expected a bare port number on the last log line, got: '$port'" >&2
+    return 1
+  fi
+
+  echo "pdebug: using talos-cluster provider port $port"
+
+  if [[ -n "${DEBUG_COMMAND:-}" ]]; then
+    PULUMI_DEBUG_PROVIDERS="talos-cluster:${port}" \
+      pulumi ${DEBUG_COMMAND} --logtostderr -d -v 12 "$@" 2> /tmp/log.txt
+  else
+    PULUMI_DEBUG_PROVIDERS="talos-cluster:${port}" \
+      pulumi "$@" --logtostderr -d -v 12 2> /tmp/log.txt
+  fi
+}
+alias pulumi-dbg='pdebug'
 EOF
   chown "${USER_UID}:${USER_UID}" "${USER_HOME}/.bashrc"
 }
@@ -39,7 +67,7 @@ case "${1:-}" in
     echo ">>> Pulumi login (local) for ${USER_NAME}"
     run_as_user "pulumi login --local || true"
     echo ">>> Build plugin & start delve"
-    run_as_user "cd /projects/pulumi-talos-cluster && make start_delve"
+    run_as_user "cd /projects/pulumi-talos-cluster && make start_delve | tee > /tmp/pulumi-provider.log"
     ;;
   main)
     ensure_user
