@@ -115,6 +115,12 @@ func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulum
 }
 
 func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", etcdReady, nil)
+	if err != nil {
+		return nil, err
+	}
+	hooks := []*pulumi.ResourceHook{etcdReadyHook}
+
 	set, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-talos-version:%s", a.name, m.MachineID), &local.CommandArgs{
 		Create: a.talosctlUpgradeCMD(m),
 		Triggers: pulumi.Array{
@@ -125,6 +131,10 @@ func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource) ([]pulu
 		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: "10m"}),
 		pulumi.DependsOn(deps),
+		pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
+			BeforeCreate: hooks,
+			BeforeUpdate: hooks,
+		}),
 	)
 	if err != nil {
 		return nil, err
@@ -191,11 +201,6 @@ func etcdReady(args *pulumi.ResourceHookArgs) error {
 
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", etcdReady, nil)
-	if err != nil {
-		return nil, err
-	}
-	hooks := []*pulumi.ResourceHook{etcdReadyHook}
 
 	apply, err := machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
 		Node:                      pulumi.String(m.NodeIP),
@@ -219,10 +224,6 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 		pulumi.IgnoreChanges([]string{"machineConfigurationInput", "applyMode"}),
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m", Update: "1m"}),
 		pulumi.DependsOn(deps),
-		pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
-			BeforeCreate: hooks,
-			BeforeUpdate: hooks,
-		}),
 	)
 	if err != nil {
 		return nil, err
