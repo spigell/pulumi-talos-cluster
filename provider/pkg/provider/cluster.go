@@ -16,7 +16,7 @@ import (
 
 const (
 	// DefaultK8SVersion.
-	DefaultK8SVersion = "v1.31.0"
+	DefaultK8SVersion = "v1.33.0"
 )
 
 const (

@@ -96,7 +96,7 @@ environment:
 	created, err := talos.NewCluster(ctx, clu.Name, &talos.ClusterArgs{
 		ClusterEndpoint: pulumi.Sprintf("https://%s:6443", servers[0].IP),
 		ClusterName:     clu.Name,
-		KubernetesVersion: pulumi.String(clu.KubernetesVersion),
+		//KubernetesVersion: pulumi.String(clu.KubernetesVersion),
 		ClusterMachines: machines,
 	})
 	if err != nil {

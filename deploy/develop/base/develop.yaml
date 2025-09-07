@@ -1,0 +1,150 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pulumi-talos-cluster-dev
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pulumi-talos-cluster-workbench
+  namespace: pulumi-talos-cluster-dev
+  labels:
+    app: pulumi-talos-cluster-workbench
+spec:
+  terminationGracePeriodSeconds: 4
+  automountServiceAccountToken: false
+
+  # Use isolated user namespace (NOT host users)
+  hostUsers: false
+
+  # Avoid auto-injecting service env vars
+  enableServiceLinks: false
+
+  # ---- Native sidecar (restartable init container) ----
+  initContainers:
+    - name: plugin
+      image: &workbench-image ghcr.io/spigell/pulumi-talos-cluster-workbench:3.193.0-de755f
+      restartPolicy: Always
+      workingDir: /projects
+      command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          if [ ! -d pulumi-talos-cluster ]; then
+            echo "=== Fetch repo ==="
+            git clone https://github.com/spigell/pulumi-talos-cluster.git
+          fi
+          echo "=== Build plugin & start delve ==="
+          cd pulumi-talos-cluster
+          make generate_schema
+          make start_delve
+      ports:
+        - name: dlv
+          containerPort: 2345
+      resources:
+        requests:
+          memory: "1Gi"
+          cpu: "2"
+        limits:
+          memory: "1Gi"
+      # ---- Health checks: gate main container on delve port readiness ----
+      startupProbe:
+        tcpSocket:
+          port: 2345
+        periodSeconds: 5
+        timeoutSeconds: 2
+        failureThreshold: 120   # up to ~10 minutes for first clone/build
+      readinessProbe:
+        tcpSocket:
+          port: 2345
+        periodSeconds: 2
+        timeoutSeconds: 1
+        failureThreshold: 3
+      livenessProbe:
+        tcpSocket:
+          port: 2345
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3
+      volumeMounts:
+        - name: projects
+          mountPath: /projects
+        - name: tmp
+          mountPath: /tmp
+      securityContext:
+        # runAsNonRoot: false
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+        seccompProfile:
+          type: RuntimeDefault
+
+  # ---- Primary application container ----
+  containers:
+    - name: workbench
+      image: *workbench-image
+      workingDir: /projects
+      command:
+        - /bin/bash
+        - -c
+        - |
+          set -euo pipefail
+          echo "==== Tool Versions (startup) ===="
+          pulumi version || true
+          go version || true
+          node --version || true
+          npm --version || true
+          yarn --version || true
+          kubectl version --client=true --short || true
+          helm version --short || true
+          k9s version || true
+          talosctl version --client || true
+          dlv version || true
+          echo "================================="
+          sleep infinity
+      env:
+        - name: PULUMI_PLUGIN_PATH
+          value: /projects/pulumi-talos-cluster/bin
+      volumeMounts:
+        - name: projects
+          mountPath: /projects
+        - name: tmp
+          mountPath: /tmp
+      resources:
+        requests:
+          memory: "2Gi"
+          cpu: "4"
+        limits:
+          memory: "4Gi"
+          cpu: "4"
+      securityContext:
+        # runAsNonRoot: false
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+        seccompProfile:
+          type: RuntimeDefault
+
+  volumes:
+    - name: projects
+      emptyDir: {}
+    - name: tmp
+      emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulumi-talos-cluster-workbench-delve
+  namespace: pulumi-talos-cluster-dev
+  labels:
+    app: pulumi-talos-cluster-workbench
+spec:
+  selector:
+    app: pulumi-talos-cluster-workbench
+  ports:
+    - name: dlv
+      port: 2345
+      targetPort: 2345
+  type: ClusterIP
