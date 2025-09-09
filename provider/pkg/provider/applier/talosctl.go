@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
@@ -150,7 +149,6 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo, deps []pulumi.Resourc
 		Home: talosctl.Home,
 	}
 
-
 	command.Command = pulumi.All(
 		a.basicClient().TalosConfig(),  // string
 		pulumi.String(m.NodeIP),        // string
@@ -159,13 +157,6 @@ func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo, deps []pulumi.Resourc
 		talosConfig := args[0].(string)
 		ip := args[1].(string)
 		machineConfig := args[2].(string)
-		if (m.MachineID == "controlplane-1") {
-			runtime.Breakpoint()
-		}
-
-		if (m.MachineID == "controlplane-2") {
-			runtime.Breakpoint()
-		}
 
 		var cfg v1alpha1.Config
 		if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {

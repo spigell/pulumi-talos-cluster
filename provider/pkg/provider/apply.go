@@ -59,24 +59,24 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 		ma := v[0].(map[string][]any)
 
-		app := applier.New(ctx, name,
-			buildClientConfigurationFromMap(args.ClientConfiguration),
-			pulumi.Parent(a),
-		).WithSkipedInitApply(v[1].(bool))
-		
-		if err := app.SetHooks(); err != nil {
-			return creds.ToStringMapOutput(), err
-		}
-
 		init := ma[tmachine.TypeInit.String()]
-
-		cp := ma[tmachine.TypeControlPlane.String()]
-		app.WithEtcdMembersCount(len(cp) + 1)
-
 		if len(init) == 0 {
 			return creds.ToStringMapOutput(), fmt.Errorf("a init node must exist")
 		}
+		cp := ma[tmachine.TypeControlPlane.String()]
+		workers := ma[tmachine.TypeWorker.String()]
 
+		app, err := applier.New(ctx, name,
+			buildClientConfigurationFromMap(args.ClientConfiguration),
+			pulumi.Parent(a),
+		)
+
+		if err != nil {
+			return creds.ToStringMapOutput(), err
+		}
+
+		app.WithSkipedInitApply(v[1].(bool))
+		app.WithEtcdMembersCount(len(cp) + 1)
 
 		i := types.ParseMachineInfo(init[0].(map[string]any))
 
@@ -124,7 +124,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		// Nodes contains all nodes, including endpoints
 		nodes = append(nodes, endpoints...)
 
-		workers := ma[tmachine.TypeWorker.String()]
 		for _, m := range workers {
 			ma, ok := m.(map[string]any)
 			if !ok {

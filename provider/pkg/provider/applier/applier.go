@@ -1,21 +1,13 @@
 package applier
 
 import (
-	"bufio"
-	"bytes"
-	"context"
 	"fmt"
-	"os/exec"
-	"strconv"
-	"strings"
-
-	//"runtime"
-	"time"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/client"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
@@ -27,7 +19,7 @@ type Applier struct {
 	commnanInterpreter  pulumi.StringArray
 	skipInitNode        bool
 
-	etcdMembers int
+	etcdMembers   int
 	etcdReadyHook *pulumi.ResourceHook
 
 	InitNode *InitNode
@@ -38,8 +30,8 @@ type InitNode struct {
 	Name string
 }
 
-func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationArgs, parent pulumi.ResourceOption) *Applier {
-	return &Applier{
+func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationArgs, parent pulumi.ResourceOption) (*Applier, error) {
+	a := &Applier{
 		name:                name,
 		ctx:                 ctx,
 		parent:              parent,
@@ -51,6 +43,15 @@ func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationAr
 			pulumi.String("-c"),
 		},
 	}
+
+	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
+	if err != nil {
+		return a, err
+	}
+
+	a.etcdReadyHook = etcdReadyHook
+
+	return a, nil
 }
 
 func (a *Applier) WithSkipedInitApply(skip bool) *Applier {
@@ -133,15 +134,7 @@ func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulum
 	return append(deps, cli...), nil
 }
 
-func (a *Applier) SetHooks() error {
-	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", a.etcdReady, nil)
-	a.etcdReadyHook = etcdReadyHook
-
-	return err
-}
-
 func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role string) ([]pulumi.Resource, error) {
-	hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
 
 	cmd := a.talosctlUpgradeCMD(m, deps)
 
@@ -158,7 +151,7 @@ func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role st
 	}
 
 	if role == "controlplane" || role == "init" {
-	//if role == "none" {
+		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
 		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
 			BeforeCreate: hooks,
 			BeforeUpdate: hooks,
@@ -168,8 +161,8 @@ func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role st
 	set, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-talos-version:%s", a.name, m.MachineID), &local.CommandArgs{
 		Create: cmd.Command,
 		Environment: pulumi.StringMap{
-			"NODE_IP":       pulumi.String(m.NodeIP),
-			"TALOSCTL_HOME": pulumi.String(cmd.Home.Dir),
+			"NODE_IP":            pulumi.String(m.NodeIP),
+			"TALOSCTL_HOME":      pulumi.String(cmd.Home.Dir),
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 		},
 		Triggers: pulumi.Array{
@@ -221,139 +214,6 @@ func (a *Applier) UpgradeK8S(ma []*types.MachineInfo, deps []pulumi.Resource) ([
 	}
 
 	return append(deps, k8s), nil
-}
-
-func (a *Applier) etcdReady(args *pulumi.ResourceHookArgs) error {
-	envObj := args.NewInputs["environment"].ObjectValue().Mappable()
-
-	ip, ok := envObj["NODE_IP"].(string)
-	if !ok || ip == "" {
-		return fmt.Errorf("environment.NODE_IP is missing or not a string")
-	}
-	workDir, ok := envObj["TALOSCTL_HOME"].(string)
-	if !ok || workDir == "" {
-		return fmt.Errorf("environment.TALOSCTL_HOME is missing or not a string")
-	}
-	etcdMembersTarget, ok := envObj["ETCD_MEMBER_TARGET"].(string)
-	if !ok || etcdMembersTarget == "" {
-		return fmt.Errorf("environment.ETCD_MEMBER_TARGET is missing or not a string")
-	}
-
-	const (
-		maxRetries    = 10
-		healthTimeout = 10 * time.Second
-		listTimeout   = 10 * time.Second
-	)
-
-	runTalosctl := func(timeout time.Duration, args ...string) ([]byte, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		args = append(args, "--talosconfig", "./talosctl.yaml")
-		cmd := exec.CommandContext(ctx, "talosctl", args...)
-		a.ctx.Log.Debug(fmt.Sprintf("health: command: %v", cmd), nil)
-		cmd.Dir = workDir
-		return cmd.Output()
-	}
-
-	expected, err := strconv.ParseInt(etcdMembersTarget, 10, 0)  // final desired size (e.g., 3)
-	if err != nil {
-		//  TO DO: return
-		//return 
-
-		return err
-	}
-	consecutiveOK := 0         // require 2 consecutive matches to avoid flapping
-	const okStreak = 2
-
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		backoff := time.Duration(attempt) * time.Second
-
-		// 1) health
-		if _, err := runTalosctl(healthTimeout, "-n", ip, "-e", ip, "etcd", "status"); err != nil {
-			a.ctx.Log.Debug(fmt.Sprintf("etcd health attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
-			time.Sleep(backoff)
-			continue
-		}
-
-		// 2) members (tabular, not JSON)
-		out, err := runTalosctl(listTimeout, "-n", ip, "-e", ip, "etcd", "members")
-		if err != nil {
-			a.ctx.Log.Debug(fmt.Sprintf("etcd members attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
-			time.Sleep(backoff)
-			continue
-		}
-
-		got, perr := countEtcdMembersFromTable(out)
-		if perr != nil {
-			a.ctx.Log.Debug(fmt.Sprintf("parse members attempt %d/%d failed: %v", attempt, maxRetries, perr), nil)
-			time.Sleep(backoff)
-			continue
-		}
-
-		match := (got == expected)
-
-		if !match {
-			consecutiveOK = 0
-			a.ctx.Log.Debug(fmt.Sprintf("attempt %d/%d: expected %d, got %d",
-				attempt, maxRetries, expected, got), nil)
-			time.Sleep(backoff)
-			continue
-		}
-
-		consecutiveOK++
-		if consecutiveOK < okStreak {
-			// keep looping to ensure stability
-			a.ctx.Log.Debug(fmt.Sprintf("attempt %d/%d: success. waiting for consecutiveOK: %d/%d",
-				attempt, maxRetries, consecutiveOK, okStreak), nil)
-			time.Sleep(backoff / 2)
-			continue
-		}
-
-		a.ctx.Log.Info(
-			fmt.Sprintf("[INFO] talos-cluster: etcd health check passed. attempts %d/%d. etcdMembers: %d",
-				attempt, maxRetries, got),
-			nil,
-		)
-
-		a.ctx.Log.Info(fmt.Sprintf("[INFO] talos-cluster: etcd health check passed. attempts %d/%d made. etcdMember: %d", attempt, maxRetries, got), nil)
-		return nil
-	}
-
-	return fmt.Errorf("etcd health check failed after %d attempts", maxRetries)
-}
-
-// countEtcdMembersFromTable parses `talosctl etcd members` tabular output.
-// It ignores the first non-empty header line and counts subsequent non-empty lines.
-func countEtcdMembersFromTable(out []byte) (int64, error) {
-	sc := bufio.NewScanner(bytes.NewReader(out))
-	sc.Buffer(make([]byte, 0, 64*1024), 1<<20)
-
-	lines := make([]string, 0, 8)
-	for sc.Scan() {
-		line := strings.TrimSpace(sc.Text())
-		if line != "" {
-			lines = append(lines, line)
-		}
-	}
-	if err := sc.Err(); err != nil {
-		return 0, fmt.Errorf("scan output: %w", err)
-	}
-	if len(lines) == 0 {
-		return 0, fmt.Errorf("no output from talosctl etcd members")
-	}
-
-	// First non-empty line is the header. Everything after is a member row.
-	memberRows := lines[1:]
-	count := 0
-	for _, row := range memberRows {
-		// Be safe: skip accidental separator lines, etc.
-		// Real rows should have multiple columns when split by fields.
-		if len(strings.Fields(row)) >= 3 {
-			count++
-		}
-	}
-
-	return int64(count), nil
 }
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
