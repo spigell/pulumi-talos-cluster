@@ -88,7 +88,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			IP:   i.NodeIP,
 		}
 
-		inited, err := app.Init(i)
+		inited, err := app.BootstrapInitNode(i)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
@@ -133,7 +133,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 			nodes = append(nodes, node.NodeIP)
 
-			_, err := app.ApplyTo(node, inited)
+			_, err := app.ApplyToWorker(node, inited)
 			if err != nil {
 				return creds.ToStringMapOutput(), err
 			}

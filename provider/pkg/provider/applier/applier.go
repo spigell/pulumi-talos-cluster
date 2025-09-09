@@ -66,7 +66,7 @@ func (a *Applier) WithEtcdMembersCount(count int) *Applier {
 	return a
 }
 
-func (a *Applier) Init(m *types.MachineInfo) ([]pulumi.Resource, error) {
+func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, error) {
 	// The Init node is special. We need to init by ourselves.
 	applied, err := a.initApply(m, nil)
 	if err != nil {
@@ -117,7 +117,7 @@ func (a *Applier) ApplyToControlplane(m *types.MachineInfo, deps []pulumi.Resour
 	return append(deps, cli...), nil
 }
 
-func (a *Applier) ApplyTo(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+func (a *Applier) ApplyToWorker(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
 	if !a.skipInitNode {
 		applied, err := a.initApply(m, deps)
 		if err != nil {
