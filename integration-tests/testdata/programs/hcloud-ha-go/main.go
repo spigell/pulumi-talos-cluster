@@ -4,44 +4,57 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/cluster"
-	"github.com/spigell/pulumi-talos-cluster/tests/pkg/hcloud"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	platform   = "metal"
+	talosImage = "ghcr.io/siderolabs/installer:v1.10.3"
 )
 
 var clu = &cluster.Cluster{
 	PrivateNetwork:    "10.10.10.0/24",
 	PrivateSubnetwork: "10.10.10.0/25",
 	KubernetesVersion: "v1.31.0",
-	TalosImage:        "ghcr.io/siderolabs/installer:v1.10.3",
 	Machines: []*cluster.Machine{
 		{
 			ID:         "controlplane-1",
 			Type:       "init",
+			TalosImage: talosImage,
+			Platform:   platform,
 			ServerType: "cx22",
 			PrivateIP:  "10.10.10.5",
 		},
 		{
 			ID:         "controlplane-2",
 			Type:       string(talos.MachineTypesControlplane),
+			Platform:   platform,
+			TalosImage: talosImage,
+
 			ServerType: "cx22",
 			PrivateIP:  "10.10.10.2",
-			Datacenter: "fsn1-dc14",
+		//	Datacenter: "fsn1-dc14",
 		},
 		{
 			ID:         "controlplane-3",
 			Type:       string(talos.MachineTypesControlplane),
 			ServerType: "cx22",
+			Platform:   platform,
+			TalosImage: talosImage,
 			PrivateIP:  "10.10.10.10",
-			Datacenter: "fsn1-dc14",
+		//	Datacenter: "fsn1-dc14",
 		},
 		{
 			ID:         "worker-1",
 			Type:       "worker",
+			Platform:   platform,
+			TalosImage: talosImage,
 			ServerType: "cx22",
 			PrivateIP:  "10.10.10.3",
-			Datacenter: "fsn1-dc14",
+		//	Datacenter: "fsn1-dc14",
 		},
 	},
 }
@@ -107,8 +120,8 @@ func main() {
 				MachineId:     server.ID,
 				NodeIp:        server.IP,
 				MachineType:   talos.MachineTypes(m.Type),
-				TalosImage:    pulumi.String(clu.TalosImage),
-				ConfigPatches: pulumi.String(rendered),
+				TalosImage:    pulumi.String(m.TalosImage),
+				ConfigPatches: pulumi.StringArray{pulumi.String(rendered)},
 			})
 		}
 

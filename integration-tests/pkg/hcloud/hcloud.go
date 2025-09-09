@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -14,8 +15,9 @@ import (
 )
 
 const (
-	defaultDatacenter = "nbg1-dc3"
-	testImageSelector = "os=talos,testing=true"
+	defaultDatacenter          = "nbg1-dc3"
+	defaultTalosInitialVersion = "v1.10.3"
+	testImageSelector          = "os=talos"
 )
 
 type Hetzner struct {
@@ -28,8 +30,10 @@ type Hetzner struct {
 }
 
 type Server struct {
-	args      *hcloud.ServerArgs
-	privateIP string
+	args          *hcloud.ServerArgs
+	privateIP     string
+	arch          string
+	imageSelector string
 
 	ID string
 	IP pulumi.StringOutput
@@ -60,6 +64,10 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 			s.Datacenter = defaultDatacenter
 		}
 
+		if s.TalosInitialVersion == "" {
+			s.TalosInitialVersion = defaultTalosInitialVersion
+		}
+
 		ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", s.ID), &hcloud.PrimaryIpArgs{
 			Name:         pulumi.Sprintf("%s-%s-ipv4", cluster.Name, s.ID),
 			Datacenter:   pulumi.String(s.Datacenter),
@@ -82,9 +90,17 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 			return nil, err
 		}
 
+		arch := "x86"
+
+		if strings.HasPrefix(s.ServerType, "cax") || strings.HasPrefix(s.ServerType, "cpx") {
+			arch = "arm"
+		}
+
 		servers = append(servers, &Server{
-			ID:        s.ID,
-			privateIP: s.PrivateIP,
+			ID:            s.ID,
+			privateIP:     s.PrivateIP,
+			arch:          arch,
+			imageSelector: fmt.Sprintf("%s,version=%s,variant=%s,arch=%s", testImageSelector, s.TalosInitialVersion, s.Platform, arch),
 			args: &hcloud.ServerArgs{
 				Name: pulumi.Sprintf("%s-%s", cluster.Name, s.ID),
 				SshKeys: pulumi.StringArray{
@@ -159,18 +175,18 @@ func (h *Hetzner) Up() (*Deployed, error) {
 		deps = append(deps, subnet)
 	}
 
-	image, err := hcloud.GetImage(h.ctx, &hcloud.GetImageArgs{
-		WithSelector:     pulumi.StringRef(testImageSelector),
-		MostRecent:       pulumi.BoolRef(true),
-		WithArchitecture: pulumi.StringRef("x86"),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("can't find an image")
-	}
-
 	servers := make([]pulumi.Resource, 0)
 
 	for _, s := range h.Servers {
+		image, err := hcloud.GetImage(h.ctx, &hcloud.GetImageArgs{
+			WithSelector:     pulumi.StringRef(s.imageSelector),
+			MostRecent:       pulumi.BoolRef(true),
+			WithArchitecture: pulumi.StringRef(s.arch),
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("can't find an image with selector: %s", s.imageSelector)
+		}
 		s.args.Image = pulumi.Sprintf("%d", image.Id)
 		// Define the server
 		server, err := hcloud.NewServer(h.ctx, s.ID, s.args,

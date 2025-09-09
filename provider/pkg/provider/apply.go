@@ -63,14 +63,20 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			buildClientConfigurationFromMap(args.ClientConfiguration),
 			pulumi.Parent(a),
 		).WithSkipedInitApply(v[1].(bool))
+		
+		if err := app.SetHooks(); err != nil {
+			return creds.ToStringMapOutput(), err
+		}
 
 		init := ma[tmachine.TypeInit.String()]
 
 		cp := ma[tmachine.TypeControlPlane.String()]
+		app.WithEtcdMembersCount(len(cp) + 1)
 
 		if len(init) == 0 {
 			return creds.ToStringMapOutput(), fmt.Errorf("a init node must exist")
 		}
+
 
 		i := types.ParseMachineInfo(init[0].(map[string]any))
 
@@ -82,14 +88,10 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			IP:   i.NodeIP,
 		}
 
-		app.WithEtcdMembersCount(1)
-
 		inited, err := app.Init(i)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
-
-		app.WithEtcdMembersCount(len(cp) + 1)
 
 		controlplanesReady := inited
 
@@ -164,7 +166,8 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 	}).(pulumi.StringMapOutput)
 
 	if err := ctx.RegisterResourceOutputs(a, pulumi.Map{
-		// ApplyResourceKubeconfigKey: kube,
+		types.KubeconfigKey:  a.Credentials.MapIndex(pulumi.String(types.KubeconfigKey)),
+		types.TalosconfigKey: a.Credentials.MapIndex(pulumi.String(types.TalosconfigKey)),
 	}); err != nil {
 		return nil, err
 	}

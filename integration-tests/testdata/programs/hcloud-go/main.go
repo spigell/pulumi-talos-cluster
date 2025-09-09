@@ -8,17 +8,22 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 )
 
+var (
+	platform   = "hcloud"
+	talosImage = "ghcr.io/siderolabs/installer:v1.10.3"
+)
 
 var (
 	clu = &cluster.Cluster{
 			PrivateNetwork:    "10.10.10.0/24",
 			PrivateSubnetwork: "10.10.10.0/25",
-			//KubernetesVersion: "1.32.0",
-			TalosImage: "ghcr.io/siderolabs/installer:v1.10.2",
+			KubernetesVersion: "1.32.0",
 			Machines: []*cluster.Machine{
 				{
 					ID:       "controlplane-1",
 					Type:       "init",
+					Platform: platform,
+					TalosImage: talosImage,
 					ServerType: "cx22",
 					PrivateIP:  "10.10.10.5",
 					Datacenter:   "fsn1-dc14",
@@ -26,6 +31,8 @@ var (
 				{
 					ID:       "worker-1",
 					Type:       "worker",
+					Platform: platform,
+					TalosImage: talosImage,
 					ServerType: "cx22",
 					PrivateIP:  "10.10.10.3",
 					Datacenter:   "fsn1-dc14",
@@ -62,6 +69,7 @@ func main() {
 		if err != nil {
 			return err
 		}
+
 
 		applied, err := talosClu.Apply(servers.Deps)
 		if err != nil {

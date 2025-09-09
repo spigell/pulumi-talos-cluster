@@ -4,11 +4,12 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
-	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
+	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
 	"gopkg.in/yaml.v3"
 )
+
 
 type Talos struct {
 	ctx *pulumi.Context
@@ -88,7 +89,7 @@ environment:
 			MachineId:  server.ID,
 			NodeIp: server.IP,
 			MachineType:   talos.MachineTypes(m.Type),
-			TalosImage: pulumi.String(clu.TalosImage),
+			TalosImage: pulumi.String(m.TalosImage),
 			ConfigPatches: pulumi.StringArray{pulumi.String(rendered), pulumi.String(timePatch), pulumi.String(extPatch)},
 		})
 	}
