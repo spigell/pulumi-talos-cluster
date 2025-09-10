@@ -203,26 +203,15 @@ func (a *Applier) ApplyToWorker(m *types.MachineInfo, deps []pulumi.Resource) ([
 
 func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role string) ([]pulumi.Resource, error) {
 	upgraded, err := a.upgrade(m, deps, role)
-
 	if err != nil {
 		return nil, err
 	}
 
 	deps = append(deps, upgraded)
 
-	apply, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-apply:%s", a.name, m.MachineID), &local.CommandArgs{
-		Create: a.talosctlApplyCMD(m, deps),
-		Triggers: pulumi.Array{
-			pulumi.String(m.UserConfigPatches),
-			pulumi.String(m.ClusterEnpoint),
-		},
-		Interpreter: a.commnanInterpreter,
-	}, a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
-		pulumi.DependsOn(deps),
-	)
+	apply, err := a.apply(m, deps)
 	if err != nil {
-		return deps, err
+		return nil, err
 	}
 
 	deps = append(deps, apply)

@@ -2,8 +2,6 @@ package applier
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
@@ -38,7 +36,7 @@ func (a *Applier) upgrade(m *types.MachineInfo, deps []pulumi.Resource, role str
 	}
 
 	upgrade, err := t.RunCommand(fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.TalosctlArgs{
-		PrepareConfig: a.basicClient().TalosConfig(),
+		TalosConfig: a.basicClient().TalosConfig(),
 		Args: talosctlUpgradeArgs(m),
 		RetryCount: 10,
 		Environment: pulumi.StringMap{
@@ -47,7 +45,6 @@ func (a *Applier) upgrade(m *types.MachineInfo, deps []pulumi.Resource, role str
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 		},
 		Triggers:    pulumi.Array{pulumi.String(m.TalosImage)},
-		Interpreter: a.commnanInterpreter,
 	}, opts...)
 
 	if err != nil {

@@ -181,6 +181,3 @@ func (t *Talosctl) withCleanCommand(cmd string) string {
 	}, " ; "), cmd, t.Home.Dir)
 }
 
-func generateWorkDirNameForTalosctl(stack, step, machineID string) string {
-	return filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-for-%s", stack), fmt.Sprintf("%s-%s", step, machineID))
-}
