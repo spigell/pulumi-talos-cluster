@@ -2,6 +2,8 @@ package applier
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -134,49 +136,79 @@ func (a *Applier) ApplyToWorker(m *types.MachineInfo, deps []pulumi.Resource) ([
 	return append(deps, cli...), nil
 }
 
+//func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role string) ([]pulumi.Resource, error) {
+
+// 	cmd := a.talosctlUpgradeCMD(m, deps)
+
+// 	opts := []pulumi.ResourceOption{
+// 		a.parent,
+// 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: "10m"}),
+// 		pulumi.DependsOn(deps),
+// 	}
+
+// 	etcdMemberTarget := a.etcdMembers
+
+// 	if role == "init" {
+// 		etcdMemberTarget = 1
+// 	}
+
+// 	if role == "controlplane" || role == "init" {
+// 		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
+// 		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
+// 			BeforeCreate: hooks,
+// 			BeforeUpdate: hooks,
+// 		}))
+// 	}
+
+// 	set, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-talos-version:%s", a.name, m.MachineID), &local.CommandArgs{
+// 		Create: cmd.Command,
+// 		Environment: pulumi.StringMap{
+// 			"NODE_IP":            pulumi.String(m.NodeIP),
+// 			"TALOSCTL_HOME":      pulumi.String(cmd.Home.Dir),
+// 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
+// 		},
+// 		Triggers: pulumi.Array{
+// 			pulumi.String(m.TalosImage),
+// 		},
+// 		Interpreter: a.commnanInterpreter,
+// 	},
+// 		opts...,
+// 	)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	deps = append(deps, set)
+
+// 	apply, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-apply:%s", a.name, m.MachineID), &local.CommandArgs{
+// 		Create: a.talosctlApplyCMD(m, deps),
+// 		Triggers: pulumi.Array{
+// 			pulumi.String(m.UserConfigPatches),
+// 			pulumi.String(m.ClusterEnpoint),
+// 		},
+// 		Interpreter: a.commnanInterpreter,
+// 	}, a.parent,
+// 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
+// 		pulumi.DependsOn(deps),
+// 	)
+// 	if err != nil {
+// 		return deps, err
+// 	}
+
+// 	deps = append(deps, apply)
+
+// 	return deps, nil
+// }
+
+
 func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role string) ([]pulumi.Resource, error) {
+	upgraded, err := a.upgrade(m, deps, role)
 
-	cmd := a.talosctlUpgradeCMD(m, deps)
-
-	opts := []pulumi.ResourceOption{
-		a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: "10m"}),
-		pulumi.DependsOn(deps),
-	}
-
-	etcdMemberTarget := a.etcdMembers
-
-	if role == "init" {
-		etcdMemberTarget = 1
-	}
-
-	if role == "controlplane" || role == "init" {
-		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
-		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
-			BeforeCreate: hooks,
-			BeforeUpdate: hooks,
-		}))
-	}
-
-	set, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-talos-version:%s", a.name, m.MachineID), &local.CommandArgs{
-		Create: cmd.Command,
-		Environment: pulumi.StringMap{
-			"NODE_IP":            pulumi.String(m.NodeIP),
-			"TALOSCTL_HOME":      pulumi.String(cmd.Home.Dir),
-			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
-		},
-		Triggers: pulumi.Array{
-			pulumi.String(m.TalosImage),
-		},
-		Interpreter: a.commnanInterpreter,
-	},
-		opts...,
-	)
 	if err != nil {
 		return nil, err
 	}
 
-	deps = append(deps, set)
+	deps = append(deps, upgraded)
 
 	apply, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-apply:%s", a.name, m.MachineID), &local.CommandArgs{
 		Create: a.talosctlApplyCMD(m, deps),
@@ -278,4 +310,8 @@ func (a *Applier) NewTalosconfig(endpoints []string, nodes []string) client.GetC
 			ClientCertificate: a.clientConfiguration.ClientCertificate,
 		},
 	})
+}
+
+func generateWorkDirNameForTalosctl(stack, step, machineID string) string {
+	return filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-for-%s", stack), fmt.Sprintf("%s-%s", step, machineID))
 }

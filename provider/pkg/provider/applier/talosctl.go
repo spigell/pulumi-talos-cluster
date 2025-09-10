@@ -1,7 +1,6 @@
 package applier
 
 import (
-	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -25,21 +24,9 @@ type Talosctl struct {
 	Home         *TalosctlHome
 }
 
-type TalosctlPulumi struct {
-	ctx          *pulumi.Context
-	deps         []pulumi.Resource
-	Binary       string
-	BasicCommand string
-	Home         *TalosctlHome
-}
 
 type TalosctlHome struct {
 	Dir string
-}
-
-type TalosctlBuiltCommand struct {
-	Command pulumi.StringOutput
-	Home    *TalosctlHome
 }
 
 func (a *Applier) NewTalosctl(ctx *pulumi.Context, name string) *Talosctl {
@@ -56,20 +43,6 @@ func (a *Applier) NewTalosctl(ctx *pulumi.Context, name string) *Talosctl {
 	}
 }
 
-func (a *Applier) NewTalosctlPulumi(ctx *pulumi.Context, name string, deps []pulumi.Resource) *TalosctlPulumi {
-	binary := "talosctl"
-	home := filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-%s-step-pulumi-%s", a.name, name))
-
-	return &TalosctlPulumi{
-		ctx:          ctx,
-		deps:         deps,
-		Binary:       binary,
-		BasicCommand: fmt.Sprintf("%s --talosconfig %s/%s", binary, home, TalosctlConfigName),
-		Home: &TalosctlHome{
-			Dir: home,
-		},
-	}
-}
 
 // MachineConfig represents the parsed YAML structure.
 type MachineConfig struct {
@@ -104,30 +77,6 @@ func (t *Talosctl) getCurrentMachineConfig(node string, deps []pulumi.Resource) 
 	return &spec, nil
 }
 
-func (t *TalosctlPulumi) prepare(config string) pulumi.BoolOutput {
-	talosConfigPath := filepath.Join(t.Home.Dir, TalosctlConfigName)
-	encoded := base64.StdEncoding.EncodeToString([]byte(config))
-
-	// Run in the right stage, with your deps.
-	cmd := fmt.Sprintf(
-		`mkdir -p %s && umask 077; printf %%s %q | base64 -d > %s && chmod 600 %s`,
-		t.Home.Dir, encoded, talosConfigPath, talosConfigPath,
-	)
-
-	// local.RunOutput returns an Output of stdout (string). If the command fails,
-	// this Output becomes a *rejected* Output, which is exactly how we "return an error".
-	run := local.RunOutput(t.ctx, local.RunOutputArgs{
-		Command: pulumi.String(cmd),
-	}, pulumi.DependsOn(t.deps))
-
-	// Map success to true; propagate any error unchanged.
-	return run.Stderr().ApplyT(func(s string) (bool, error) {
-		if s != "" {
-			return false, fmt.Errorf("prepare error (stderr is not empty): %s", s)
-		}
-		return true, nil
-	}).(pulumi.BoolOutput)
-}
 
 func (t *Talosctl) prepare(config string) error {
 	err := os.MkdirAll(t.Home.Dir, 0o700)
@@ -141,47 +90,6 @@ func (t *Talosctl) prepare(config string) error {
 	}
 
 	return nil
-}
-
-func (a *Applier) talosctlUpgradeCMD(m *types.MachineInfo, deps []pulumi.Resource) *TalosctlBuiltCommand {
-	talosctl := a.NewTalosctlPulumi(a.ctx, "upgrade-"+m.MachineID, deps)
-	command := &TalosctlBuiltCommand{
-		Home: talosctl.Home,
-	}
-
-	command.Command = pulumi.All(
-		a.basicClient().TalosConfig(),  // string
-		pulumi.String(m.NodeIP),        // string
-		pulumi.String(m.Configuration), // string (YAML)
-	).ApplyT(func(args []any) (pulumi.StringOutput, error) {
-		talosConfig := args[0].(string)
-		ip := args[1].(string)
-		machineConfig := args[2].(string)
-
-		var cfg v1alpha1.Config
-		if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {
-			// This is a *synchronous* error (before we schedule any commands).
-			return pulumi.StringOutput{}, fmt.Errorf("failed to unmarshal machine config: %w", err)
-		}
-
-		// Run prepare at the right stage; it returns a BoolOutput that fails if the shell fails.
-		prepared := talosctl.prepare(talosConfig)
-
-		// Only build the final command AFTER prepare succeeds.
-		return prepared.ApplyT(func(_ bool) (string, error) {
-			img := cfg.MachineConfig.Install().Image()
-
-			base := fmt.Sprintf("%s upgrade --debug -n %s -e %s --image %s",
-				talosctl.BasicCommand, ip, ip, img)
-
-			// Keep your wrappers.
-			cmd := talosctl.withCleanCommand(withBashRetry(base, "30"))
-
-			return cmd, nil
-		}).(pulumi.StringOutput), nil
-	}).(pulumi.StringOutput)
-
-	return command
 }
 
 // talosctlFastReboot returns command talosctl command for rebooting node.
@@ -273,9 +181,6 @@ func (t *Talosctl) withCleanCommand(cmd string) string {
 	}, " ; "), cmd, t.Home.Dir)
 }
 
-func (t *TalosctlPulumi) withCleanCommand(cmd string) string {
-	return fmt.Sprintf(strings.Join([]string{
-		"%s",
-		"rm -rfv %s",
-	}, " ; "), cmd, t.Home.Dir)
+func generateWorkDirNameForTalosctl(stack, step, machineID string) string {
+	return filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-for-%s", stack), fmt.Sprintf("%s-%s", step, machineID))
 }

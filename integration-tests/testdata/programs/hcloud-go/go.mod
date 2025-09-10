@@ -95,3 +95,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	lukechampine.com/frand v1.5.1 // indirect
 )
+
+replace github.com/spigell/pulumi-talos-cluster/sdk => ../../../../sdk
+
+replace github.com/spigell/pulumi-talos-cluster/integration-tests => ../../../../integration-tests

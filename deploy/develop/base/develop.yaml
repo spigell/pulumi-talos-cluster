@@ -60,14 +60,14 @@ spec:
         tcpSocket:
           port: 2345
         periodSeconds: 2
-        timeoutSeconds: 1
-        failureThreshold: 3
+        timeoutSeconds: 3
+        failureThreshold: 5
       livenessProbe:
         tcpSocket:
           port: 2345
         periodSeconds: 10
-        timeoutSeconds: 1
-        failureThreshold: 3
+        timeoutSeconds: 3
+        failureThreshold: 5
       volumeMounts:
         - name: projects
           mountPath: /projects
