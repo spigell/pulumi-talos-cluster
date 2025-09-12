@@ -16,7 +16,7 @@ import (
 
 const (
 	defaultDatacenter          = "nbg1-dc3"
-	defaultTalosInitialVersion = "v1.10.3"
+	defaultTalosInitialVersion = "v1.11.0"
 	testImageSelector          = "os=talos"
 )
 

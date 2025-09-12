@@ -44,15 +44,7 @@ jobs:
         run: |
           git clone "$GITHUB_SERVER_URL/spigell/my-shared-workflows" ./.github/actions_ext
 
-#      - name: Prepare pulumi environment
-##        uses: ./.github/actions/prepare-pulumi-env
-#        with:
-#          runtime: ${{ inputs.runtime }}
-#          with-tests: 'true'
-#          with-provider: 'false'
-
       - name: Setup Pulumi Go env
-        if: ${{ inputs.setup-action == 'setup-pulumi-env' }}
         uses: ./.github/actions_ext/.github/actions/setup-pulumi-env
         with:
           runtime: ${{ inputs.runtime }}
