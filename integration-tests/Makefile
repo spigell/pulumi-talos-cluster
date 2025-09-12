@@ -4,6 +4,9 @@ TAG ?= $(shell git describe --tags --abbrev=0)
 
 GH_TEST ?= TestHcloudClusterGo
 
+generate_schema: 
+	$(MAKE) -C .. generate_schema
+
 dev-ts-testprog: clean
 	cd .. && $(MAKE) install_nodejs_sdk
 	cd $(PROG) && \

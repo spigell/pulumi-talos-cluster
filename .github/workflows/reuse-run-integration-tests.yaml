@@ -3,7 +3,7 @@ run-name: The test ${{ inputs.name }} by @${{ github.actor }}
 
 env:
   PULUMI_BACKEND: gs://spigell-infra-talos-pulumi-states
-  TALOSCTL_VERSION: v1.10.3
+  TALOSCTL_VERSION: v1.11.0
 
 on:
   workflow_call:
@@ -34,16 +34,30 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
-      - name: Prepare pulumi environment
-        uses: ./.github/actions/prepare-pulumi-env
-        with:
-          runtime: ${{ inputs.runtime }}
-          with-tests: 'true'
-          with-provider: 'false'
+
       - name: Set gcloud auth pulumi
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets.google-credentials }}'
+
+      - name: Get actions
+        run: |
+          git clone "$GITHUB_SERVER_URL/spigell/my-shared-workflows" ./.github/actions_ext
+
+#      - name: Prepare pulumi environment
+##        uses: ./.github/actions/prepare-pulumi-env
+#        with:
+#          runtime: ${{ inputs.runtime }}
+#          with-tests: 'true'
+#          with-provider: 'false'
+
+      - name: Setup Pulumi Go env
+        if: ${{ inputs.setup-action == 'setup-pulumi-env' }}
+        uses: ./.github/actions_ext/.github/actions/setup-pulumi-env
+        with:
+          runtime: ${{ inputs.runtime }}
+          working-directory: 'integration-tests'
+
       - name: Install talosctl
         uses: jaxxstorm/action-install-gh-release@v1.10.0
         with:
