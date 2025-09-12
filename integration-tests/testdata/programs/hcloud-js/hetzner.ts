@@ -3,6 +3,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as forge from 'node-forge';
 import {Cluster, DeployedServer} from './types'
 
+const defaultTalosInitialVersion = 'v1.11.0'
+
 export function Hetzner (cluster: Cluster): DeployedServer[] {
     const sshKey = new hcloud.SshKey("ssh", {
         publicKey: generateSSHKey().then(keys => keys.publicKey),
@@ -25,7 +27,7 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
         ipRange: cluster.PrivateSubnetwork,
     });
 
-    const selector = "os=talos,testing=true"
+    const selector = `os=talos,version=${defaultTalosInitialVersion}`
     const image = hcloud.getImage({
         withSelector: selector,
         withArchitecture: 'arm'
@@ -38,8 +40,8 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
         const server = new hcloud.Server(machine.id, {
             name: machine.id,
             serverType: machine.serverType,
-            image: image.then(v => `${v.id}`), // OS image
-            location: "nbg1",               // Choose the Hetzner location
+            image: image.then(v => `${v.id}`),
+            location: "nbg1",
             sshKeys: [sshKey.id],
             networks: [{
                 networkId: convertedNetID,
