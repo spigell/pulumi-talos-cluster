@@ -5,7 +5,7 @@ import {Hetzner} from './hetzner'
 
 const cluster: Cluster = {
 	name: pulumi.getStack(),
-	kubernetesVersion: 'v1.31.0',
+	kubernetesVersion: 'v1.34.0',
 	privateNetwork: '10.10.0.0/16',
 	PrivateSubnetwork: '10.10.10.0/25',
 	machines: [
@@ -26,7 +26,7 @@ cluster.machines.forEach(v => machines.push({
 	nodeIp: servers.find(m => v.id == m.id)?.ip as pulumi.Input<string>,
 	machineType: v.type,
 	configPatches: [JSON.stringify({
-			debug: "true",
+			debug: true,
 			machine: {
 	            network: {
 	              hostname: "master-1",

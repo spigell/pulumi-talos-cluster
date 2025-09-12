@@ -9,8 +9,6 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
-// talosctlFastReboot returns command talosctl command for rebooting node.
-// It doesn't wait for good node status.
 func (a *Applier) reboot(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	stageName := "cli-reboot"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
@@ -21,6 +19,7 @@ func (a *Applier) reboot(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.R
 		PrepareDeps: deps,
 		Dir:         home,
 		CommandArgs: pulumi.String(talosctlFastRebootArgs()),
+		// Do not retry since we do not wait for success.
 		RetryCount:  0,
 	}, []pulumi.ResourceOption{
 		a.parent,
