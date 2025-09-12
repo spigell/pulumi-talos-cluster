@@ -5,11 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	//"github.com/pulumi/pulumi-command/sdk/go/command/local"
-	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/client"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
+	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
@@ -159,8 +158,7 @@ func (a *Applier) UpgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) ([]pu
 	return append(deps, upgraded), nil
 }
 
-
-func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulumi.Resource, ) ([]pulumi.Resource, error) {
+func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulumi.Resource) ([]pulumi.Resource, error) {
 	upgraded, err := a.upgrade(m, role, deps)
 	if err != nil {
 		return nil, err
@@ -178,9 +176,7 @@ func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulu
 	return deps, nil
 }
 
-
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-
 	apply, err := machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
 		Node:                      pulumi.String(m.NodeIP),
 		MachineConfigurationInput: pulumi.String(m.Configuration),
@@ -223,7 +219,6 @@ func (a *Applier) basicClient() client.GetConfigurationResultOutput {
 		},
 	})
 }
-
 
 func generateWorkDirNameForTalosctl(stack, step, machineID string) string {
 	return filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-for-%s", stack), fmt.Sprintf("%s-%s", step, machineID))

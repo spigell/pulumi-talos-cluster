@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
 	"time"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// EtcdReadyHook returns a hook function that waits for the etcd cluster to become healthy.
 func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 	return func(args *pulumi.ResourceHookArgs) error {
 		const (

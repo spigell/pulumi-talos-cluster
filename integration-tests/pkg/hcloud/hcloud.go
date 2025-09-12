@@ -183,7 +183,6 @@ func (h *Hetzner) Up() (*Deployed, error) {
 			MostRecent:       pulumi.BoolRef(true),
 			WithArchitecture: pulumi.StringRef(s.arch),
 		})
-
 		if err != nil {
 			return nil, fmt.Errorf("can't find an image with selector: %s", s.imageSelector)
 		}

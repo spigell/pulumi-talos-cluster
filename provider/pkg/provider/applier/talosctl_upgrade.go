@@ -41,34 +41,32 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().WithNodeIP(m.NodeIP)
 
-
-	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.TalosctlArgs{
+	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		TalosConfig: a.basicClient().TalosConfig(),
 		PrepareDeps: deps,
-		Dir: home,
+		Dir:         home,
 		CommandArgs: pulumi.String(args),
-		RetryCount: 10,
+		RetryCount:  10,
 		Environment: pulumi.StringMap{
 			"NODE_IP":            pulumi.String(m.NodeIP),
 			"TALOSCTL_HOME":      pulumi.String(home),
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 		},
-		Triggers:    pulumi.Array{pulumi.String(m.TalosImage)},
+		Triggers: pulumi.Array{pulumi.String(m.TalosImage)},
 	}, opts...)
 }
 
-
 func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
-		machineConfig := m.Configuration
+	machineConfig := m.Configuration
 
-		var cfg v1alpha1.Config
-		if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {
-			return "", fmt.Errorf("failed to unmarshal machine config: %w", err)
-		}
+	var cfg v1alpha1.Config
+	if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {
+		return "", fmt.Errorf("failed to unmarshal machine config: %w", err)
+	}
 
-		img := cfg.MachineConfig.Install().Image()
+	img := cfg.MachineConfig.Install().Image()
 
-		base := fmt.Sprintf("upgrade --debug --image %s", img)
+	base := fmt.Sprintf("upgrade --debug --image %s", img)
 
-		return base, nil
+	return base, nil
 }

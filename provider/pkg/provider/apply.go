@@ -38,6 +38,7 @@ type ApplyMachines struct {
 	WorkerMachineConfigurations       []*types.MachineInfo `pulumi:"worker"`
 }
 
+//nolint:gocognit // apply is complex but mirrors provider logic
 func apply(ctx *pulumi.Context, a *Apply, name string,
 	args *ApplyArgs, inputs provider.ConstructInputs, opts ...pulumi.ResourceOption,
 ) (*provider.ConstructResult, error) {
@@ -55,7 +56,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		creds := make(pulumi.StringMap, 0)
 		endpoints := make([]string, 0)
 		nodes := make([]string, 0)
-		controlplanes := make([]*types.MachineInfo, 0)
 
 		ma := v[0].(map[string][]any)
 
@@ -70,7 +70,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			buildClientConfigurationFromMap(args.ClientConfiguration),
 			pulumi.Parent(a),
 		)
-
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
@@ -81,7 +80,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		i := types.ParseMachineInfo(init[0].(map[string]any))
 
 		endpoints = append(endpoints, i.NodeIP)
-		controlplanes = append(controlplanes, i)
 
 		app.InitNode = &applier.InitNode{
 			Name: i.MachineID,
@@ -102,7 +100,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			}
 
 			node := types.ParseMachineInfo(ma)
-			controlplanes = append(controlplanes, node)
 
 			endpoints = append(endpoints, node.NodeIP)
 
