@@ -2,7 +2,6 @@ package applier
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
@@ -18,6 +17,11 @@ type K8SImages struct {
 	APIServer         string
 	KubeProxy         string
 	Scheduler         string
+}
+
+// MachineConfig represents the parsed YAML structure.
+type MachineConfig struct {
+	Spec string
 }
 
 func NewK8SImages(config *v1alpha1.Config) *K8SImages {
@@ -41,27 +45,22 @@ func NewK8SImages(config *v1alpha1.Config) *K8SImages {
 // that Kubernetes image versions in the configuration align with the currently running
 // versions to prevent accidental downgrades (Talos does not support downgrades via specifying images in the config).
 func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	stageName := "apply-config"
-	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
-	t := talosctl.New(a.ctx, home, deps)
-
 	machineFile := pulumi.All(m.UserConfigPatches, m.NodeIP, m.Configuration).ApplyT(func(args []any) (pulumi.StringOutput, error) {
-		runtime.Breakpoint()
 		// Extract current images to use instead of any potential downgraded images
 		userPatches := args[0].(string)
 		ip := args[1].(string)
 		machineConfig := args[2].(string)
 
+		t2 := talosctl.New().WithNodeIP(ip)
+		stageName := "cli-get-machine-config"
 
-
-		current, err := t.RunGetCommand("get-machine-config", &talosctl.TalosctlArgs{
+		current, err := t2.RunGetCommand(a.ctx, stageName, &talosctl.TalosctlArgs{
 			TalosConfig: a.basicClient().TalosConfig(),
-			Args: pulumi.String(fmt.Sprintf("%s get machineconfig v1alpha1 -n %[2]s -e %[2]s -oyaml",
-				t.BasicCommand, ip,
-			)),
-			RetryCount: 10,
+			Dir: generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
+			CommandArgs: pulumi.String("get machineconfig v1alpha1 -oyaml"),
+			// No retry. Need to implement another way to retry for get functions.
+			RetryCount: 0,
 		}, deps)
-		//current, err := talosctl.getCurrentMachineConfig(a.InitNode.IP, deps)
 
 		if err != nil {
 			return pulumi.StringOutput{}, fmt.Errorf("failed to get current machine info: %w", err)
@@ -69,8 +68,6 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 
 
 		return current.ApplyT(func (output string) (string, error) {
-			runtime.Breakpoint()
-			
 			var config MachineConfig
 			if err := yaml.Unmarshal([]byte(output), &config); err != nil {
 				return "", fmt.Errorf("error parsing YAML output: %w", err)
@@ -95,15 +92,17 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		}).(pulumi.StringOutput), nil
 	}).(pulumi.StringOutput)
 
-	configPath := "machineconfig.yaml"
+	stageName := "cli-apply-config"
+	t := talosctl.New().WithNodeIP(m.NodeIP)
+	machineConfigName := "machineconfig.yaml"
 
-	apply, err := t.RunCommand(fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.TalosctlArgs{
+	apply, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.TalosctlArgs{
 		TalosConfig: a.basicClient().TalosConfig(),
 		AdditionalFiles: []talosctl.ExtraFile{
-			{ Path: configPath, Content: machineFile },
+			{ Name: machineConfigName, Content: machineFile },
 		},
-		Args: pulumi.Sprintf("apply-config -n %[1]s -e %[1]s -f %s", m.NodeIP, configPath),
-		RetryCount: 10,
+		CommandArgs: pulumi.Sprintf("apply-config -f %s", machineConfigName),
+		Dir: generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
 		Triggers:    pulumi.Array{
 			pulumi.String(m.UserConfigPatches),
 			pulumi.String(m.ClusterEnpoint),

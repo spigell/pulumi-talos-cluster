@@ -32,3 +32,4 @@ __debug*
 kubeconfig
 talosconfig
 kube.yaml
+talosctl.yaml

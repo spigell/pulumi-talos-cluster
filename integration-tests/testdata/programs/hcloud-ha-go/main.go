@@ -99,7 +99,7 @@ func main() {
 						},
 					},
 					"time": map[string]any{
-						"disabled": false,
+						"disabled": true,
 					},
 				},
 			}

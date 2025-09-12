@@ -4,17 +4,14 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"gopkg.in/yaml.v3"
 )
 
-func (a *Applier) upgrade(m *types.MachineInfo, deps []pulumi.Resource, role string) (pulumi.Resource, error) {
-	stageName := "cli-talos-upgrade"
-	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
-	t := talosctl.New(a.ctx, home, deps)
-
+func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulumi.Resource) (pulumi.Resource, error) {
 	opts := []pulumi.ResourceOption{
 		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: "10m"}),
@@ -23,11 +20,11 @@ func (a *Applier) upgrade(m *types.MachineInfo, deps []pulumi.Resource, role str
 
 	etcdMemberTarget := a.etcdMembers
 
-	if role == "init" {
+	if role == tmachine.TypeInit {
 		etcdMemberTarget = 1
 	}
 
-	if role == "controlplane" || role == "init" {
+	if role == tmachine.TypeInit || role == tmachine.TypeControlPlane {
 		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
 		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
 			BeforeCreate: hooks,
@@ -35,33 +32,35 @@ func (a *Applier) upgrade(m *types.MachineInfo, deps []pulumi.Resource, role str
 		}))
 	}
 
-	upgrade, err := t.RunCommand(fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.TalosctlArgs{
+	args, err := talosctlUpgradeArgs(m)
+	if err != nil {
+		return nil, err
+	}
+
+	stageName := "cli-upgrade"
+	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
+	t := talosctl.New().WithNodeIP(m.NodeIP)
+
+
+	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.TalosctlArgs{
 		TalosConfig: a.basicClient().TalosConfig(),
-		Args: talosctlUpgradeArgs(m),
+		PrepareDeps: deps,
+		Dir: home,
+		CommandArgs: pulumi.String(args),
 		RetryCount: 10,
 		Environment: pulumi.StringMap{
 			"NODE_IP":            pulumi.String(m.NodeIP),
-			"TALOSCTL_HOME":      pulumi.String(t.Home.Dir),
+			"TALOSCTL_HOME":      pulumi.String(home),
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 		},
 		Triggers:    pulumi.Array{pulumi.String(m.TalosImage)},
 	}, opts...)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return upgrade, nil
 }
 
 
-func talosctlUpgradeArgs(m *types.MachineInfo) pulumi.StringOutput {
-	return pulumi.All(
-		pulumi.String(m.NodeIP),        // string
-		pulumi.String(m.Configuration), // string (YAML)
-	).ApplyT(func(args []any) (string, error) {
-		ip := args[0].(string)
-		machineConfig := args[1].(string)
+func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
+		machineConfig := m.Configuration
 
 		var cfg v1alpha1.Config
 		if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {
@@ -70,10 +69,7 @@ func talosctlUpgradeArgs(m *types.MachineInfo) pulumi.StringOutput {
 
 		img := cfg.MachineConfig.Install().Image()
 
-		base := fmt.Sprintf("upgrade --debug -n %s -e %s --image %s",
-			ip, ip, img,
-		)
+		base := fmt.Sprintf("upgrade --debug --image %s", img)
 
 		return base, nil
-	}).(pulumi.StringOutput)
 }

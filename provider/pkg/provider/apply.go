@@ -139,7 +139,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			}
 		}
 
-		upgraded, err := app.UpgradeK8S(controlplanes, controlplanesReady)
+		upgraded, err := app.UpgradeK8S(i, controlplanesReady)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}

@@ -1,0 +1,9 @@
+go 1.24.5
+
+use (
+	./integration-tests
+	./integration-tests/testdata/programs/hcloud-go
+	./integration-tests/testdata/programs/hcloud-ha-go
+	./provider
+	./sdk
+)

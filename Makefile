@@ -23,7 +23,7 @@ install:: install_provider install_nodejs_sdk
 # Lint
 lint::
 	cd provider && golangci-lint run
-	cd tests && golangci-lint run
+	cd integration-tests && golangci-lint run
 
 # Tests
 unit_tests:: generate_schema

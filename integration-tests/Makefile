@@ -1,15 +1,8 @@
 SHELL := bash
-PROG ?= testdata/programs/hcloud-go
+PROG ?= testdata/programs/hcloud-ts
 TAG ?= $(shell git describe --tags --abbrev=0)
 
 GH_TEST ?= TestHcloudClusterGo
-
-dev-go-testprog: clean
-	echo $(PROG) > .current_test_dir
-	@cd $(PROG) && \
-	go mod edit -replace=github.com/spigell/pulumi-talos-cluster/sdk=../../../../sdk && \
-	go mod edit -replace=github.com/spigell/pulumi-talos-cluster/integration-tests=../../../../integration-tests
-	@echo "Now you can create stack for test project in the testdata directory"
 
 dev-ts-testprog: clean
 	cd .. && $(MAKE) install_nodejs_sdk

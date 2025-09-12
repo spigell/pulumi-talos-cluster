@@ -5,7 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pulumi/pulumi-command/sdk/go/command/local"
+	//"github.com/pulumi/pulumi-command/sdk/go/command/local"
+	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/client"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
@@ -68,6 +69,19 @@ func (a *Applier) WithEtcdMembersCount(count int) *Applier {
 	return a
 }
 
+func (a *Applier) NewTalosconfig(endpoints []string, nodes []string) client.GetConfigurationResultOutput {
+	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
+		ClusterName: pulumi.String(a.name),
+		Endpoints:   pulumi.ToStringArray(endpoints),
+		Nodes:       pulumi.ToStringArray(nodes),
+		ClientConfiguration: &client.GetConfigurationClientConfigurationArgs{
+			CaCertificate:     a.clientConfiguration.CaCertificate,
+			ClientKey:         a.clientConfiguration.ClientKey,
+			ClientCertificate: a.clientConfiguration.ClientCertificate,
+		},
+	})
+}
+
 func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, error) {
 	// The Init node is special. We need to init by ourselves.
 	applied, err := a.initApply(m, nil)
@@ -90,7 +104,7 @@ func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, er
 
 	deps = append(deps, bootstrap)
 
-	cli, err := a.cliApply(m, deps, "init")
+	cli, err := a.cliApply(m, tmachine.TypeInit, deps)
 	if err != nil {
 		return deps, err
 	}
@@ -111,7 +125,7 @@ func (a *Applier) InitControlplane(m *types.MachineInfo, deps []pulumi.Resource)
 }
 
 func (a *Applier) ApplyToControlplane(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
-	cli, err := a.cliApply(m, deps, "controlplane")
+	cli, err := a.cliApply(m, tmachine.TypeControlPlane, deps)
 	if err != nil {
 		return deps, err
 	}
@@ -128,7 +142,7 @@ func (a *Applier) ApplyToWorker(m *types.MachineInfo, deps []pulumi.Resource) ([
 		deps = append(deps, applied)
 	}
 
-	cli, err := a.cliApply(m, deps, "worker")
+	cli, err := a.cliApply(m, tmachine.TypeWorker, deps)
 	if err != nil {
 		return deps, err
 	}
@@ -136,73 +150,18 @@ func (a *Applier) ApplyToWorker(m *types.MachineInfo, deps []pulumi.Resource) ([
 	return append(deps, cli...), nil
 }
 
-//func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role string) ([]pulumi.Resource, error) {
+func (a *Applier) UpgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
+	upgraded, err := a.upgradeK8S(m, deps)
+	if err != nil {
+		return deps, err
+	}
 
-// 	cmd := a.talosctlUpgradeCMD(m, deps)
-
-// 	opts := []pulumi.ResourceOption{
-// 		a.parent,
-// 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: "10m"}),
-// 		pulumi.DependsOn(deps),
-// 	}
-
-// 	etcdMemberTarget := a.etcdMembers
-
-// 	if role == "init" {
-// 		etcdMemberTarget = 1
-// 	}
-
-// 	if role == "controlplane" || role == "init" {
-// 		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
-// 		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
-// 			BeforeCreate: hooks,
-// 			BeforeUpdate: hooks,
-// 		}))
-// 	}
-
-// 	set, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-talos-version:%s", a.name, m.MachineID), &local.CommandArgs{
-// 		Create: cmd.Command,
-// 		Environment: pulumi.StringMap{
-// 			"NODE_IP":            pulumi.String(m.NodeIP),
-// 			"TALOSCTL_HOME":      pulumi.String(cmd.Home.Dir),
-// 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
-// 		},
-// 		Triggers: pulumi.Array{
-// 			pulumi.String(m.TalosImage),
-// 		},
-// 		Interpreter: a.commnanInterpreter,
-// 	},
-// 		opts...,
-// 	)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	deps = append(deps, set)
-
-// 	apply, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-apply:%s", a.name, m.MachineID), &local.CommandArgs{
-// 		Create: a.talosctlApplyCMD(m, deps),
-// 		Triggers: pulumi.Array{
-// 			pulumi.String(m.UserConfigPatches),
-// 			pulumi.String(m.ClusterEnpoint),
-// 		},
-// 		Interpreter: a.commnanInterpreter,
-// 	}, a.parent,
-// 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
-// 		pulumi.DependsOn(deps),
-// 	)
-// 	if err != nil {
-// 		return deps, err
-// 	}
-
-// 	deps = append(deps, apply)
-
-// 	return deps, nil
-// }
+	return append(deps, upgraded), nil
+}
 
 
-func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role string) ([]pulumi.Resource, error) {
-	upgraded, err := a.upgrade(m, deps, role)
+func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulumi.Resource, ) ([]pulumi.Resource, error) {
+	upgraded, err := a.upgrade(m, role, deps)
 	if err != nil {
 		return nil, err
 	}
@@ -219,23 +178,6 @@ func (a *Applier) cliApply(m *types.MachineInfo, deps []pulumi.Resource, role st
 	return deps, nil
 }
 
-func (a *Applier) UpgradeK8S(ma []*types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {
-	k8s, err := local.NewCommand(a.ctx, fmt.Sprintf("%s:cli-set-k8s-version:%s", a.name, ma[0].MachineID), &local.CommandArgs{
-		Create:      a.talosctlUpgradeK8SCMD(ma),
-		Interpreter: a.commnanInterpreter,
-		Triggers: pulumi.Array{
-			pulumi.String(ma[0].KubernetesVersion),
-		},
-	}, a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "20m", Update: "20m"}),
-		pulumi.DependsOn(deps),
-	)
-	if err != nil {
-		return deps, err
-	}
-
-	return append(deps, k8s), nil
-}
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 
@@ -268,13 +210,7 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 
 	deps = append(deps, apply)
 
-	return local.NewCommand(a.ctx, fmt.Sprintf("%s:reboot:%s", a.name, m.MachineID), &local.CommandArgs{
-		Create:      a.talosctlFastReboot(m),
-		Interpreter: a.commnanInterpreter,
-	}, a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "5m", Update: "5m"}),
-		pulumi.DependsOn(deps),
-	)
+	return a.reboot(m, deps)
 }
 
 func (a *Applier) basicClient() client.GetConfigurationResultOutput {
@@ -288,18 +224,6 @@ func (a *Applier) basicClient() client.GetConfigurationResultOutput {
 	})
 }
 
-func (a *Applier) NewTalosconfig(endpoints []string, nodes []string) client.GetConfigurationResultOutput {
-	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
-		ClusterName: pulumi.String(a.name),
-		Endpoints:   pulumi.ToStringArray(endpoints),
-		Nodes:       pulumi.ToStringArray(nodes),
-		ClientConfiguration: &client.GetConfigurationClientConfigurationArgs{
-			CaCertificate:     a.clientConfiguration.CaCertificate,
-			ClientKey:         a.clientConfiguration.ClientKey,
-			ClientCertificate: a.clientConfiguration.ClientCertificate,
-		},
-	})
-}
 
 func generateWorkDirNameForTalosctl(stack, step, machineID string) string {
 	return filepath.Join(os.TempDir(), fmt.Sprintf("talos-home-for-%s", stack), fmt.Sprintf("%s-%s", step, machineID))
