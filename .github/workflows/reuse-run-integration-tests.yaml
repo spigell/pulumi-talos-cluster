@@ -3,6 +3,7 @@ run-name: The test ${{ inputs.name }} by @${{ github.actor }}
 
 env:
   PULUMI_BACKEND: gs://spigell-infra-talos-pulumi-states
+  PULUMI_SECRET_PROVIDER: gcpkms://projects/spigell-infra/locations/global/keyRings/spigell-infra-keyring/cryptoKeys/pulumi-key 
   TALOSCTL_VERSION: v1.11.0
 
 on:

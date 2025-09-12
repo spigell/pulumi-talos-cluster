@@ -18,7 +18,7 @@ func main() {
 	var (
 		template    = flag.String("template", "hcloud.pkr.hcl", "Path to Packer template")
 		concurrency = flag.Int("concurrency", 4, "Max concurrent packer builds")
-		failFast    = flag.Bool("failfast", true, "Cancel remaining builds on first failure")
+		failFast    = flag.Bool("failfast", false, "Cancel remaining builds on first failure")
 		timeout     = flag.Duration("timeout", 0, "Optional timeout for each build (e.g. 90m, 2h). 0 = no timeout")
 		varList     multiVar
 	)
