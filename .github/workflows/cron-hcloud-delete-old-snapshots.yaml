@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         arch: ['arm', 'x86']
+        variant: ['hcloud', 'metal']
       fail-fast: false
     env:
       MAX_SNAPSHOTS: 1 # Max count for every arch
@@ -27,6 +28,6 @@ jobs:
         chmod +x hcloud
         sudo mv hcloud /usr/local/bin/
     - name: Auto-clean old snapshots
-      run: integration-tests/packer/hcloud-clean-old-snapshots.sh ${{ env.MAX_SNAPSHOTS }} ${{ matrix.arch }}
+      run: integration-tests/packer/hcloud-clean-old-snapshots.sh ${{ env.MAX_SNAPSHOTS }} ${{ matrix.arch }} ${{ matrix.variant }}
       env:
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
