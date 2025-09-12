@@ -65,6 +65,7 @@ func getBaseOptions(t *testing.T) integration.ProgramTestOptions {
 		DecryptSecretsInOutput: true,
 		ExpectRefreshChanges:   false,
 		RetryFailedSteps:       false,
+		SecretsProvider:        getEnvIfSet("PULUMI_SECRET_PROVIDER"),
 		CloudURL:               getEnvIfSet("PULUMI_CLOUD_URL"),
 		// ReportStats: reporter,
 	}

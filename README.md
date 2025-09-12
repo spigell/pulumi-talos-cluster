@@ -9,7 +9,6 @@ This component can be used for bare-metal and cloud installation. The direct acc
 ## Motivation
 
 The official Terraform (and therefore Pulumi) provider for Talos has certain limitations, particularly around upgrading and configuring clusters, as highlighted in issues like [#195](https://github.com/siderolabs/terraform-provider-talos/issues/195). This component leverages the `pulumiverse/talos` and `pulumi/command` providers to fully manage Talos clusters, overcoming these limitations.
-This component is also planned for use in the [pulumi-hcloud-kube-hetzner](https://github.com/spigell/pulumi-hcloud-kube-hetzner) project, which provides a comprehensive solution for managing Kubernetes clusters on Hetzner Cloud with Pulumi.
 
 
 ## Development

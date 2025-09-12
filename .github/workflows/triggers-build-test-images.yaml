@@ -4,8 +4,8 @@ on:
   push:
     paths:
       - .github/workflows/triggers-build-test-images.yaml
-      - tests/packer/hcloud-schematic.json
-      - tests/packer/hcloud-talos.pkr.hcl
+      - integration-tests/packer/run-packer.go
+      - integration-tests/packer/hcloud-talos.pkr.hcl
   workflow_dispatch:
 
 env:
@@ -27,28 +27,12 @@ jobs:
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
         # Update and install dependencies
         sudo apt-get update && sudo apt-get install -y curl jq packer
-    # Step 3: Read schematic from YAML file and create schematic via Talos Image Factory API
-    - name: Create Talos schematic
-      id: create_schematic
-      run: |
-        # Send POST request to Talos Image Factory
-        response=$(curl -s -X POST \
-          -H "Content-Type: application/json" \
-          -d "@tests/packer/hcloud-schematic.json" \
-          https://factory.talos.dev/schematics)
 
-        # Extract schematic ID
-        schematic_id=$(echo $response | jq -r '.id')
-
-        # Save schematic ID for future steps
-        echo "schematic_id=$schematic_id" >> $GITHUB_ENV
-
-    # Step 4: Use schematic ID with Packer
     - name: Build Hetzner Cloud image with Packer
       run: |
         # Initialize and build with Packer
-        cd tests/packer
+        cd integration-tests/packer
         packer init .
-        packer build -var "talos_version=${{ env.TALOS_VERSION }}" -var "talos_schematic_id=${{ env.schematic_id }}" hcloud-talos.pkr.hcl
+        go run ./run-packer.go -var=talos_version=${{ env.TALOS_VERSION }} -template ./hcloud-talos.pkr.hcl
       env:
         HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}

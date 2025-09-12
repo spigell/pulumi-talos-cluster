@@ -38,6 +38,7 @@ type ApplyMachines struct {
 	WorkerMachineConfigurations       []*types.MachineInfo `pulumi:"worker"`
 }
 
+//nolint:gocognit // apply is complex but mirrors provider logic
 func apply(ctx *pulumi.Context, a *Apply, name string,
 	args *ApplyArgs, inputs provider.ConstructInputs, opts ...pulumi.ResourceOption,
 ) (*provider.ConstructResult, error) {
@@ -55,36 +56,41 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		creds := make(pulumi.StringMap, 0)
 		endpoints := make([]string, 0)
 		nodes := make([]string, 0)
-		controlplanes := make([]*types.MachineInfo, 0)
 
 		ma := v[0].(map[string][]any)
 
-		app := applier.New(ctx, name,
-			buildClientConfigurationFromMap(args.ClientConfiguration),
-			pulumi.Parent(a),
-		).WithSkipedInitApply(v[1].(bool))
-
 		init := ma[tmachine.TypeInit.String()]
-
 		if len(init) == 0 {
 			return creds.ToStringMapOutput(), fmt.Errorf("a init node must exist")
 		}
+		cp := ma[tmachine.TypeControlPlane.String()]
+		workers := ma[tmachine.TypeWorker.String()]
+
+		app, err := applier.New(ctx, name,
+			buildClientConfigurationFromMap(args.ClientConfiguration),
+			pulumi.Parent(a),
+		)
+		if err != nil {
+			return creds.ToStringMapOutput(), err
+		}
+
+		app.WithSkipedInitApply(v[1].(bool))
+		app.WithEtcdMembersCount(len(cp) + 1)
 
 		i := types.ParseMachineInfo(init[0].(map[string]any))
 
 		endpoints = append(endpoints, i.NodeIP)
-		controlplanes = append(controlplanes, i)
 
 		app.InitNode = &applier.InitNode{
 			Name: i.MachineID,
 			IP:   i.NodeIP,
 		}
 
-		inited, err := app.Init(i)
+		inited, err := app.BootstrapInitNode(i)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
-		cp := ma[tmachine.TypeControlPlane.String()]
+
 		controlplanesReady := inited
 
 		for _, m := range cp {
@@ -94,7 +100,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			}
 
 			node := types.ParseMachineInfo(ma)
-			controlplanes = append(controlplanes, node)
 
 			endpoints = append(endpoints, node.NodeIP)
 
@@ -116,7 +121,6 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		// Nodes contains all nodes, including endpoints
 		nodes = append(nodes, endpoints...)
 
-		workers := ma[tmachine.TypeWorker.String()]
 		for _, m := range workers {
 			ma, ok := m.(map[string]any)
 			if !ok {
@@ -126,13 +130,13 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 			nodes = append(nodes, node.NodeIP)
 
-			_, err := app.ApplyTo(node, inited)
+			_, err := app.ApplyToWorker(node, inited)
 			if err != nil {
 				return creds.ToStringMapOutput(), err
 			}
 		}
 
-		upgraded, err := app.UpgradeK8S(controlplanes, controlplanesReady)
+		upgraded, err := app.UpgradeK8S(i, controlplanesReady)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
@@ -158,7 +162,8 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 	}).(pulumi.StringMapOutput)
 
 	if err := ctx.RegisterResourceOutputs(a, pulumi.Map{
-		// ApplyResourceKubeconfigKey: kube,
+		types.KubeconfigKey:  a.Credentials.MapIndex(pulumi.String(types.KubeconfigKey)),
+		types.TalosconfigKey: a.Credentials.MapIndex(pulumi.String(types.TalosconfigKey)),
 	}); err != nil {
 		return nil, err
 	}

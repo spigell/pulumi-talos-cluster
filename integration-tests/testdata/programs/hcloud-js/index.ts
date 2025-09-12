@@ -5,7 +5,7 @@ import {Hetzner} from './hetzner'
 
 const cluster: Cluster = {
 	name: pulumi.getStack(),
-	kubernetesVersion: 'v1.31.0',
+	kubernetesVersion: 'v1.34.0',
 	privateNetwork: '10.10.0.0/16',
 	PrivateSubnetwork: '10.10.10.0/25',
 	machines: [
@@ -24,7 +24,16 @@ const machines: pulumi.Input<pulumi.Input<talos.types.input.ClusterMachinesArgs>
 cluster.machines.forEach(v => machines.push({
 	machineId: v.id,
 	nodeIp: servers.find(m => v.id == m.id)?.ip as pulumi.Input<string>,
-	machineType: v.type
+	machineType: v.type,
+	configPatches: [JSON.stringify({
+			debug: true,
+			machine: {
+	            network: {
+	              hostname: "master-1",
+	            }
+            }
+        })
+	]
 }))
 
 const clu = new talos.Cluster(cluster.name, {
