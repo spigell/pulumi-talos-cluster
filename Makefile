@@ -24,6 +24,8 @@ install:: install_provider install_nodejs_sdk
 lint::
 	cd provider && golangci-lint run
 	cd integration-tests && golangci-lint run
+	cd integration-tests/testdata/hcloud-go && golangci-lint run
+	cd integration-tests/testdata/hcloud-ha-go && golangci-lint run
 
 # Tests
 unit_tests:: generate_schema

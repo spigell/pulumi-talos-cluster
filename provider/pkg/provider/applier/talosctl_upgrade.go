@@ -55,7 +55,6 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 		},
 		Triggers:    pulumi.Array{pulumi.String(m.TalosImage)},
 	}, opts...)
-
 }
 
 
