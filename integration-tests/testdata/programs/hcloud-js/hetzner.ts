@@ -4,6 +4,8 @@ import * as forge from 'node-forge';
 import {Cluster, DeployedServer} from './types'
 
 const defaultTalosInitialVersion = 'v1.10.3'
+const arch = 'arm'
+const variant = 'hcloud'
 
 export function Hetzner (cluster: Cluster): DeployedServer[] {
     const sshKey = new hcloud.SshKey("ssh", {
@@ -27,10 +29,10 @@ export function Hetzner (cluster: Cluster): DeployedServer[] {
         ipRange: cluster.PrivateSubnetwork,
     });
 
-    const selector = `os=talos,version=${defaultTalosInitialVersion}`
+    const selector = `os=talos,version=${defaultTalosInitialVersion},variant=${variant},arch=${arch}`
     const image = hcloud.getImage({
         withSelector: selector,
-        withArchitecture: 'arm'
+        withArchitecture: arch
     })
 
     const deployed: DeployedServer[] = [];
