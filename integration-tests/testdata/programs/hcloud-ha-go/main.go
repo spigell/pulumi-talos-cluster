@@ -36,7 +36,7 @@ var clu = &cluster.Cluster{
 
 			ServerType: "cx22",
 			PrivateIP:  "10.10.10.2",
-		//	Datacenter: "fsn1-dc14",
+			//	Datacenter: "fsn1-dc14",
 		},
 		{
 			ID:         "controlplane-3",
@@ -45,7 +45,7 @@ var clu = &cluster.Cluster{
 			Platform:   platform,
 			TalosImage: talosImage,
 			PrivateIP:  "10.10.10.10",
-		//	Datacenter: "fsn1-dc14",
+			//	Datacenter: "fsn1-dc14",
 		},
 		{
 			ID:         "worker-1",
@@ -54,7 +54,7 @@ var clu = &cluster.Cluster{
 			TalosImage: talosImage,
 			ServerType: "cx22",
 			PrivateIP:  "10.10.10.3",
-		//	Datacenter: "fsn1-dc14",
+			//	Datacenter: "fsn1-dc14",
 		},
 	},
 }

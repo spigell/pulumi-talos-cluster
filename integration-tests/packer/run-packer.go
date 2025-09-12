@@ -34,9 +34,8 @@ func main() {
 
 	// Root context (supports Ctrl+C)
 	rootCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
-	sem := make(chan struct{}, max(1, *concurrency))
+	sem := make(chan struct{}, maxInt(1, *concurrency))
 	var wg sync.WaitGroup
 
 	// Track errors and allow fail-fast cancel
@@ -45,11 +44,9 @@ func main() {
 	cancel := func() {}
 	if *failFast {
 		ctx, cancel = context.WithCancel(rootCtx)
-		defer cancel()
 	}
 
 	for _, v := range variants {
-		v := v // capture
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -116,6 +113,8 @@ func main() {
 	}
 
 	if hadErr {
+		cancel()
+		stop()
 		os.Exit(1)
 	}
 	fmt.Println("All builds finished successfully.")
@@ -148,7 +147,7 @@ type ioReadCloser interface {
 	Close() error
 }
 
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}

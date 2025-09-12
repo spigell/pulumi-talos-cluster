@@ -13,33 +13,31 @@ var (
 	talosImage = "ghcr.io/siderolabs/installer:v1.10.3"
 )
 
-var (
-	clu = &cluster.Cluster{
-			PrivateNetwork:    "10.10.10.0/24",
-			PrivateSubnetwork: "10.10.10.0/25",
-			KubernetesVersion: "1.32.0",
-			Machines: []*cluster.Machine{
-				{
-					ID:       "controlplane-1",
-					Type:       "init",
-					Platform: platform,
-					TalosImage: talosImage,
-					ServerType: "cx22",
-					PrivateIP:  "10.10.10.5",
-					Datacenter:   "fsn1-dc14",
-				},
-				{
-					ID:       "worker-1",
-					Type:       "worker",
-					Platform: platform,
-					TalosImage: talosImage,
-					ServerType: "cx22",
-					PrivateIP:  "10.10.10.3",
-					Datacenter:   "fsn1-dc14",
-				},
-			},
-		}
-)
+var clu = &cluster.Cluster{
+	PrivateNetwork:    "10.10.10.0/24",
+	PrivateSubnetwork: "10.10.10.0/25",
+	KubernetesVersion: "1.32.0",
+	Machines: []*cluster.Machine{
+		{
+			ID:         "controlplane-1",
+			Type:       "init",
+			Platform:   platform,
+			TalosImage: talosImage,
+			ServerType: "cx22",
+			PrivateIP:  "10.10.10.5",
+			Datacenter: "fsn1-dc14",
+		},
+		{
+			ID:         "worker-1",
+			Type:       "worker",
+			Platform:   platform,
+			TalosImage: talosImage,
+			ServerType: "cx22",
+			PrivateIP:  "10.10.10.3",
+			Datacenter: "fsn1-dc14",
+		},
+	},
+}
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
@@ -55,11 +53,10 @@ func main() {
 			return err
 		}
 
-
 		for i, s := range hetzner.Servers {
 			hetzner.Servers[i] = s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
 				pulumi.String(s.ID),
-			).ToStringOutput().ApplyT(func (v string) string {
+			).ToStringOutput().ApplyT(func(v string) string {
 				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID, v), nil)
 				return v
 			}).(pulumi.StringOutput))
@@ -69,7 +66,6 @@ func main() {
 		if err != nil {
 			return err
 		}
-
 
 		applied, err := talosClu.Apply(servers.Deps)
 		if err != nil {

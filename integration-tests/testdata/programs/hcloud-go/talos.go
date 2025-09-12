@@ -10,16 +10,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-
 type Talos struct {
-	ctx *pulumi.Context
+	ctx     *pulumi.Context
 	Cluster *talos.Cluster
 
 	Name string
 }
 
 type TalosCluster struct {
-	Kubeconfig pulumi.StringOutput
+	Kubeconfig  pulumi.StringOutput
 	Talosconfig pulumi.StringOutput
 }
 
@@ -60,7 +59,7 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 			patches["cluster"] = map[string]any{
 				"etcd": map[string]any{
 					"advertisedSubnets": []string{
-							clu.PrivateNetwork,
+						clu.PrivateNetwork,
 					},
 				},
 			}
@@ -73,7 +72,8 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 				"time": map[string]any{
 					"disabled": false,
 				},
-		}})
+			},
+		})
 
 		extPatch := `apiVersion: v1alpha1
 kind: ExtensionServiceConfig
@@ -84,12 +84,11 @@ environment:
   - TUNNEL_EDGE_IP_VERSION=auto
 `
 
-
 		machines = append(machines, &talos.ClusterMachinesArgs{
-			MachineId:  server.ID,
-			NodeIp: server.IP,
+			MachineId:     server.ID,
+			NodeIp:        server.IP,
 			MachineType:   talos.MachineTypes(m.Type),
-			TalosImage: pulumi.String(m.TalosImage),
+			TalosImage:    pulumi.String(m.TalosImage),
 			ConfigPatches: pulumi.StringArray{pulumi.String(rendered), pulumi.String(timePatch), pulumi.String(extPatch)},
 		})
 	}
@@ -97,7 +96,7 @@ environment:
 	created, err := talos.NewCluster(ctx, clu.Name, &talos.ClusterArgs{
 		ClusterEndpoint: pulumi.Sprintf("https://%s:6443", servers[0].IP),
 		ClusterName:     clu.Name,
-		//KubernetesVersion: pulumi.String(clu.KubernetesVersion),
+		// KubernetesVersion: pulumi.String(clu.KubernetesVersion),
 		ClusterMachines: machines,
 	})
 	if err != nil {
@@ -105,24 +104,24 @@ environment:
 	}
 
 	return &Talos{
-		ctx: ctx,
-		Name: clu.Name,
+		ctx:     ctx,
+		Name:    clu.Name,
 		Cluster: created,
 	}, nil
 }
 
-func (t *Talos) Apply(deps []pulumi.Resource) (*TalosCluster, error ) {
+func (t *Talos) Apply(deps []pulumi.Resource) (*TalosCluster, error) {
 	apply, err := talos.NewApply(t.ctx, t.Name, &talos.ApplyArgs{
-		SkipInitApply: pulumi.Bool(true),
+		SkipInitApply:       pulumi.Bool(true),
 		ClientConfiguration: t.Cluster.ClientConfiguration,
-		ApplyMachines: t.Cluster.Machines,
+		ApplyMachines:       t.Cluster.Machines,
 	}, pulumi.DependsOn(deps), pulumi.IgnoreChanges([]string{"skipInitApply"}))
 	if err != nil {
 		return nil, fmt.Errorf("error apply: %w", err)
 	}
 
 	return &TalosCluster{
-		Kubeconfig: apply.Credentials.Kubeconfig(),
+		Kubeconfig:  apply.Credentials.Kubeconfig(),
 		Talosconfig: apply.Credentials.Talosconfig(),
 	}, err
 }
