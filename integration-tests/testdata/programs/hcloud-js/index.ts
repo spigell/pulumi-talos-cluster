@@ -24,7 +24,16 @@ const machines: pulumi.Input<pulumi.Input<talos.types.input.ClusterMachinesArgs>
 cluster.machines.forEach(v => machines.push({
 	machineId: v.id,
 	nodeIp: servers.find(m => v.id == m.id)?.ip as pulumi.Input<string>,
-	machineType: v.type
+	machineType: v.type,
+	configPatches: [JSON.stringify({
+			debug: "true",
+			machine: {
+	            network: {
+	              hostname: "master-1",
+	            }
+            }
+        })
+	]
 }))
 
 const clu = new talos.Cluster(cluster.name, {
