@@ -20,7 +20,7 @@ func (a *Applier) reboot(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.R
 		Dir:         home,
 		CommandArgs: pulumi.String(talosctlFastRebootArgs()),
 		// Do not retry since we do not wait for success.
-		RetryCount:  0,
+		RetryCount: 0,
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "5m", Update: "5m"}),

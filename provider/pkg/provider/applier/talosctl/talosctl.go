@@ -89,7 +89,7 @@ func (t *Talosctl) RunCommand(
 
 	// Hidden cleanup after the resource completes.
 	_ = local.RunOutput(ctx, local.RunOutputArgs{
-		Command:     pulumi.Sprintf(`rm -rfv %q`, a.Dir),
+		Command:     pulumi.Sprintf(`rm -rf %q`, a.Dir),
 		Interpreter: pulumi.ToStringArray(interpreter),
 	}, pulumi.DependsOn([]pulumi.Resource{main}))
 
@@ -121,6 +121,8 @@ func (t *Talosctl) RunGetCommand(
 	out := local.RunOutput(ctx, local.RunOutputArgs{
 		Command:     cmd,
 		Interpreter: pulumi.ToStringArray(interpreter),
+		// Only log stderr since stdout can keep a sensitive data.
+		Logging:     local.LoggingStderr,
 		Environment: env,
 		Dir:         pulumi.String(a.Dir),
 	}, pulumi.DependsOn(deps))

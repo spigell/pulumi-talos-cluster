@@ -29,121 +29,141 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			okStreak      = 2
 		)
 
-		env := args.NewInputs["environment"].ObjectValue().Mappable()
-
-		ip, _ := env["NODE_IP"].(string)
-		if ip == "" {
-			return fmt.Errorf("environment.NODE_IP is missing or not a string")
-		}
-		workDir, _ := env["TALOSCTL_HOME"].(string)
-		if workDir == "" {
-			return fmt.Errorf("environment.TALOSCTL_HOME is missing or not a string")
-		}
-		targetStr, _ := env["ETCD_MEMBER_TARGET"].(string)
-		if targetStr == "" {
-			return fmt.Errorf("environment.ETCD_MEMBER_TARGET is missing or not a string")
-		}
-
-		expected, err := strconv.Atoi(targetStr)
+		// 1) Read env
+		ip, workDir, expected, err := readEtcdEnv(args)
 		if err != nil {
-			return fmt.Errorf("invalid environment.ETCD_MEMBER_TARGET %q: %w", targetStr, err)
+			return err
 		}
 
+		// 2) Build runner
 		cli := talosctl.New().WithNodeIP(ip)
+		run := makeTalosRunner(cli, workDir, logger)
 
-		run := func(timeout time.Duration, args ...string) ([]byte, error) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
-			baseArgs := strings.Fields(cli.BasicCommand)[1:]
-			full := append(baseArgs, args...)
-			logger.Debug(fmt.Sprintf("exec: %s %s", cli.Binary, strings.Join(full, " ")), nil)
-
-			cmd := exec.CommandContext(ctx, cli.Binary, full...)
-			cmd.Dir = workDir
-
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				return out, fmt.Errorf("talosctl %v failed: %w: %s", full, err, strings.TrimSpace(string(out)))
-			}
-			return out, nil
-		}
-
+		// 3) Wait loop with simple linear backoff
 		consecutiveOK := 0
-
 		for attempt := 1; attempt <= maxRetries; attempt++ {
 			backoff := time.Duration(attempt) * time.Second
 
-			// 1) health/status
-			if _, err := run(healthTimeout, "etcd", "status"); err != nil {
+			// 3.1) health/status
+			if err := checkEtcdStatus(run, healthTimeout); err != nil {
 				logger.Debug(fmt.Sprintf("talos-cluster: etcd status attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
 				time.Sleep(backoff)
 				continue
 			}
 
-			// 2) members (tabular)
-			out, err := run(listTimeout, "etcd", "members")
+			// 3.2) members
+			peers, err := listEtcdPeers(run, listTimeout)
 			if err != nil {
 				logger.Debug(fmt.Sprintf("talos-cluster: etcd members attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
 				time.Sleep(backoff)
 				continue
 			}
 
-			peers, perr := parseEtcdPeersFromTable(out)
-			if perr != nil {
-				logger.Debug(fmt.Sprintf("talos-cluster: parse members attempt %d/%d failed: %v", attempt, maxRetries, perr), nil)
-				time.Sleep(backoff)
-				continue
-			}
-
-			got := len(peers)
-
-			if got != expected {
+			// 3.3) validate
+			ok, reason := peersReady(peers, expected)
+			if !ok {
 				consecutiveOK = 0
-				logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: expected %d members, got %d", attempt, maxRetries, expected, got), nil)
+				logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: %s", attempt, maxRetries, reason), nil)
 				time.Sleep(backoff)
 				continue
 			}
 
-			for _, p := range peers {
-				if p.Learner {
-					consecutiveOK = 0
-					logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: peer %s is learner", attempt, maxRetries, p.ID), nil)
-					time.Sleep(backoff)
-				}
-			}
-
-			allReady := true
-			for _, p := range peers {
-			    if p.Learner {
-			        consecutiveOK = 0
-			        allReady = false
-			        logger.Debug(fmt.Sprintf(
-			            "talos-cluster: attempt %d/%d: peer %s is learner",
-			            attempt, maxRetries, p.ID,
-			        ), nil)
-			        break
-			    }
-			}
-			if !allReady {
-			    time.Sleep(backoff)
-			    continue // retry outer loop
-			}
-
-
+			// 3.4) stability window
 			consecutiveOK++
 			if consecutiveOK < okStreak {
-				logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: matched (%d). waiting for stability %d/%d", attempt, maxRetries, got, consecutiveOK, okStreak), nil)
+				logger.Debug(fmt.Sprintf(
+					"talos-cluster: attempt %d/%d: matched (%d). waiting for stability %d/%d",
+					attempt, maxRetries, len(peers), consecutiveOK, okStreak,
+				), nil)
 				time.Sleep(backoff / 2)
 				continue
 			}
 
-			logger.Info(fmt.Sprintf("talos-cluster: etcd health check passed after attempt %d/%d. members=%d", attempt, maxRetries, got), nil)
+			logger.Info(fmt.Sprintf("talos-cluster: etcd health check passed after attempt %d/%d. members=%d",
+				attempt, maxRetries, len(peers)), nil)
 			return nil
 		}
 
 		return fmt.Errorf("talos-cluster: etcd health check failed after %d attempts", maxRetries)
 	}
+}
+
+func readEtcdEnv(args *pulumi.ResourceHookArgs) (ip, workDir string, expected int, err error) {
+	env := args.NewInputs["environment"].ObjectValue().Mappable()
+
+	ip, _ = env["NODE_IP"].(string)
+	if ip == "" {
+		return "", "", 0, fmt.Errorf("environment.NODE_IP is missing or not a string")
+	}
+	workDir, _ = env["TALOSCTL_HOME"].(string)
+	if workDir == "" {
+		return "", "", 0, fmt.Errorf("environment.TALOSCTL_HOME is missing or not a string")
+	}
+	targetStr, _ := env["ETCD_MEMBER_TARGET"].(string)
+	if targetStr == "" {
+		return "", "", 0, fmt.Errorf("environment.ETCD_MEMBER_TARGET is missing or not a string")
+	}
+	n, convErr := strconv.Atoi(targetStr)
+	if convErr != nil {
+		return "", "", 0, fmt.Errorf("invalid environment.ETCD_MEMBER_TARGET %q: %w", targetStr, convErr)
+	}
+	return ip, workDir, n, nil
+}
+
+// ---------- RUNNER ----------
+
+type runnerFn func(timeout time.Duration, args ...string) ([]byte, error)
+
+func makeTalosRunner(cli *talosctl.Talosctl, workDir string, logger pulumi.Log) runnerFn {
+	return func(timeout time.Duration, args ...string) ([]byte, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		// build "talosctl --talosconfig ... -n <ip> -e <ip> ..."
+		full := strings.Fields(cli.BasicCommand)[1:]
+		full = append(full, args...)
+		logger.Debug(fmt.Sprintf("exec: %s %s", cli.Binary, strings.Join(full, " ")), nil)
+
+		// #nosec G204 — cli.Binary and args are our controlled values
+		cmd := exec.CommandContext(ctx, cli.Binary, full...)
+		cmd.Dir = workDir
+
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return out, fmt.Errorf("talosctl %v failed: %w: %s", full, err, strings.TrimSpace(string(out)))
+		}
+		return out, nil
+	}
+}
+
+func checkEtcdStatus(run runnerFn, timeout time.Duration) error {
+	_, err := run(timeout, "etcd", "status")
+	return err
+}
+
+func listEtcdPeers(run runnerFn, timeout time.Duration) ([]PeerStatus, error) {
+	out, err := run(timeout, "etcd", "members")
+	if err != nil {
+		return nil, err
+	}
+	peers, perr := parseEtcdPeersFromTable(out)
+	if perr != nil {
+		return nil, perr
+	}
+	return peers, nil
+}
+
+// peersReady checks count and that no peer is a learner.
+func peersReady(peers []PeerStatus, expected int) (bool, string) {
+	if len(peers) != expected {
+		return false, fmt.Sprintf("expected %d members, got %d", expected, len(peers))
+	}
+	for _, p := range peers {
+		if p.Learner {
+			return false, fmt.Sprintf("peer %s is learner", p.ID)
+		}
+	}
+	return true, "ok"
 }
 
 /* An example of talosctl etcd members
@@ -152,7 +172,6 @@ NODE            ID                 HOSTNAME        PEER URLS                  CL
 91.98.138.169   c22a6165837acd5b   talos-apx-beq   https://10.10.10.10:2380   https://10.10.10.10:2379   false
 91.98.138.169   d65010d57cf22d49   talos-q2p-yyy   https://10.10.10.5:2380    https://10.10.10.5:2379    false
 */
-
 
 // parseEtcdPeersFromTable parses `talosctl etcd members` table output and returns peer statuses.
 // It skips the header (first non-empty line) and any accidental separator/garbage lines.
