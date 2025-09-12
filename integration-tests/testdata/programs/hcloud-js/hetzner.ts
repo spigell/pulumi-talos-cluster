@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as forge from 'node-forge';
 import {Cluster, DeployedServer} from './types'
 
-const defaultTalosInitialVersion = 'v1.11.0'
+const defaultTalosInitialVersion = 'v1.10.3'
 
 export function Hetzner (cluster: Cluster): DeployedServer[] {
     const sshKey = new hcloud.SshKey("ssh", {

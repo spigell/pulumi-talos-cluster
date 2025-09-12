@@ -10,7 +10,7 @@ import (
 
 var (
 	platform   = "hcloud"
-	talosImage = "ghcr.io/siderolabs/installer:v1.10.3"
+	talosImage = "ghcr.io/siderolabs/installer:v1.11.0"
 )
 
 var (
