@@ -5,7 +5,7 @@ import {Cluster, DeployedServer} from './types'
 
 const defaultTalosInitialVersion = 'v1.10.3'
 const arch = 'arm'
-const variant = 'hcloud'
+const variant = 'metal'
 
 export function Hetzner (cluster: Cluster): DeployedServer[] {
     const sshKey = new hcloud.SshKey("ssh", {
