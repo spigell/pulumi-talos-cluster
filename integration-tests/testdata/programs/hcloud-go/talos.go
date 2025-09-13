@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
-	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
 	"gopkg.in/yaml.v3"
 )
@@ -22,7 +22,7 @@ type TalosCluster struct {
 	Talosconfig pulumi.StringOutput
 }
 
-func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hcloud.Server) (*Talos, error) {
+func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Server) (*Talos, error) {
 	if clu.Machines[0].Type != "init" {
 		return nil, fmt.Errorf("the first node must be init")
 	}
@@ -33,7 +33,7 @@ func NewTalosCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []*hclou
 		var m *cluster.Machine
 
 		for _, machine := range clu.Machines {
-			if machine.ID == server.ID {
+			if machine.ID == server.ID() {
 				m = machine
 				break
 			}
@@ -85,8 +85,8 @@ environment:
 `
 
 		machines = append(machines, &talos.ClusterMachinesArgs{
-			MachineId:     server.ID,
-			NodeIp:        server.IP,
+			MachineId:     server.ID(),
+			NodeIp:        server.IP(),
 			MachineType:   talos.MachineTypes(m.Type),
 			TalosImage:    pulumi.String(m.TalosImage),
 			ConfigPatches: pulumi.StringArray{pulumi.String(rendered), pulumi.String(timePatch), pulumi.String(extPatch)},
@@ -94,7 +94,7 @@ environment:
 	}
 
 	created, err := talos.NewCluster(ctx, clu.Name, &talos.ClusterArgs{
-		ClusterEndpoint: pulumi.Sprintf("https://%s:6443", servers[0].IP),
+		ClusterEndpoint: pulumi.Sprintf("https://%s:6443", servers[0].IP()),
 		ClusterName:     clu.Name,
 		// KubernetesVersion: pulumi.String(clu.KubernetesVersion),
 		ClusterMachines: machines,

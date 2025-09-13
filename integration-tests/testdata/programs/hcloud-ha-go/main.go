@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
+	hcloud "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud/hcloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
-	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
 	"gopkg.in/yaml.v3"
 )
@@ -68,12 +69,16 @@ func main() {
 
 		machines := make(talos.ClusterMachinesArray, 0)
 
-		servers, err := hcloud.NewWithIPS(ctx, clu)
+		var (
+			provider cloud.Provider
+			err      error
+		)
+		provider, err = hcloud.NewWithIPS(ctx, clu)
 		if err != nil {
 			return err
 		}
 
-		up, err := servers.Up()
+		up, err := provider.Up()
 		if err != nil {
 			return err
 		}
@@ -82,7 +87,7 @@ func main() {
 			var m *cluster.Machine
 
 			for _, machine := range clu.Machines {
-				if machine.ID == server.ID {
+				if machine.ID == server.ID() {
 					m = machine
 					break
 				}
@@ -117,8 +122,8 @@ func main() {
 			rendered, _ := yaml.Marshal(patches)
 
 			machines = append(machines, &talos.ClusterMachinesArgs{
-				MachineId:     server.ID,
-				NodeIp:        server.IP,
+				MachineId:     server.ID(),
+				NodeIp:        server.IP(),
 				MachineType:   talos.MachineTypes(m.Type),
 				TalosImage:    pulumi.String(m.TalosImage),
 				ConfigPatches: pulumi.StringArray{pulumi.String(rendered)},
@@ -126,7 +131,7 @@ func main() {
 		}
 
 		created, err := talos.NewCluster(ctx, clu.Name, &talos.ClusterArgs{
-			ClusterEndpoint:   pulumi.Sprintf("https://%s:6443", up.Servers[0].IP),
+			ClusterEndpoint:   pulumi.Sprintf("https://%s:6443", up.Servers[0].IP()),
 			ClusterName:       clu.Name,
 			KubernetesVersion: pulumi.String(clu.KubernetesVersion),
 			ClusterMachines:   machines,

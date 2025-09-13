@@ -4,8 +4,9 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
+	hcloud "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud/hcloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
-	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/hcloud"
 )
 
 var (
@@ -43,31 +44,37 @@ func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		clu.Name = ctx.Stack()
 
-		hetzner, err := hcloud.NewWithIPS(ctx, clu)
+		var (
+			provider cloud.Provider
+			err      error
+		)
+		provider, err = hcloud.NewWithIPS(ctx, clu)
 		if err != nil {
 			return err
 		}
 
-		talosClu, err := NewTalosCluster(ctx, clu, hetzner.Servers)
+		servers := provider.Servers()
+
+		talosClu, err := NewTalosCluster(ctx, clu, servers)
 		if err != nil {
 			return err
 		}
 
-		for i, s := range hetzner.Servers {
-			hetzner.Servers[i] = s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
-				pulumi.String(s.ID),
+		for _, s := range servers {
+			s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
+				pulumi.String(s.ID()),
 			).ToStringOutput().ApplyT(func(v string) string {
-				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID, v), nil)
+				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID(), v), nil)
 				return v
 			}).(pulumi.StringOutput))
 		}
 
-		servers, err := hetzner.Up()
+		deployed, err := provider.Up()
 		if err != nil {
 			return err
 		}
 
-		applied, err := talosClu.Apply(servers.Deps)
+		applied, err := talosClu.Apply(deployed.Deps)
 		if err != nil {
 			return err
 		}
