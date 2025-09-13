@@ -10,6 +10,7 @@ import (
 
 	"github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	"golang.org/x/crypto/ssh"
 )
@@ -26,7 +27,7 @@ type Hetzner struct {
 	privateSubnetwork string
 	clusterName       string
 
-	Servers []*Server
+	servers []*Server
 }
 
 type Server struct {
@@ -35,13 +36,8 @@ type Server struct {
 	arch          string
 	imageSelector string
 
-	ID string
-	IP pulumi.StringOutput
-}
-
-type Deployed struct {
-	Servers []*Server
-	Deps    []pulumi.Resource
+	id string
+	ip pulumi.StringOutput
 }
 
 func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error) {
@@ -97,7 +93,7 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 		}
 
 		servers = append(servers, &Server{
-			ID:            s.ID,
+			id:            s.ID,
 			privateIP:     s.PrivateIP,
 			arch:          arch,
 			imageSelector: fmt.Sprintf("%s,version=%s,variant=%s,arch=%s", testImageSelector, s.TalosInitialVersion, s.Platform, arch),
@@ -121,21 +117,28 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 					},
 				},
 			},
-			IP: ipv4.IpAddress,
-		},
-		)
+			ip: ipv4.IpAddress,
+		})
 	}
 
 	return &Hetzner{
 		ctx:               ctx,
-		Servers:           servers,
+		servers:           servers,
 		privateNetwork:    cluster.PrivateNetwork,
 		privateSubnetwork: cluster.PrivateSubnetwork,
 		clusterName:       cluster.Name,
 	}, nil
 }
 
-func (h *Hetzner) Up() (*Deployed, error) {
+func (h *Hetzner) Servers() []cloud.Server {
+	result := make([]cloud.Server, len(h.servers))
+	for i, s := range h.servers {
+		result[i] = s
+	}
+	return result
+}
+
+func (h *Hetzner) Up() (*cloud.Deployed, error) {
 	deps := make([]pulumi.Resource, 0)
 
 	if h.privateNetwork != "" {
@@ -163,7 +166,7 @@ func (h *Hetzner) Up() (*Deployed, error) {
 			return nil, fmt.Errorf("error creating subnet: %w", err)
 		}
 
-		for _, s := range h.Servers {
+		for _, s := range h.servers {
 			s.args.Networks = &hcloud.ServerNetworkTypeArray{
 				&hcloud.ServerNetworkTypeArgs{
 					NetworkId: convertedNetID,
@@ -177,7 +180,7 @@ func (h *Hetzner) Up() (*Deployed, error) {
 
 	servers := make([]pulumi.Resource, 0)
 
-	for _, s := range h.Servers {
+	for _, s := range h.servers {
 		image, err := hcloud.GetImage(h.ctx, &hcloud.GetImageArgs{
 			WithSelector:     pulumi.StringRef(s.imageSelector),
 			MostRecent:       pulumi.BoolRef(true),
@@ -188,7 +191,7 @@ func (h *Hetzner) Up() (*Deployed, error) {
 		}
 		s.args.Image = pulumi.Sprintf("%d", image.Id)
 		// Define the server
-		server, err := hcloud.NewServer(h.ctx, s.ID, s.args,
+		server, err := hcloud.NewServer(h.ctx, s.id, s.args,
 			pulumi.DependsOn(deps),
 			pulumi.IgnoreChanges([]string{"sshKeys", "userData"}),
 		)
@@ -199,8 +202,8 @@ func (h *Hetzner) Up() (*Deployed, error) {
 		servers = append(servers, server)
 	}
 
-	return &Deployed{
-		Servers: h.Servers,
+	return &cloud.Deployed{
+		Servers: h.Servers(),
 		Deps:    servers,
 	}, nil
 }
@@ -209,7 +212,15 @@ func (s *Server) Args() *hcloud.ServerArgs {
 	return s.args
 }
 
-func (s *Server) WithUserdata(userdata pulumi.StringOutput) *Server {
+func (s *Server) ID() string {
+	return s.id
+}
+
+func (s *Server) IP() pulumi.StringOutput {
+	return s.ip
+}
+
+func (s *Server) WithUserdata(userdata pulumi.StringOutput) cloud.Server {
 	s.args.UserData = userdata
 
 	return s
