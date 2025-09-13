@@ -1,0 +1,19 @@
+name: ""
+kubernetesVersion: 1.32.0
+privateNetwork: 10.10.10.0/24
+privateSubnetwork: 10.10.10.0/25
+machines:
+  - id: controlplane-1
+    type: init
+    platform: hcloud
+    talosImage: ghcr.io/siderolabs/installer:v1.11.0
+    serverType: cx22
+    privateIP: 10.10.10.5
+    datacenter: fsn1-dc14
+  - id: worker-1
+    type: worker
+    platform: hcloud
+    talosImage: ghcr.io/siderolabs/installer:v1.11.0
+    serverType: cx22
+    privateIP: 10.10.10.3
+    datacenter: fsn1-dc14
