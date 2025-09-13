@@ -10,6 +10,7 @@ export interface Machine {
   talosImage: string;
   privateIP: string;
   datacenter: string;
+  configPatches: string[];
 }
 
 export interface Cluster {

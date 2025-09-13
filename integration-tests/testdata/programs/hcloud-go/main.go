@@ -7,6 +7,7 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
 	hcloud "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud/hcloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
+	talospkg "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/talos"
 )
 
 var (
@@ -55,7 +56,7 @@ func main() {
 
 		servers := provider.Servers()
 
-		talosClu, err := NewTalosCluster(ctx, clu, servers)
+		talosClu, err := talospkg.NewCluster(ctx, clu, servers)
 		if err != nil {
 			return err
 		}
