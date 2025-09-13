@@ -1,0 +1,21 @@
+name: demo-cluster
+kubernetesVersion: v1.28.3
+privateNetwork: 10.0.0.0/24
+privateSubnetwork: 10.0.0.0/24
+machines:
+  - id: cp1
+    type: controlplane
+    serverType: cpx11
+    platform: hcloud
+    talosInitialVersion: v1.5.0
+    talosImage: ghcr.io/siderolabs/installer:v1.5.0
+    privateIP: 10.0.0.2
+    datacenter: fsn1
+  - id: worker1
+    type: worker
+    serverType: cpx11
+    platform: hcloud
+    talosInitialVersion: v1.5.0
+    talosImage: ghcr.io/siderolabs/installer:v1.5.0
+    privateIP: 10.0.0.3
+    datacenter: fsn1
