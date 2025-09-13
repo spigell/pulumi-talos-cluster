@@ -9,12 +9,13 @@ type Cluster struct {
 }
 
 type Machine struct {
-	ID                  string `yaml:"id"`
-	Type                string `yaml:"type"`
-	ServerType          string `yaml:"serverType"`
-	Platform            string `yaml:"platform"`
-	TalosInitialVersion string `yaml:"talosInitialVersion"`
-	TalosImage          string `yaml:"talosImage"`
-	PrivateIP           string `yaml:"privateIP"`
-	Datacenter          string `yaml:"datacenter"`
+	ID                  string   `yaml:"id"`
+	Type                string   `yaml:"type"`
+	ServerType          string   `yaml:"serverType"`
+	Platform            string   `yaml:"platform"`
+	TalosInitialVersion string   `yaml:"talosInitialVersion"`
+	TalosImage          string   `yaml:"talosImage"`
+	PrivateIP           string   `yaml:"privateIP"`
+	Datacenter          string   `yaml:"datacenter"`
+	ConfigPatches       []string `yaml:"configPatches"`
 }

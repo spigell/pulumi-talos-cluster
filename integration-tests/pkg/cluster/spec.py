@@ -13,6 +13,7 @@ class Machine:
     talosImage: str
     privateIP: str
     datacenter: str
+    configPatches: List[str]
 
 
 @dataclass
@@ -27,7 +28,13 @@ class Cluster:
 def load(path: str) -> Cluster:
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
-    machines = [Machine(**m) for m in data.get("machines", [])]
+    machines = [
+        Machine(
+            configPatches=m.get("configPatches", []),
+            **{k: v for k, v in m.items() if k != "configPatches"}
+        )
+        for m in data.get("machines", [])
+    ]
     return Cluster(
         name=data.get("name", ""),
         privateNetwork=data.get("privateNetwork", ""),
