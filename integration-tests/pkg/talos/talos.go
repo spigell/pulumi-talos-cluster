@@ -5,7 +5,6 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
-	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	taloscluster "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
 )
 
@@ -18,6 +17,21 @@ type Cluster struct {
 	Name string
 }
 
+// Spec describes a Talos cluster to be created.
+type Spec struct {
+	Name     string
+	Machines []MachineSpec
+}
+
+// MachineSpec contains the subset of machine fields required to create
+// Talos resources.
+type MachineSpec struct {
+	ID            string
+	Type          string
+	TalosImage    string
+	ConfigPatches []string
+}
+
 // Applied contains the credentials produced by talos.Apply.
 type Applied struct {
 	Kubeconfig  pulumi.StringOutput
@@ -26,19 +40,19 @@ type Applied struct {
 
 // NewCluster creates a Talos cluster resource configured from the provided
 // cluster specification and server definitions.
-func NewCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Server) (*Cluster, error) {
-	if len(clu.Machines) == 0 || clu.Machines[0].Type != "init" {
+func NewCluster(ctx *pulumi.Context, spec *Spec, servers []cloud.Server) (*Cluster, error) {
+	if len(spec.Machines) == 0 || spec.Machines[0].Type != "init" {
 		return nil, fmt.Errorf("the first node must be init")
 	}
 
 	machines := make(taloscluster.ClusterMachinesArray, 0)
 
 	for _, server := range servers {
-		var m *cluster.Machine
+		var m *MachineSpec
 
-		for _, machine := range clu.Machines {
-			if machine.ID == server.ID() {
-				m = machine
+		for i := range spec.Machines {
+			if spec.Machines[i].ID == server.ID() {
+				m = &spec.Machines[i]
 				break
 			}
 		}
@@ -57,9 +71,9 @@ func NewCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Serve
 		})
 	}
 
-	created, err := taloscluster.NewCluster(ctx, clu.Name, &taloscluster.ClusterArgs{
+	created, err := taloscluster.NewCluster(ctx, spec.Name, &taloscluster.ClusterArgs{
 		ClusterEndpoint: pulumi.Sprintf("https://%s:6443", servers[0].IP()),
-		ClusterName:     clu.Name,
+		ClusterName:     spec.Name,
 		ClusterMachines: machines,
 	})
 	if err != nil {
@@ -68,7 +82,7 @@ func NewCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Serve
 
 	return &Cluster{
 		ctx:     ctx,
-		Name:    clu.Name,
+		Name:    spec.Name,
 		Cluster: created,
 	}, nil
 }
