@@ -1,4 +1,4 @@
-name: ""
+name: hcloud-go
 kubernetesVersion: 1.32.0
 privateNetwork: 10.10.10.0/24
 privateSubnetwork: 10.10.10.0/25

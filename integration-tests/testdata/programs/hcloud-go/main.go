@@ -12,21 +12,20 @@ func main() {
 		if err != nil {
 			return err
 		}
-		clu.Name = ctx.Stack()
 
 		provider, err := hcloud.NewWithIPS(ctx, clu)
 		if err != nil {
 			return err
 		}
 
-		talosClu, applied, err := cluster.Deploy(ctx, clu, provider, true)
+		deployed, err := cluster.Deploy(ctx, provider, clu)
 		if err != nil {
 			return err
 		}
 
-		ctx.Export("clusterMachineConfigs", talosClu.Cluster.GeneratedConfigurations)
-		ctx.Export("kubeconfig", applied.Kubeconfig)
-		ctx.Export("talosconfig", applied.Talosconfig)
+		ctx.Export("clusterMachineConfigs", deployed.ClusterMachines)
+		ctx.Export("kubeconfig", deployed.Credentials.Kubeconfig)
+		ctx.Export("talosconfig", deployed.Credentials.Talosconfig)
 
 		return nil
 	})

@@ -33,7 +33,7 @@ type MachineSpec struct {
 }
 
 // Applied contains the credentials produced by talos.Apply.
-type Applied struct {
+type Credentials struct {
 	Kubeconfig  pulumi.StringOutput
 	Talosconfig pulumi.StringOutput
 }
@@ -88,7 +88,7 @@ func NewCluster(ctx *pulumi.Context, spec *Spec, servers []cloud.Server) (*Clust
 }
 
 // Apply runs the Talos Apply resource to bootstrap the cluster.
-func (t *Cluster) Apply(deps []pulumi.Resource) (*Applied, error) {
+func (t *Cluster) Apply(deps []pulumi.Resource) (*Credentials, error) {
 	apply, err := taloscluster.NewApply(t.ctx, t.Name, &taloscluster.ApplyArgs{
 		SkipInitApply:       pulumi.Bool(true),
 		ClientConfiguration: t.Cluster.ClientConfiguration,
@@ -98,7 +98,7 @@ func (t *Cluster) Apply(deps []pulumi.Resource) (*Applied, error) {
 		return nil, fmt.Errorf("error apply: %w", err)
 	}
 
-	return &Applied{
+	return &Credentials{
 		Kubeconfig:  apply.Credentials.Kubeconfig(),
 		Talosconfig: apply.Credentials.Talosconfig(),
 	}, nil

@@ -138,6 +138,25 @@ func (h *Hetzner) Servers() []cloud.Server {
 	return result
 }
 
+
+func (s *Server) Args() *hcloud.ServerArgs {
+	return s.args
+}
+
+func (s *Server) ID() string {
+	return s.id
+}
+
+func (s *Server) IP() pulumi.StringOutput {
+	return s.ip
+}
+
+func (s *Server) WithUserdata(userdata pulumi.StringOutput) cloud.Server {
+	s.args.UserData = userdata
+
+	return s
+}
+
 func (h *Hetzner) Up() (*cloud.Deployed, error) {
 	deps := make([]pulumi.Resource, 0)
 
@@ -206,24 +225,6 @@ func (h *Hetzner) Up() (*cloud.Deployed, error) {
 		Servers: h.Servers(),
 		Deps:    servers,
 	}, nil
-}
-
-func (s *Server) Args() *hcloud.ServerArgs {
-	return s.args
-}
-
-func (s *Server) ID() string {
-	return s.id
-}
-
-func (s *Server) IP() pulumi.StringOutput {
-	return s.ip
-}
-
-func (s *Server) WithUserdata(userdata pulumi.StringOutput) cloud.Server {
-	s.args.UserData = userdata
-
-	return s
 }
 
 // generatePrivateKey creates a RSA Private Key of specified byte size.

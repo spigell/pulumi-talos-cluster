@@ -18,5 +18,5 @@ type Machine struct {
 	PrivateIP           string   `yaml:"privateIP"`
 	Datacenter          string   `yaml:"datacenter"`
 	ConfigPatches       []string `yaml:"configPatches"`
-	Userdata            string   `yaml:"userdata"`
+	ApplyConfigViaUserdata            bool   `yaml:"apply-config-via-userdata"`
 }

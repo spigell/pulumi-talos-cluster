@@ -5,18 +5,28 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
-	talospkg "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/talos"
+	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/talos"
 )
+
+type Deployed struct {
+	ClusterMachines  pulumi.StringMapOutput
+	Credentials *DeployedCredentials
+}
+
+type DeployedCredentials struct {
+	Kubeconfig pulumi.StringOutput
+	Talosconfig pulumi.StringOutput
+}
 
 // Deploy provisions servers with the given provider and boots a Talos cluster.
 // If patchUserdata is true, Talos-generated configuration is set as the userdata
 // for each server (unless overridden in the machine spec).
-func Deploy(ctx *pulumi.Context, clu *Cluster, provider cloud.Provider, patchUserdata bool) (*talospkg.Cluster, *talospkg.Applied, error) {
+func Deploy(ctx *pulumi.Context, provider cloud.Provider, cluster *Cluster) (*Deployed, error) {
 	servers := provider.Servers()
 
-	spec := &talospkg.Spec{Name: clu.Name, Machines: make([]talospkg.MachineSpec, len(clu.Machines))}
-	for i, m := range clu.Machines {
-		spec.Machines[i] = talospkg.MachineSpec{
+	spec := &talos.Spec{Name: cluster.Name, Machines: make([]talos.MachineSpec, len(cluster.Machines))}
+	for i, m := range cluster.Machines {
+		spec.Machines[i] = talos.MachineSpec{
 			ID:            m.ID,
 			Type:          m.Type,
 			TalosImage:    m.TalosImage,
@@ -24,22 +34,18 @@ func Deploy(ctx *pulumi.Context, clu *Cluster, provider cloud.Provider, patchUse
 		}
 	}
 
-	talosClu, err := talospkg.NewCluster(ctx, spec, servers)
+	talosClu, err := talos.NewCluster(ctx, spec, servers)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	if patchUserdata {
-		for _, s := range servers {
-			m := machineByID(clu, s.ID())
-			var userdata pulumi.StringInput
-			if m != nil && m.Userdata != "" {
-				userdata = pulumi.String(m.Userdata)
-			} else {
-				userdata = talosClu.Cluster.GeneratedConfigurations.MapIndex(
-					pulumi.String(s.ID()),
-				).ToStringOutput()
-			}
+	for _, s := range servers {
+		m := machineByID(cluster.Machines, s.ID())
+		if (m.ApplyConfigViaUserdata) {
+			userdata := talosClu.Cluster.GeneratedConfigurations.MapIndex(
+				pulumi.String(s.ID()),
+			).ToStringOutput()
+
 			s.WithUserdata(userdata.ToStringOutput().ApplyT(func(v string) string {
 				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID(), v), nil)
 				return v
@@ -49,19 +55,25 @@ func Deploy(ctx *pulumi.Context, clu *Cluster, provider cloud.Provider, patchUse
 
 	deployed, err := provider.Up()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	applied, err := talosClu.Apply(deployed.Deps)
+	creds, err := talosClu.Apply(deployed.Deps)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return talosClu, applied, nil
+	return &Deployed{
+		ClusterMachines: talosClu.Cluster.GeneratedConfigurations,
+		Credentials: &DeployedCredentials{
+			Kubeconfig: creds.Kubeconfig,
+			Talosconfig: creds.Talosconfig,
+		},
+	}, nil
 }
 
-func machineByID(c *Cluster, id string) *Machine {
-	for _, m := range c.Machines {
+func machineByID(ma []*Machine, id string) *Machine {
+	for _, m := range ma {
 		if m.ID == id {
 			return m
 		}
