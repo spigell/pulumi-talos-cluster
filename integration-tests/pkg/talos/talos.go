@@ -7,7 +7,6 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	taloscluster "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
-	"gopkg.in/yaml.v3"
 )
 
 // Cluster provides helpers for creating and applying a Talos cluster
@@ -44,52 +43,7 @@ func NewCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Serve
 			}
 		}
 
-		patches := map[string]any{
-			"debug": false,
-			"machine": map[string]any{
-				"kubelet": map[string]any{
-					"nodeIP": map[string]any{
-						"validSubnets": []string{clu.PrivateNetwork},
-					},
-				},
-				"time": map[string]any{
-					"disabled": true,
-				},
-			},
-		}
-
-		if m.Type == "controlplane" || m.Type == "init" {
-			patches["cluster"] = map[string]any{
-				"etcd": map[string]any{
-					"advertisedSubnets": []string{clu.PrivateNetwork},
-				},
-			}
-		}
-
-		rendered, _ := yaml.Marshal(patches)
-		timePatch, _ := yaml.Marshal(map[string]any{
-			"machine": map[string]any{
-				"time": map[string]any{
-					"disabled": false,
-				},
-			},
-		})
-
-		extPatch := `apiVersion: v1alpha1
-kind: ExtensionServiceConfig
-name: cloudflared
-environment:
-  - TUNNEL_TOKEN=CHANGE_ME_AGAIN
-  - TUNNEL_METRICS=localhost:2001
-  - TUNNEL_EDGE_IP_VERSION=auto
-`
-
-		configPatches := pulumi.StringArray{
-			pulumi.String(rendered),
-			pulumi.String(timePatch),
-			pulumi.String(extPatch),
-		}
-
+		configPatches := pulumi.StringArray{}
 		for _, p := range m.ConfigPatches {
 			configPatches = append(configPatches, pulumi.String(p))
 		}

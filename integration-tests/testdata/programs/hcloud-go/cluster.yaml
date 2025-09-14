@@ -10,6 +10,32 @@ machines:
     serverType: cx22
     privateIP: 10.10.10.5
     datacenter: fsn1-dc14
+    configPatches:
+      - |
+        debug: false
+        machine:
+          kubelet:
+            nodeIP:
+              validSubnets:
+                - 10.10.10.0/24
+          time:
+            disabled: true
+        cluster:
+          etcd:
+            advertisedSubnets:
+              - 10.10.10.0/24
+      - |
+        machine:
+          time:
+            disabled: false
+      - |
+        apiVersion: v1alpha1
+        kind: ExtensionServiceConfig
+        name: cloudflared
+        environment:
+          - TUNNEL_TOKEN=CHANGE_ME_AGAIN
+          - TUNNEL_METRICS=localhost:2001
+          - TUNNEL_EDGE_IP_VERSION=auto
   - id: worker-1
     type: worker
     platform: hcloud
@@ -17,3 +43,25 @@ machines:
     serverType: cx22
     privateIP: 10.10.10.3
     datacenter: fsn1-dc14
+    configPatches:
+      - |
+        debug: false
+        machine:
+          kubelet:
+            nodeIP:
+              validSubnets:
+                - 10.10.10.0/24
+          time:
+            disabled: true
+      - |
+        machine:
+          time:
+            disabled: false
+      - |
+        apiVersion: v1alpha1
+        kind: ExtensionServiceConfig
+        name: cloudflared
+        environment:
+          - TUNNEL_TOKEN=CHANGE_ME_AGAIN
+          - TUNNEL_METRICS=localhost:2001
+          - TUNNEL_EDGE_IP_VERSION=auto
