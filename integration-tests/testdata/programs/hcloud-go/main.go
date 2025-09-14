@@ -43,7 +43,7 @@ func main() {
 			return err
 		}
 
-		applied, err := talosClu.Apply(deployed.Deps)
+		applied, err := talosClu.Apply(deployed.Deps, clu.SkipInitApply)
 		if err != nil {
 			return err
 		}

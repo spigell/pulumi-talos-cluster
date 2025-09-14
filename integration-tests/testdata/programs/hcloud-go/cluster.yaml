@@ -2,6 +2,7 @@ name: ""
 kubernetesVersion: 1.32.0
 privateNetwork: 10.10.10.0/24
 privateSubnetwork: 10.10.10.0/25
+skipInitApply: false
 machines:
   - id: controlplane-1
     type: init
