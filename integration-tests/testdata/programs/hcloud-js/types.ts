@@ -19,6 +19,7 @@ export type ClusterMachine = {
   platform?: string;
   talosInitialVersion?: string;
   configPatches?: string[];
+  userdata?: string;
 };
 
 export type DeployedServer = {

@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	hcloud "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud/hcloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
-	talospkg "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/talos"
 )
 
 func main() {
@@ -22,28 +19,7 @@ func main() {
 			return err
 		}
 
-		servers := provider.Servers()
-
-		talosClu, err := talospkg.NewCluster(ctx, clu, servers)
-		if err != nil {
-			return err
-		}
-
-		for _, s := range servers {
-			s.WithUserdata(talosClu.Cluster.GeneratedConfigurations.MapIndex(
-				pulumi.String(s.ID()),
-			).ToStringOutput().ApplyT(func(v string) string {
-				ctx.Log.Debug(fmt.Sprintf("set userdata for server %s: \n\n%s\n\n===", s.ID(), v), nil)
-				return v
-			}).(pulumi.StringOutput))
-		}
-
-		deployed, err := provider.Up()
-		if err != nil {
-			return err
-		}
-
-		applied, err := talosClu.Apply(deployed.Deps)
+		talosClu, applied, err := cluster.Deploy(ctx, clu, provider, true)
 		if err != nil {
 			return err
 		}
