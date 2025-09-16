@@ -7,9 +7,10 @@ machines:
     type: init
     platform: hcloud
     talosImage: ghcr.io/siderolabs/installer:v1.11.0
-    serverType: cx22
     privateIP: 10.10.10.5
-    datacenter: fsn1-dc14
+    hcloud:
+      serverType: cx22
+      datacenter: fsn1-dc14
     configPatches:
       - |
         debug: false
@@ -40,9 +41,10 @@ machines:
     type: worker
     platform: hcloud
     talosImage: ghcr.io/siderolabs/installer:v1.11.0
-    serverType: cx22
     privateIP: 10.10.10.3
-    datacenter: fsn1-dc14
+    hcloud:
+      serverType: cx22
+      datacenter: fsn1-dc14
     configPatches:
       - |
         debug: false

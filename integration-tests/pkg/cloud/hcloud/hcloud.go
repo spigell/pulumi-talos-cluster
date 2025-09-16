@@ -41,7 +41,7 @@ type Server struct {
 }
 
 func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error) {
-	servers := make([]*Server, 0)
+	servers := make([]*Server, 0, len(cluster.Machines))
 
 	pubKey, err := generateECDSAPubKey()
 	if err != nil {
@@ -55,70 +55,13 @@ func NewWithIPS(ctx *pulumi.Context, cluster *cluster.Cluster) (*Hetzner, error)
 		return nil, err
 	}
 
-	for _, s := range cluster.Machines {
-		if s.Datacenter == "" {
-			s.Datacenter = defaultDatacenter
-		}
-
-		if s.TalosInitialVersion == "" {
-			s.TalosInitialVersion = defaultTalosInitialVersion
-		}
-
-		ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", s.ID), &hcloud.PrimaryIpArgs{
-			Name:         pulumi.Sprintf("%s-%s-ipv4", cluster.Name, s.ID),
-			Datacenter:   pulumi.String(s.Datacenter),
-			Type:         pulumi.String("ipv4"),
-			AssigneeType: pulumi.String("server"),
-			AutoDelete:   pulumi.Bool(true),
-		})
+	for _, machine := range cluster.Machines {
+		server, err := newServer(ctx, cluster, machine, sshKey)
 		if err != nil {
 			return nil, err
 		}
 
-		ipv6, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv6", s.ID), &hcloud.PrimaryIpArgs{
-			Name:         pulumi.Sprintf("%s-%s-ipv6", cluster.Name, s.ID),
-			Datacenter:   pulumi.String(s.Datacenter),
-			Type:         pulumi.String("ipv6"),
-			AssigneeType: pulumi.String("server"),
-			AutoDelete:   pulumi.Bool(true),
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		arch := "x86"
-
-		if strings.HasPrefix(s.ServerType, "cax") || strings.HasPrefix(s.ServerType, "cpx") {
-			arch = "arm"
-		}
-
-		servers = append(servers, &Server{
-			id:            s.ID,
-			privateIP:     s.PrivateIP,
-			arch:          arch,
-			imageSelector: fmt.Sprintf("%s,version=%s,variant=%s,arch=%s", testImageSelector, s.TalosInitialVersion, s.Platform, arch),
-			args: &hcloud.ServerArgs{
-				Name: pulumi.Sprintf("%s-%s", cluster.Name, s.ID),
-				SshKeys: pulumi.StringArray{
-					sshKey.ID(),
-				},
-				ServerType: pulumi.String(s.ServerType),
-				Datacenter: pulumi.String(s.Datacenter),
-				PublicNets: hcloud.ServerPublicNetArray{
-					&hcloud.ServerPublicNetArgs{
-						//nolint: gocritic // this is the only way to convert string to int
-						Ipv4: ipv4.ID().ApplyT(func(id string) (int, error) {
-							return strconv.Atoi(id)
-						}).(pulumi.IntOutput),
-						//nolint: gocritic // this is the only way to convert string to int
-						Ipv6: ipv6.ID().ApplyT(func(id string) (int, error) {
-							return strconv.Atoi(id)
-						}).(pulumi.IntOutput),
-					},
-				},
-			},
-			ip: ipv4.IpAddress,
-		})
+		servers = append(servers, server)
 	}
 
 	return &Hetzner{
@@ -137,7 +80,6 @@ func (h *Hetzner) Servers() []cloud.Server {
 	}
 	return result
 }
-
 
 func (s *Server) Args() *hcloud.ServerArgs {
 	return s.args
@@ -225,6 +167,97 @@ func (h *Hetzner) Up() (*cloud.Deployed, error) {
 		Servers: h.Servers(),
 		Deps:    servers,
 	}, nil
+}
+
+func newServer(ctx *pulumi.Context, cluster *cluster.Cluster, machine *cluster.Machine, sshKey *hcloud.SshKey) (*Server, error) {
+	if machine.Hcloud == nil {
+		return nil, fmt.Errorf("machine %q is missing hcloud configuration", machine.ID)
+	}
+
+	if machine.Hcloud.ServerType == "" {
+		return nil, fmt.Errorf("machine %q must define hcloud.serverType", machine.ID)
+	}
+
+	if machine.PrivateIP == "" {
+		return nil, fmt.Errorf("machine %q must define privateIP", machine.ID)
+	}
+
+	datacenter := machine.Hcloud.Datacenter
+	if datacenter == "" {
+		datacenter = defaultDatacenter
+	}
+
+	talosVersion := machine.TalosInitialVersion
+	if talosVersion == "" {
+		talosVersion = defaultTalosInitialVersion
+	}
+
+	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
+		Name:         pulumi.Sprintf("%s-%s-ipv4", cluster.Name, machine.ID),
+		Datacenter:   pulumi.String(datacenter),
+		Type:         pulumi.String("ipv4"),
+		AssigneeType: pulumi.String("server"),
+		AutoDelete:   pulumi.Bool(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	ipv6, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv6", machine.ID), &hcloud.PrimaryIpArgs{
+		Name:         pulumi.Sprintf("%s-%s-ipv6", cluster.Name, machine.ID),
+		Datacenter:   pulumi.String(datacenter),
+		Type:         pulumi.String("ipv6"),
+		AssigneeType: pulumi.String("server"),
+		AutoDelete:   pulumi.Bool(true),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	arch := architectureForServer(machine.Hcloud.ServerType)
+	imageSelector := fmt.Sprintf(
+		"%s,version=%s,variant=%s,arch=%s",
+		testImageSelector,
+		talosVersion,
+		machine.Platform,
+		arch,
+	)
+
+	return &Server{
+		id:            machine.ID,
+		privateIP:     machine.PrivateIP,
+		arch:          arch,
+		imageSelector: imageSelector,
+		args: &hcloud.ServerArgs{
+			Name: pulumi.Sprintf("%s-%s", cluster.Name, machine.ID),
+			SshKeys: pulumi.StringArray{
+				sshKey.ID(),
+			},
+			ServerType: pulumi.String(machine.Hcloud.ServerType),
+			Datacenter: pulumi.String(datacenter),
+			PublicNets: hcloud.ServerPublicNetArray{
+				&hcloud.ServerPublicNetArgs{
+					//nolint: gocritic // this is the only way to convert string to int
+					Ipv4: ipv4.ID().ApplyT(func(id string) (int, error) {
+						return strconv.Atoi(id)
+					}).(pulumi.IntOutput),
+					//nolint: gocritic // this is the only way to convert string to int
+					Ipv6: ipv6.ID().ApplyT(func(id string) (int, error) {
+						return strconv.Atoi(id)
+					}).(pulumi.IntOutput),
+				},
+			},
+		},
+		ip: ipv4.IpAddress,
+	}, nil
+}
+
+func architectureForServer(serverType string) string {
+	if strings.HasPrefix(serverType, "cax") || strings.HasPrefix(serverType, "cpx") {
+		return "arm"
+	}
+
+	return "x86"
 }
 
 // generatePrivateKey creates a RSA Private Key of specified byte size.

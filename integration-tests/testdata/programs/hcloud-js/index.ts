@@ -12,8 +12,10 @@ const cluster: Cluster = {
     {
       id: "controlplane-1",
       type: talos.MachineTypes.Init,
-      serverType: "cax21",
       privateIP: "10.10.10.2",
+      hcloud: {
+        serverType: "cax21",
+      },
       configPatches: [
         JSON.stringify({
           debug: true,

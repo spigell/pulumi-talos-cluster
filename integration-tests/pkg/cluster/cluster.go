@@ -9,14 +9,18 @@ type Cluster struct {
 }
 
 type Machine struct {
-	ID                  string   `yaml:"id"`
-	Type                string   `yaml:"type"`
-	ServerType          string   `yaml:"serverType"`
-	Platform            string   `yaml:"platform"`
-	TalosInitialVersion string   `yaml:"talosInitialVersion"`
-	TalosImage          string   `yaml:"talosImage"`
-	PrivateIP           string   `yaml:"privateIP"`
-	Datacenter          string   `yaml:"datacenter"`
-	ConfigPatches       []string `yaml:"configPatches"`
-	ApplyConfigViaUserdata            bool   `yaml:"apply-config-via-userdata"`
+	ID                     string         `yaml:"id"`
+	Type                   string         `yaml:"type"`
+	Platform               string         `yaml:"platform"`
+	TalosInitialVersion    string         `yaml:"talosInitialVersion"`
+	TalosImage             string         `yaml:"talosImage"`
+	PrivateIP              string         `yaml:"privateIP"`
+	ConfigPatches          []string       `yaml:"configPatches"`
+	ApplyConfigViaUserdata bool           `yaml:"apply-config-via-userdata"`
+	Hcloud                 *HcloudMachine `yaml:"hcloud"`
+}
+
+type HcloudMachine struct {
+	ServerType string `yaml:"serverType"`
+	Datacenter string `yaml:"datacenter"`
 }

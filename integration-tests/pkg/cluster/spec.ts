@@ -1,17 +1,21 @@
 import { readFileSync } from "fs";
 import { parse } from "yaml";
 
+export interface HcloudMachine {
+  serverType: string;
+  datacenter?: string;
+}
+
 export interface Machine {
   id: string;
   type: string;
-  serverType: string;
   platform: string;
   talosInitialVersion: string;
   talosImage: string;
   privateIP: string;
-  datacenter: string;
   configPatches: string[];
   userdata: string;
+  hcloud?: HcloudMachine;
 }
 
 export interface Cluster {

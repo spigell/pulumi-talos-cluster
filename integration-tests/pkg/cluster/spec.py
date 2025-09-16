@@ -1,20 +1,25 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 import yaml
+
+
+@dataclass
+class HcloudMachine:
+    serverType: str
+    datacenter: Optional[str] = None
 
 
 @dataclass
 class Machine:
     id: str
     type: str
-    serverType: str
     platform: str
     talosInitialVersion: str
     talosImage: str
     privateIP: str
-    datacenter: str
     configPatches: List[str]
     userdata: str
+    hcloud: Optional[HcloudMachine] = None
 
 
 @dataclass
@@ -33,7 +38,12 @@ def load(path: str) -> Cluster:
         Machine(
             configPatches=m.get("configPatches", []),
             userdata=m.get("userdata", ""),
-            **{k: v for k, v in m.items() if k not in ("configPatches", "userdata")}
+            hcloud=HcloudMachine(**m["hcloud"]) if m.get("hcloud") else None,
+            **{
+                k: v
+                for k, v in m.items()
+                if k not in ("configPatches", "userdata", "hcloud")
+            }
         )
         for m in data.get("machines", [])
     ]

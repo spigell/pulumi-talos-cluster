@@ -23,36 +23,43 @@ var clu = &cluster.Cluster{
 			Type:       "init",
 			TalosImage: talosImage,
 			Platform:   platform,
-			ServerType: "cx22",
 			PrivateIP:  "10.10.10.5",
+			Hcloud: &cluster.HcloudMachine{
+				ServerType: "cx22",
+			},
 		},
 		{
 			ID:         "controlplane-2",
 			Type:       string(talos.MachineTypesControlplane),
 			Platform:   platform,
 			TalosImage: talosImage,
-
-			ServerType: "cx22",
 			PrivateIP:  "10.10.10.2",
-			//	Datacenter: "fsn1-dc14",
+			Hcloud: &cluster.HcloudMachine{
+				ServerType: "cx22",
+				// Datacenter: "fsn1-dc14",
+			},
 		},
 		{
 			ID:         "controlplane-3",
 			Type:       string(talos.MachineTypesControlplane),
-			ServerType: "cx22",
 			Platform:   platform,
 			TalosImage: talosImage,
 			PrivateIP:  "10.10.10.10",
-			//	Datacenter: "fsn1-dc14",
+			Hcloud: &cluster.HcloudMachine{
+				ServerType: "cx22",
+				// Datacenter: "fsn1-dc14",
+			},
 		},
 		{
 			ID:         "worker-1",
 			Type:       "worker",
 			Platform:   platform,
 			TalosImage: talosImage,
-			ServerType: "cx22",
 			PrivateIP:  "10.10.10.3",
-			//	Datacenter: "fsn1-dc14",
+			Hcloud: &cluster.HcloudMachine{
+				ServerType: "cx22",
+				// Datacenter: "fsn1-dc14",
+			},
 		},
 	},
 }
