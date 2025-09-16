@@ -6,7 +6,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -24,7 +23,7 @@ func main() {
 		log.Fatal("schema not found")
 	}
 
-	schemaContents, err := ioutil.ReadFile(schemaPath)
+	schemaContents, err := os.ReadFile(schemaPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +40,7 @@ func main() {
 		log.Fatalf("cannot reserialize schema: %v", err)
 	}
 
-	err = ioutil.WriteFile("./schema.go", []byte(fmt.Sprintf(`package main
+	err = os.WriteFile("./schema.go", []byte(fmt.Sprintf(`package main
 
 var pulumiSchema = %#v
 `, versionedContents)), 0600)
