@@ -37,12 +37,15 @@ patches:
 
 machineDefaults: &machineDefaults
   platform: hcloud
+  hcloud:
+    serverType: cx22
+    datacenter: fsn1-dc14
   talosImage: ghcr.io/siderolabs/installer:v1.11.0
   serverType: cx22
   datacenter: fsn1-dc14
 
 name: hcloud-go
-kubernetesVersion: 1.32.0
+kubernetesVersion: 1.32.0 
 privateNetwork: 10.10.10.0/24
 privateSubnetwork: 10.10.10.0/25
 skipInitApply: false

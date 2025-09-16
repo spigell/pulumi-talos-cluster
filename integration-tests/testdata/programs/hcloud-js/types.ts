@@ -9,17 +9,21 @@ export type Cluster = {
   machines: ClusterMachine[];
 };
 
+export type HcloudMachine = {
+  serverType: string;
+  datacenter?: string;
+};
+
 export type ClusterMachine = {
   id: string;
   type: talos.MachineTypes;
-  serverType: string;
   privateIP: string;
   talosImage?: string;
-  datacenter?: string;
   platform?: string;
   talosInitialVersion?: string;
   configPatches?: string[];
   userdata?: string;
+  hcloud?: HcloudMachine;
 };
 
 export type DeployedServer = {

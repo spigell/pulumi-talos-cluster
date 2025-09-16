@@ -4,7 +4,6 @@ import * as forge from "node-forge";
 import { Cluster, DeployedServer } from "./types";
 
 const defaultTalosInitialVersion = "v1.10.3";
-const arch = "arm";
 const variant = "metal";
 
 export function Hetzner(cluster: Cluster): DeployedServer[] {
@@ -33,31 +32,49 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
     ipRange: cluster.privateSubnetwork,
   });
 
-  const selector = `os=talos,version=${defaultTalosInitialVersion},variant=${variant},arch=${arch}`;
-  const image = hcloud.getImage({
-    withSelector: selector,
-    withArchitecture: arch,
-  });
-
   const deployed: DeployedServer[] = [];
 
   for (const machine of cluster.machines) {
+    if (!machine.hcloud) {
+      throw new Error(`machine ${machine.id} is missing hcloud configuration`);
+    }
+
+    const serverArch = architectureForServer(machine.hcloud.serverType);
+    const machineVariant = machine.platform ?? variant;
+    const talosVersion = machine.talosInitialVersion ?? defaultTalosInitialVersion;
+    const selector = `os=talos,version=${talosVersion},variant=${machineVariant},arch=${serverArch}`;
+    const image = hcloud.getImage({
+      withSelector: selector,
+      withArchitecture: serverArch,
+    });
+
+    if (!machine.privateIP) {
+      throw new Error(`machine ${machine.id} is missing privateIP`);
+    }
+
+    const serverArgs: hcloud.ServerArgs = {
+      name: machine.id,
+      serverType: machine.hcloud.serverType,
+      image: image.then((v) => `${v.id}`),
+      sshKeys: [sshKey.id],
+      networks: [
+        {
+          networkId: convertedNetID,
+          ip: machine.privateIP,
+        },
+      ],
+    };
+
+    if (machine.hcloud.datacenter) {
+      serverArgs.datacenter = machine.hcloud.datacenter;
+    } else {
+      serverArgs.location = "nbg1";
+    }
+
     // Define the server
     const server = new hcloud.Server(
       machine.id,
-      {
-        name: machine.id,
-        serverType: machine.serverType,
-        image: image.then((v) => `${v.id}`),
-        location: "nbg1",
-        sshKeys: [sshKey.id],
-        networks: [
-          {
-            networkId: convertedNetID,
-            ip: machine.privateIP,
-          },
-        ],
-      },
+      serverArgs,
       { ignoreChanges: ["sshKeys"] },
     );
 
@@ -68,6 +85,14 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
   }
 
   return deployed;
+}
+
+function architectureForServer(serverType: string): string {
+  if (serverType.startsWith("cax") || serverType.startsWith("cpx")) {
+    return "arm";
+  }
+
+  return "x86";
 }
 
 async function generateSSHKey(): Promise<{ publicKey: string }> {
