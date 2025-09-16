@@ -8,7 +8,7 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		clu, err := cluster.Load("cluster.yaml")
+		clu, err := cluster.Load("talos.yaml")
 		if err != nil {
 			return err
 		}

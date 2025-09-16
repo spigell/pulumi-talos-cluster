@@ -154,6 +154,7 @@ func (h *Hetzner) Up() (*cloud.Deployed, error) {
 		// Define the server
 		server, err := hcloud.NewServer(h.ctx, s.id, s.args,
 			pulumi.DependsOn(deps),
+			pulumi.DeleteBeforeReplace(true),
 			pulumi.IgnoreChanges([]string{"sshKeys", "userData"}),
 		)
 		if err != nil {
@@ -197,7 +198,7 @@ func newServer(ctx *pulumi.Context, cluster *cluster.Cluster, machine *cluster.M
 		Datacenter:   pulumi.String(datacenter),
 		Type:         pulumi.String("ipv4"),
 		AssigneeType: pulumi.String("server"),
-		AutoDelete:   pulumi.Bool(true),
+		AutoDelete:   pulumi.Bool(false),
 	})
 	if err != nil {
 		return nil, err
@@ -208,7 +209,7 @@ func newServer(ctx *pulumi.Context, cluster *cluster.Cluster, machine *cluster.M
 		Datacenter:   pulumi.String(datacenter),
 		Type:         pulumi.String("ipv6"),
 		AssigneeType: pulumi.String("server"),
-		AutoDelete:   pulumi.Bool(true),
+		AutoDelete:   pulumi.Bool(false),
 	})
 	if err != nil {
 		return nil, err

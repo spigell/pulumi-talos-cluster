@@ -24,12 +24,15 @@ type DeployedCredentials struct {
 func Deploy(ctx *pulumi.Context, provider cloud.Provider, cluster *Cluster) (*Deployed, error) {
 	servers := provider.Servers()
 
-	spec := &talos.Spec{Name: cluster.Name, Machines: make([]talos.MachineSpec, len(cluster.Machines))}
+	spec := &talos.Spec{Name: cluster.Name, KubernetesVersion: cluster.KubernetesVersion, Machines: make([]talos.MachineSpec, len(cluster.Machines))}
 	for i, m := range cluster.Machines {
 		spec.Machines[i] = talos.MachineSpec{
 			ID:            m.ID,
 			Type:          m.Type,
 			TalosImage:    m.TalosImage,
+			Platform: m.Platform,
+			SkipInitApply: cluster.SkipInitApply,
+
 			ConfigPatches: m.ConfigPatches,
 		}
 	}
