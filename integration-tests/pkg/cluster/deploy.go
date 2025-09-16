@@ -9,12 +9,12 @@ import (
 )
 
 type Deployed struct {
-	ClusterMachines  pulumi.StringMapOutput
-	Credentials *DeployedCredentials
+	ClusterMachines pulumi.StringMapOutput
+	Credentials     *DeployedCredentials
 }
 
 type DeployedCredentials struct {
-	Kubeconfig pulumi.StringOutput
+	Kubeconfig  pulumi.StringOutput
 	Talosconfig pulumi.StringOutput
 }
 
@@ -30,7 +30,7 @@ func Deploy(ctx *pulumi.Context, provider cloud.Provider, cluster *Cluster) (*De
 			ID:            m.ID,
 			Type:          m.Type,
 			TalosImage:    m.TalosImage,
-			Platform: m.Platform,
+			Platform:      m.Platform,
 			SkipInitApply: cluster.SkipInitApply,
 
 			ConfigPatches: m.ConfigPatches,
@@ -44,7 +44,7 @@ func Deploy(ctx *pulumi.Context, provider cloud.Provider, cluster *Cluster) (*De
 
 	for _, s := range servers {
 		m := machineByID(cluster.Machines, s.ID())
-		if (m.ApplyConfigViaUserdata) {
+		if m.ApplyConfigViaUserdata {
 			userdata := talosClu.Cluster.GeneratedConfigurations.MapIndex(
 				pulumi.String(s.ID()),
 			).ToStringOutput()
@@ -69,7 +69,7 @@ func Deploy(ctx *pulumi.Context, provider cloud.Provider, cluster *Cluster) (*De
 	return &Deployed{
 		ClusterMachines: talosClu.Cluster.GeneratedConfigurations,
 		Credentials: &DeployedCredentials{
-			Kubeconfig: creds.Kubeconfig,
+			Kubeconfig:  creds.Kubeconfig,
 			Talosconfig: creds.Talosconfig,
 		},
 	}, nil

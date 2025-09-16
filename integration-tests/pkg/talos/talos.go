@@ -20,8 +20,8 @@ type Cluster struct {
 
 // Spec describes a Talos cluster to be created.
 type Spec struct {
-	Name     string
-	KubernetesVersion string     `yaml:"kubernetesVersion"`
+	Name              string
+	KubernetesVersion string `yaml:"kubernetesVersion"`
 
 	Machines []MachineSpec
 }
@@ -77,10 +77,10 @@ func NewCluster(ctx *pulumi.Context, spec *Spec, servers []cloud.Server) (*Clust
 	}
 
 	created, err := taloscluster.NewCluster(ctx, spec.Name, &taloscluster.ClusterArgs{
-		ClusterEndpoint:      pulumi.Sprintf("https://%s:6443", servers[0].IP()),
-		ClusterName:          spec.Name,
-		ClusterMachines:      machines,
-		KubernetesVersion:    pulumi.String(spec.KubernetesVersion),
+		ClusterEndpoint:   pulumi.Sprintf("https://%s:6443", servers[0].IP()),
+		ClusterName:       spec.Name,
+		ClusterMachines:   machines,
+		KubernetesVersion: pulumi.String(spec.KubernetesVersion),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error init cluster: %w", err)
@@ -91,7 +91,6 @@ func NewCluster(ctx *pulumi.Context, spec *Spec, servers []cloud.Server) (*Clust
 		Name:     spec.Name,
 		Cluster:  created,
 		machines: spec.Machines,
-
 	}, nil
 }
 
@@ -102,7 +101,6 @@ func (t *Cluster) Apply(deps []pulumi.Resource) (*Credentials, error) {
 			return nil, fmt.Errorf("skipInitApply is not supported for metal platform because reboot is required")
 		}
 	}
-
 
 	apply, err := taloscluster.NewApply(t.ctx, t.Name, &taloscluster.ApplyArgs{
 		SkipInitApply:       pulumi.Bool(t.machines[0].SkipInitApply),
