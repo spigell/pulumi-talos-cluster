@@ -49,11 +49,16 @@ func NewCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Serve
 			configPatches = append(configPatches, pulumi.String(p))
 		}
 
+		talosImage := m.TalosImage
+		if talosImage == "" {
+			talosImage = "ghcr.io/siderolabs/installer:v1.10.5"
+		}
+
 		machines = append(machines, &taloscluster.ClusterMachinesArgs{
 			MachineId:     server.ID(),
 			NodeIp:        server.IP(),
 			MachineType:   taloscluster.MachineTypes(m.Type),
-			TalosImage:    pulumi.String(m.TalosImage),
+			TalosImage:    pulumi.StringPtr(talosImage),
 			ConfigPatches: configPatches,
 		})
 	}
@@ -86,8 +91,8 @@ func NewCluster(ctx *pulumi.Context, clu *cluster.Cluster, servers []cloud.Serve
 func (t *Cluster) Apply(deps []pulumi.Resource, skipInitApply bool) (*Applied, error) {
 	if skipInitApply {
 		for _, m := range t.machines {
-			if m.Platform == "metal" {
-				return nil, fmt.Errorf("skipInitApply is not supported for metal platform")
+			if m.Platform != "metal" {
+				return nil, fmt.Errorf("skipInitApply is only supported for metal platform")
 			}
 		}
 	}
