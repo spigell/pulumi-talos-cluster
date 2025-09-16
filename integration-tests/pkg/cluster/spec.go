@@ -1,14 +1,14 @@
 package cluster
 
 import (
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
 // Load reads a cluster specification from the given path and unmarshals it into a Cluster.
 func Load(path string) (*Cluster, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

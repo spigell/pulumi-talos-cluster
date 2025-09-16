@@ -14,6 +14,7 @@ class Machine:
     privateIP: str
     datacenter: str
     configPatches: List[str]
+    userdata: str
 
 
 @dataclass
@@ -32,7 +33,8 @@ def load(path: str) -> Cluster:
     machines = [
         Machine(
             configPatches=m.get("configPatches", []),
-            **{k: v for k, v in m.items() if k != "configPatches"}
+            userdata=m.get("userdata", ""),
+            **{k: v for k, v in m.items() if k not in ("configPatches", "userdata")}
         )
         for m in data.get("machines", [])
     ]

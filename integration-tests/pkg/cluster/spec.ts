@@ -11,6 +11,7 @@ export interface Machine {
   privateIP: string;
   datacenter: string;
   configPatches: string[];
+  userdata: string;
 }
 
 export interface Cluster {

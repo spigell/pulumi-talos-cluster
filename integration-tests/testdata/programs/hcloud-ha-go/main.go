@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud"
 	hcloud "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud/hcloud"
 	"github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	talos "github.com/spigell/pulumi-talos-cluster/sdk/go/talos-cluster"
@@ -63,36 +60,8 @@ var clu = &cluster.Cluster{
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		clu.Name = ctx.Stack()
-		if clu.Machines[0].Type != "init" {
-			return fmt.Errorf("the first node must be init")
-		}
 
-		machines := make(talos.ClusterMachinesArray, 0)
-
-		var (
-			provider cloud.Provider
-			err      error
-		)
-		provider, err = hcloud.NewWithIPS(ctx, clu)
-		if err != nil {
-			return err
-		}
-
-		up, err := provider.Up()
-		if err != nil {
-			return err
-		}
-
-		for _, server := range up.Servers {
-			var m *cluster.Machine
-
-			for _, machine := range clu.Machines {
-				if machine.ID == server.ID() {
-					m = machine
-					break
-				}
-			}
-
+		for _, m := range clu.Machines {
 			patches := map[string]any{
 				"debug": false,
 				"machine": map[string]any{
@@ -120,36 +89,22 @@ func main() {
 			}
 
 			rendered, _ := yaml.Marshal(patches)
-
-			machines = append(machines, &talos.ClusterMachinesArgs{
-				MachineId:     server.ID(),
-				NodeIp:        server.IP(),
-				MachineType:   talos.MachineTypes(m.Type),
-				TalosImage:    pulumi.String(m.TalosImage),
-				ConfigPatches: pulumi.StringArray{pulumi.String(rendered)},
-			})
+			m.ConfigPatches = []string{string(rendered)}
 		}
 
-		created, err := talos.NewCluster(ctx, clu.Name, &talos.ClusterArgs{
-			ClusterEndpoint:   pulumi.Sprintf("https://%s:6443", up.Servers[0].IP()),
-			ClusterName:       clu.Name,
-			KubernetesVersion: pulumi.String(clu.KubernetesVersion),
-			ClusterMachines:   machines,
-		}, pulumi.DependsOn(up.Deps))
+		provider, err := hcloud.NewWithIPS(ctx, clu)
 		if err != nil {
-			return fmt.Errorf("error init cluster: %w", err)
+			return err
 		}
 
-		apply, err := talos.NewApply(ctx, clu.Name, &talos.ApplyArgs{
-			ClientConfiguration: created.ClientConfiguration,
-			ApplyMachines:       created.Machines,
-		})
+		talosClu, applied, err := cluster.Deploy(ctx, clu, provider, true)
 		if err != nil {
-			return fmt.Errorf("error apply: %w", err)
+			return err
 		}
 
-		ctx.Export("kubeconfig", apply.Credentials.Kubeconfig())
-		ctx.Export("talosconfig", apply.Credentials.Talosconfig())
+		ctx.Export("clusterMachineConfigs", talosClu.Cluster.GeneratedConfigurations)
+		ctx.Export("kubeconfig", applied.Kubeconfig)
+		ctx.Export("talosconfig", applied.Talosconfig)
 
 		return nil
 	})
