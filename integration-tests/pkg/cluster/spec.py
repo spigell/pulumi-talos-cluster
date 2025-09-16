@@ -23,6 +23,7 @@ class Cluster:
     privateNetwork: str
     privateSubnetwork: str
     kubernetesVersion: str
+    skipInitApply: bool = False
     machines: List[Machine]
 
 
@@ -42,5 +43,6 @@ def load(path: str) -> Cluster:
         privateNetwork=data.get("privateNetwork", ""),
         privateSubnetwork=data.get("privateSubnetwork", ""),
         kubernetesVersion=data.get("kubernetesVersion", ""),
+        skipInitApply=data.get("skipInitApply", False),
         machines=machines,
     )

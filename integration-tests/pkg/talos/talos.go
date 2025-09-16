@@ -14,7 +14,8 @@ type Cluster struct {
 	ctx     *pulumi.Context
 	Cluster *taloscluster.Cluster
 
-	Name string
+	Name     string
+	machines []*cluster.Machine
 }
 
 // Spec describes a Talos cluster to be created.
@@ -62,35 +63,58 @@ func NewCluster(ctx *pulumi.Context, spec *Spec, servers []cloud.Server) (*Clust
 			configPatches = append(configPatches, pulumi.String(p))
 		}
 
+		talosImage := m.TalosImage
+		if talosImage == "" {
+			talosImage = "ghcr.io/siderolabs/installer:v1.10.5"
+		}
+
 		machines = append(machines, &taloscluster.ClusterMachinesArgs{
 			MachineId:     server.ID(),
 			NodeIp:        server.IP(),
 			MachineType:   taloscluster.MachineTypes(m.Type),
-			TalosImage:    pulumi.String(m.TalosImage),
+			TalosImage:    pulumi.StringPtr(talosImage),
 			ConfigPatches: configPatches,
 		})
 	}
 
-	created, err := taloscluster.NewCluster(ctx, spec.Name, &taloscluster.ClusterArgs{
-		ClusterEndpoint: pulumi.Sprintf("https://%s:6443", servers[0].IP()),
-		ClusterName:     spec.Name,
-		ClusterMachines: machines,
+	k8sVersion := clu.KubernetesVersion
+	if k8sVersion == "" {
+		k8sVersion = "v1.31.0"
+	}
+
+	created, err := taloscluster.NewCluster(ctx, clu.Name, &taloscluster.ClusterArgs{
+		ClusterEndpoint:      pulumi.Sprintf("https://%s:6443", servers[0].IP()),
+		ClusterName:          clu.Name,
+		ClusterMachines:      machines,
+		KubernetesVersion:    pulumi.StringPtr(k8sVersion),
+		TalosVersionContract: pulumi.StringPtr("v1.10.5"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error init cluster: %w", err)
 	}
 
 	return &Cluster{
-		ctx:     ctx,
-		Name:    spec.Name,
-		Cluster: created,
+		ctx:      ctx,
+		Name:     clu.Name,
+		Cluster:  created,
+		machines: clu.Machines,
+
 	}, nil
 }
 
 // Apply runs the Talos Apply resource to bootstrap the cluster.
-func (t *Cluster) Apply(deps []pulumi.Resource) (*Credentials, error) {
+func (t *Cluster) Apply(deps []pulumi.Resource, skipInitApply bool) (*Applied, error) {
+	if skipInitApply {
+		for _, m := range t.machines {
+			if m.Platform != "metal" {
+				return nil, fmt.Errorf("skipInitApply is only supported for metal platform")
+			}
+		}
+	}
+
+
 	apply, err := taloscluster.NewApply(t.ctx, t.Name, &taloscluster.ApplyArgs{
-		SkipInitApply:       pulumi.Bool(true),
+		SkipInitApply:       pulumi.BoolPtr(skipInitApply),
 		ClientConfiguration: t.Cluster.ClientConfiguration,
 		ApplyMachines:       t.Cluster.Machines,
 	}, pulumi.DependsOn(deps), pulumi.IgnoreChanges([]string{"skipInitApply"}))

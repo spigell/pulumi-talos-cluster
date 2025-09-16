@@ -18,6 +18,7 @@ func main() {
 			return err
 		}
 
+
 		deployed, err := cluster.Deploy(ctx, provider, clu)
 		if err != nil {
 			return err

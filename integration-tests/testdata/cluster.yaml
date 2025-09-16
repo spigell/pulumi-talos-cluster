@@ -2,6 +2,7 @@ name: demo-cluster
 kubernetesVersion: v1.28.3
 privateNetwork: 10.0.0.0/24
 privateSubnetwork: 10.0.0.0/24
+skipInitApply: false
 machines:
   - id: cp1
     type: controlplane

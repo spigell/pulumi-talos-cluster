@@ -5,6 +5,7 @@ type Cluster struct {
 	PrivateNetwork    string     `yaml:"privateNetwork"`
 	PrivateSubnetwork string     `yaml:"privateSubnetwork"`
 	KubernetesVersion string     `yaml:"kubernetesVersion"`
+	SkipInitApply     bool       `yaml:"skipInitApply"`
 	Machines          []*Machine `yaml:"machines"`
 }
 
