@@ -23,10 +23,15 @@ export interface Cluster {
   privateNetwork: string;
   privateSubnetwork: string;
   kubernetesVersion: string;
+  skipInitApply?: boolean;
   machines: Machine[];
 }
 
 export function load(path: string): Cluster {
   const data = readFileSync(path, "utf8");
-  return parse(data) as Cluster;
+  const spec = parse(data) as Cluster;
+  if (spec.skipInitApply === undefined) {
+    spec.skipInitApply = false;
+  }
+  return spec;
 }
