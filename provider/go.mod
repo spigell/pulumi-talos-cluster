@@ -8,7 +8,7 @@ require (
 	github.com/pulumi/pulumi/pkg/v3 v3.193.0
 	github.com/pulumi/pulumi/sdk/v3 v3.193.0
 	github.com/pulumiverse/pulumi-talos/sdk v0.6.0
-	github.com/siderolabs/talos/pkg/machinery v1.11.0
+	github.com/siderolabs/talos/pkg/machinery v1.11.2
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v3 v3.0.1
 )

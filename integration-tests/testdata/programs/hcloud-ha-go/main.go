@@ -12,7 +12,7 @@ import (
 
 var (
 	platform   = "metal"
-	talosImage = "ghcr.io/siderolabs/installer:v1.10.6"
+	talosImage = "ghcr.io/siderolabs/installer:v1.11.2"
 )
 
 var clu = &cluster.Cluster{

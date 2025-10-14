@@ -22,7 +22,7 @@ func main() {
 		timeout     = flag.Duration("timeout", 0, "Optional timeout for each build (e.g. 90m, 2h). 0 = no timeout")
 		varList     multiVar
 	)
-	flag.Var(&varList, "var", "Extra -var key=value (repeatable). Example: -var talos_version=v1.10.3")
+	flag.Var(&varList, "var", "Extra -var key=value (repeatable). Example: -var talos_version=v1.11.2")
 	flag.Parse()
 
 	variants := []string{

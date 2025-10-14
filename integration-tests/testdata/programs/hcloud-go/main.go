@@ -10,7 +10,7 @@ import (
 
 var (
 	platform   = "hcloud"
-	talosImage = "ghcr.io/siderolabs/installer:v1.11.0"
+	talosImage = "ghcr.io/siderolabs/installer:v1.11.2"
 )
 
 var clu = &cluster.Cluster{

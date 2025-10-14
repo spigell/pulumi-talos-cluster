@@ -3,7 +3,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as forge from 'node-forge';
 import {Cluster, DeployedServer} from './types'
 
-const defaultTalosInitialVersion = 'v1.10.3'
+const defaultTalosInitialVersion = 'v1.11.2'
 const arch = 'arm'
 const variant = 'metal'
 
