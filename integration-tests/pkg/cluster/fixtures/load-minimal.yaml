@@ -1,0 +1,11 @@
+name: minimal-cluster
+privateNetwork: 10.0.0.0/16
+privateSubnetwork: 10.0.1.0/24
+kubernetesVersion: v1.28.0
+usePrivateNetwork: false
+machines:
+  - id: simple-machine
+    type: worker
+    platform: hcloud
+    variant: metal
+    privateIP: 10.0.1.20

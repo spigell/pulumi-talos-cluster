@@ -1,0 +1,5 @@
+name: cluster
+kubernetesVersion: v1.28.0
+usePrivateNetwork: false
+privateNetwork: 10.0.0.0/16
+machines: []

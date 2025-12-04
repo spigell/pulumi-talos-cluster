@@ -1,0 +1,29 @@
+name: test-cluster
+privateNetwork: 10.0.0.0/16
+privateSubnetwork: 10.0.1.0/24
+kubernetesVersion: v1.28.0
+skipInitApply: false
+usePrivateNetwork: true
+machines:
+  - id: worker-0
+    type: worker
+    platform: hcloud
+    variant: metal
+    talosInitialVersion: v1.5.0
+    talosImage: ghcr.io/siderolabs/talos:v1.5.0
+    privateIP: 10.0.1.10
+    configPatches: ["patch1", "patch2"]
+    userdata: "worker-userdata"
+    apply-config-via-userdata: true
+    hcloud:
+      serverType: cx11
+      datacenter: fsn1
+  - id: controlplane-0
+    type: controlplane
+    platform: hcloud
+    variant: metal
+    talosInitialVersion: v1.5.0
+    talosImage: ghcr.io/siderolabs/talos:v1.5.0
+    privateIP: 10.0.1.11
+    configPatches: []
+    userdata: "controlplane-userdata"

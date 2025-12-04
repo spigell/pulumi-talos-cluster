@@ -1,4 +1,7 @@
+// revive:disable:var-naming
 package types
+
+// revive:enable:var-naming
 
 import (
 	"strings"

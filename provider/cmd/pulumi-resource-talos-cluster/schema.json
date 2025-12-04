@@ -42,8 +42,8 @@
             },
             "requires": {
                 "pulumi": "\u003e=3.0.0,\u003c4.0.0",
-                "pulumi-command": "1.1.0",
-                "pulumiverse-talos": "0.6.0"
+                "pulumi-command": "\u003e=1.1.0,\u003c2.0.0",
+                "pulumiverse-talos": "\u003e=0.6.0,\u003c0.7.0"
             },
             "usesIOClasses": true
         }

@@ -1,22 +1,9 @@
-import * as talos from "@spigell/pulumi-talos-cluster"
 import * as pulumi from "@pulumi/pulumi";
-
-export type Cluster = {
-	name: string;
-	kubernetesVersion: string;
-	privateNetwork: string;
-	PrivateSubnetwork: string;
-	machines: ClusterMachine[];
-}
-
-export type ClusterMachine = {
-	id: string
-	type: talos.MachineTypes
-	serverType: string
-	privateIP: string
-}
+import type { Cluster as ClusterSpec } from "pulumi-talos-cluster-integration-tests-infra/pkg/cluster/typescript/spec.js";
 
 export type DeployedServer = {
-	id: string
-	ip: pulumi.Output<string>
-}
+  id: string;
+  ip: pulumi.Output<string>;
+};
+
+export type Cluster = ClusterSpec;

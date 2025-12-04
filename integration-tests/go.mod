@@ -8,8 +8,10 @@ require (
 	github.com/pulumi/pulumi-hcloud/sdk v1.24.0
 	github.com/pulumi/pulumi/pkg/v3 v3.193.0
 	github.com/pulumi/pulumi/sdk/v3 v3.193.0
+	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.41.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -67,7 +69,6 @@ require (
 	github.com/edsrzf/mmap-go v1.2.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.2 // indirect
@@ -107,7 +108,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
@@ -180,6 +180,5 @@ require (
 	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/frand v1.5.1 // indirect
 )

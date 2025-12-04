@@ -61,8 +61,8 @@ func generateSchema() schema.PackageSpec {
 			"python": rawMessage(map[string]any{
 				"requires": map[string]string{
 					"pulumi":            ">=3.0.0,<4.0.0",
-					"pulumiverse-talos": "0.6.0",
-					"pulumi-command":    "1.1.0",
+					"pulumiverse-talos": ">=0.6.0,<0.7.0",
+					"pulumi-command":    ">=1.1.0,<2.0.0",
 				},
 				"usesIOClasses":                true,
 				"liftSingleValueMethodReturns": true,

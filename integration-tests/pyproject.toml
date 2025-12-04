@@ -1,0 +1,17 @@
+[project]
+name = "pulumi-talos-cluster-integration-tests-infra"
+version = "0.0.0"
+description = "Shared integration test utilities for pulumi-talos-cluster"
+requires-python = ">=3.9"
+dynamic = ["dependencies"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["spec", "validation"]
+package-dir = {"" = "pkg/cluster/python"}
+
+[tool.setuptools.dynamic]
+  dependencies = {file = ["requirements.txt"]}

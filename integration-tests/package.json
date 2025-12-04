@@ -1,0 +1,31 @@
+{
+  "name": "pulumi-talos-cluster-integration-tests-infra",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint \"pkg/**/typescript/**/*.{ts,tsx}\"",
+    "test": "vitest run",
+    "build": "tsc",
+    "prepare": "yarn run build"
+  },
+  "dependencies": {
+    "@pulumi/pulumi": "3.193.0",
+    "ajv": "^8.17.1",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "eslint": "9.39.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-promise": "^7.1.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^15.11.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
+  },
+  "packageManager": "yarn@1.22.22"
+}

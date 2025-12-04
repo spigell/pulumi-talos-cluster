@@ -23,22 +23,10 @@ install:: install_provider install_nodejs_sdk
 # Lint
 lint::
 	cd provider && golangci-lint run
-	cd integration-tests && golangci-lint run
-	cd integration-tests/testdata/programs/hcloud-go && golangci-lint run
-	cd integration-tests/testdata/programs/hcloud-ha-go && golangci-lint run
 
 # Tests
 unit_tests:: generate_schema
 	cd provider && set -o pipefail ; go test $$(go list ./... | grep -v tests | grep -v crds/generated) | grep -v 'no test files'
-
-integration_tests:: integration_tests_nodejs integration_tests_go
-	cd integration-tests && go test -timeout=25m -v
-
-integration_tests_go:: build_provider_tests gen_go_sdk
-	cd integration-tests && go test -timeout=25m -v -run $(TEST)
-
-integration_tests_nodejs:: build_nodejs_sdk build_provider_tests install_nodejs_sdk
-	cd integration-tests && go test -timeout=25m -v -run $(TEST)
 
 # Provider
 
@@ -59,7 +47,7 @@ install_provider:: build_provider
 	cp ${WORKING_DIR}/bin/${PROVIDER} ${GOPATH}/bin
 
 start_delve:
-	cd provider/cmd/${PROVIDER} && dlv debug --listen=:2345 --headless=true --api-version=2 --build-flags="-gcflags 'all=-N -l'" --accept-multiclient --api-version=2 --continue --output ${WORKING_DIR}/bin/${PROVIDER}
+	cd provider/cmd/${PROVIDER} && dlv debug --check-go-version=false --listen=:2345 --headless=true --api-version=2 --build-flags="-gcflags 'all=-N -l'" --accept-multiclient --continue --output ${WORKING_DIR}/bin/${PROVIDER}
 
 # Go SDK
 

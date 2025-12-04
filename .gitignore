@@ -1,35 +1,47 @@
-venv
-sdk/dotnet/obj
-*.png
+# Creds
 Pulumi.*.yaml
-*sublime-workspace
-.vagrant/
-.venv
 creds.yml
 admin.conf
 credentials
-packer_cache
 *.client.conf
-kubeconfig
+
+# Builds
+build/*
+bin/
+packer_cache
+.vagrant/
 *.iso
 *.qcow2
 output/*
 *local*
 
-tests/test-project
-
-build/*
-bin/
+# NodeJS
 node_modules
-provider/cmd/pulumi-resource-talos-cluster/schema.go
+integration-tests/dist
 __debug*
 
-**/examples/**/**/yarn.lock
-**/integration-tests/**/**/yarn.lock
+# Python
+.venv
+venv
+__pycache__/
+.pytest_cache/
+*.py[cod]
 
+# DotNet
+sdk/dotnet/obj
+
+# Project-specific
+tests/test-project
+provider/cmd/pulumi-resource-talos-cluster/schema.go
 .current_test_dir
-
 kubeconfig
 talosconfig
 kube.yaml
 talosctl.yaml
+
+# Other
+*sublime-workspace
+*.png
+
+# Python artifacts
+*.egg-info/
