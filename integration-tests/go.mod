@@ -1,6 +1,6 @@
 module github.com/spigell/pulumi-talos-cluster/integration-tests
 
-go 1.24.7
+go 1.25.3
 
 require (
 	github.com/pulumi/pulumi-hcloud/sdk v1.24.0

@@ -1,6 +1,6 @@
 module github.com/spigell/pulumi-talos-cluster/provider
 
-go 1.24.7
+go 1.25.3
 
 require (
 	github.com/pkg/errors v0.9.1
