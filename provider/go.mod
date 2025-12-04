@@ -1,11 +1,11 @@
 module github.com/spigell/pulumi-talos-cluster/provider
 
-go 1.24.5
+go 1.24.7
 
 require (
 	github.com/pkg/errors v0.9.1
 	github.com/pulumi/pulumi-command/sdk v1.1.0
-	github.com/pulumi/pulumi/pkg/v3 v3.193.0
+	github.com/pulumi/pulumi/pkg/v3 v3.210.0
 	github.com/pulumi/pulumi/sdk/v3 v3.210.0
 	github.com/pulumiverse/pulumi-talos/sdk v0.6.0
 	github.com/siderolabs/talos/pkg/machinery v1.11.0
@@ -94,6 +94,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
+	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.6 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect

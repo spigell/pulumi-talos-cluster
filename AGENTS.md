@@ -24,9 +24,12 @@
 - Avoid generic coercion helpers (e.g., `toString(any) string`); prefer explicit typed access after validation or straightforward type assertions.
 - Pulumi SDK/binaries upgrade procedure (keep versions in sync):
   1) Update Go modules: `go get github.com/pulumi/pulumi/sdk/v3@<version>` in `provider/`, `integration-tests/`, `sdk/`, and Go test programs (e.g., `integration-tests/testdata/programs/hcloud-go`, `hcloud-ha-go`), then `go mod tidy` in each.
+     Also bump `github.com/pulumi/pulumi/pkg/v3@<version>` in those same modules to avoid mismatch errors.
   2) Update Node dependencies: bump `@pulumi/pulumi` in `integration-tests/package.json` and JS test programs (e.g., `integration-tests/testdata/programs/hcloud-js/package.json`), then run `yarn install` to refresh locks.
-  3) Update `.pulumi.version` to the same version you just bumped.
-  4) Regenerate provider/SDK artifacts if schema changes accompany the upgrade.
+  3) Update Python requirements: set `pulumi==<version>` in `integration-tests/requirements.txt` and Python test programs (e.g., `integration-tests/testdata/programs/hcloud-ha-py/requirements.txt`).
+  4) Update `.pulumi.version` to the same version you just bumped.
+  5) Regenerate provider/SDK artifacts if schema changes accompany the upgrade.
+  6) After version bumps, run `make build` (requires `pulumictl` and `pulumi` on PATH) to rebuild schema and all SDKs. If missing locally, ensure these binaries are installed before running.
 
 ## Testing Guidelines
 - **Framework**: The testing framework uses Go's standard `testing` package with `stretchr/testify` helpers. The integration tests, located in `integration-tests/`, are written in Go and orchestrate deployments of Pulumi programs written in various languages (Go, Python, Node.js).
