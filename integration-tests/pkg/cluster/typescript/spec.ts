@@ -1,8 +1,10 @@
 import { readFileSync } from "fs";
+
 import { parse } from "yaml";
 
-import type { Cluster, Machine } from "./cluster.js";
 import { validateCluster } from "./validation.js";
+
+import type { Cluster, Machine } from "./cluster.js";
 
 // These specs are internal
 type MachineSpec = Omit<Machine, "configPatches" | "applyConfigViaUserdata"> & {

@@ -1,4 +1,5 @@
 import AjvModule, { type ErrorObject } from "ajv";
+
 import clusterSchema from "../schema.json" with { type: "json" }; // ESM requires JSON imports to declare type
 
 const Ajv = AjvModule.default; // NodeNext: Ajv constructor lives on default export

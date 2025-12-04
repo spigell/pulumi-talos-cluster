@@ -33,7 +33,7 @@ type MachineSpec struct {
 	Type          string
 	TalosImage    string
 	Platform      string
-	Variant string
+	Variant       string
 	SkipInitApply bool
 	ConfigPatches []string
 }

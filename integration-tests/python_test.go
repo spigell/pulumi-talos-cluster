@@ -23,7 +23,7 @@ func getPythonBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	return base.With(integration.ProgramTestOptions{
 		Dependencies: []string{
 			filepath.Join(cwd, "..", "sdk", "python"),
-			filepath.Join(cwd), // integration-tests package (pyproject.toml)
+			cwd, // integration-tests package (pyproject.toml)
 		},
 	})
 }

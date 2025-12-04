@@ -12,7 +12,7 @@ GH_TEST ?= TestHcloudClusterGo
 generate_schema: 
 	$(MAKE) -C .. generate_schema
 
-dev-ts-testprog: clean
+dev_ts_testprog: clean
 	cd .. && $(MAKE) install_nodejs_sdk
 	cd $(PROG) && \
 	yarn link "@spigell/pulumi-talos-cluster" && \
@@ -25,16 +25,25 @@ clean:
 	yarn unlink --cwd ../sdk/nodejs/bin || true
 	rm -rf .current_test_dir
 
-framework-unit-tests-ts:
+framework_unit_tests_ts:
 	yarn install && yarn test
 
-ts-lint:
+framework_lint_ts:
 	yarn install && yarn lint
 
-framework-unit-tests-go:
+framework_lint_go:
+	golangci-lint run ./pkg/...
+	golangci-lint run ./pkg/testdata/programs/...
+
+framework_lint_py:
+	test -d $(PY_VENV) || $(PYTHON) -m venv $(PY_VENV)
+	$(PY_VENV_BIN)/python -m pip install -r requirements.txt
+	$(PY_VENV_BIN)/python -m ruff check pkg
+
+framework_unit_tests_go:
 	go test ./pkg/cluster/go ./pkg/cloud/go/...
 
-framework-unit-tests-py:
+framework_unit_tests_py:
 	test -d $(PY_VENV) || $(PYTHON) -m venv $(PY_VENV)
 	$(PY_VENV_BIN)/python -m pip install -r requirements.txt
 	$(PY_VENV_BIN)/python -m pytest pkg/cluster/python
@@ -61,8 +70,8 @@ integration_tests_python: clean
 	go test -timeout=25m -v -run $(TEST)
 
 
-github-run-test: export TEST=$(GH_TEST)
-github-run-test:
+github_run_test: export TEST=$(GH_TEST)
+github_run_test:
 	gh workflow run --ref $$(git rev-parse --abbrev-ref HEAD) -f test=$(TEST) main-run-integration-tests.yaml
 	sleep 10
 	watch gh run view $$(gh run list --workflow=main-run-integration-tests.yaml -b $$(git rev-parse --abbrev-ref HEAD) -L 1 --json databaseId | jq .[0].databaseId -r) -v

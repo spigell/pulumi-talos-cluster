@@ -1,5 +1,5 @@
 name: hcloud-js
-kubernetesVersion: v1.34.0
+kubernetesVersion: v1.33.0
 privateNetwork: 10.10.0.0/16
 privateSubnetwork: 10.10.10.0/25
 usePrivateNetwork: true

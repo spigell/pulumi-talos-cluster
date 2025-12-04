@@ -1,5 +1,5 @@
 [project]
-name = "pulumi-talos-cluster-integration-tests"
+name = "pulumi-talos-cluster-integration-tests-infra"
 version = "0.0.0"
 description = "Shared integration test utilities for pulumi-talos-cluster"
 requires-python = ">=3.9"

@@ -7,6 +7,7 @@ import (
 	hcloudsdk "github.com/pulumi/pulumi-hcloud/sdk/go/hcloud"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	cloud "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cloud/go"
 	cluster "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster/go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -93,7 +94,6 @@ func TestHetznerUpWithFixtures(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			fixturePath := filepath.Join("..", "..", "..", "cluster", "fixtures", tt.fixture)
 			testCluster, err := cluster.Load(fixturePath)
@@ -116,51 +116,59 @@ func TestHetznerUpWithFixtures(t *testing.T) {
 				gotIDs := make([]string, 0, len(deployed.Servers))
 				for _, s := range deployed.Servers {
 					gotIDs = append(gotIDs, s.ID())
+					assertServerMatchesMachine(t, s, machines, tt.expectNetworks)
 				}
 
 				assert.ElementsMatch(t, tt.expectedIDs, gotIDs)
-
-				for _, s := range deployed.Servers {
-					server, ok := s.(*hetznerServer)
-					require.True(t, ok, "server is not hetznerServer")
-
-					m := machines[server.id]
-					require.NotNil(t, m)
-
-					expectedDC := m.Hcloud.Datacenter
-					if expectedDC == "" {
-						expectedDC = defaultDatacenter
-					}
-					if dc, ok := server.args.Datacenter.(pulumi.String); ok {
-						assert.Equal(t, expectedDC, string(dc))
-					}
-
-					expectedTalos := m.TalosInitialVersion
-					if expectedTalos == "" {
-						expectedTalos = defaultTalosInitialVersion
-					}
-					assert.Contains(t, server.imageSelector, expectedTalos)
-
-					if tt.expectNetworks {
-						if assert.NotNil(t, server.Args().Networks) {
-							switch nets := server.Args().Networks.(type) {
-							case hcloudsdk.ServerNetworkTypeArray:
-								assert.NotEmpty(t, nets)
-							case *hcloudsdk.ServerNetworkTypeArray:
-								assert.NotEmpty(t, *nets)
-							default:
-								t.Fatalf("unexpected networks type %T", nets)
-							}
-						}
-					} else {
-						assert.Nil(t, server.Args().Networks)
-					}
-				}
 
 				return nil
 			}, pulumi.WithMocks("project", "stack", defaultMocks()))
 
 			assert.NoError(t, err)
 		})
+	}
+}
+
+func assertServerMatchesMachine(
+	t *testing.T,
+	s cloud.Server,
+	machines map[string]*cluster.Machine,
+	expectNetworks bool,
+) {
+	t.Helper()
+
+	server, ok := s.(*hetznerServer)
+	require.True(t, ok, "server is not hetznerServer")
+
+	m := machines[server.id]
+	require.NotNil(t, m)
+
+	expectedDC := m.Hcloud.Datacenter
+	if expectedDC == "" {
+		expectedDC = defaultDatacenter
+	}
+	if dc, ok := server.args.Datacenter.(pulumi.String); ok {
+		assert.Equal(t, expectedDC, string(dc))
+	}
+
+	expectedTalos := m.TalosInitialVersion
+	if expectedTalos == "" {
+		expectedTalos = defaultTalosInitialVersion
+	}
+	assert.Contains(t, server.imageSelector, expectedTalos)
+
+	if expectNetworks {
+		if assert.NotNil(t, server.Args().Networks) {
+			switch nets := server.Args().Networks.(type) {
+			case hcloudsdk.ServerNetworkTypeArray:
+				assert.NotEmpty(t, nets)
+			case *hcloudsdk.ServerNetworkTypeArray:
+				assert.NotEmpty(t, *nets)
+			default:
+				t.Fatalf("unexpected networks type %T", nets)
+			}
+		}
+	} else {
+		assert.Nil(t, server.Args().Networks)
 	}
 }

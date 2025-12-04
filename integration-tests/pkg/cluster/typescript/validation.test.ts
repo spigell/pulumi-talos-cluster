@@ -1,8 +1,9 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { fileURLToPath } from "url";
-import { parse } from "yaml";
+
 import { describe, expect, test } from "vitest";
+import { parse } from "yaml";
 
 import { validateCluster } from "./validation.js";
 

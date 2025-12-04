@@ -17,7 +17,7 @@ import (
 
 const (
 	defaultDatacenter = "nbg1-dc3"
-	// It should be renamed due misleading. This is not related to talos. @spigell
+	// It should be renamed; this value is not related to Talos.
 	defaultTalosInitialVersion = "v1.10.3"
 	testImageSelector          = "os=talos"
 	defaultServerType          = "cx11"
