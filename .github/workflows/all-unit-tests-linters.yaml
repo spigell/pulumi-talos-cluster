@@ -6,6 +6,11 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
 jobs:
   provider:
     name: Tests and linting for provider directory
@@ -13,9 +18,31 @@ jobs:
     with:
       setup-action: 'setup-pulumi-env'
       working-directory: provider
+      actions-branch: main
 
-  tests:
-    name: Tests and linting for provider directory
+  integration-framework-go:
+    name: Integration framework Go unit tests
     uses: spigell/my-shared-workflows/.github/workflows/golang-test-lint.yaml@main
     with:
       working-directory: integration-tests
+      packages: ./pkg/cluster/go ./pkg/talos/go ./pkg/cloud/go
+      exclude-regex: ''
+      actions-branch: main
+
+  integration-framework-ts:
+    name: Integration framework TypeScript tests
+    uses: spigell/my-shared-workflows/.github/workflows/nodejs-test-lint.yaml@main
+    with:
+      working-directory: integration-tests
+      test-flags: run
+      eslint-flags: pkg/cluster/typescript
+      actions-branch: main
+
+  integration-framework-py:
+    name: Integration framework Python tests
+    uses: spigell/my-shared-workflows/.github/workflows/python-test-lint.yaml@main
+    with:
+      working-directory: integration-tests
+      python-version: '3.12'
+      requirements-file: 'requirements.txt'
+      actions-branch: main
