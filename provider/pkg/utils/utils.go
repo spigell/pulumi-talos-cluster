@@ -1,4 +1,7 @@
+// revive:disable:var-naming
 package utils
+
+// revive:enable:var-naming
 
 import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
