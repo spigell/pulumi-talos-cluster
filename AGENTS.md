@@ -25,11 +25,16 @@
 - Pulumi SDK/binaries upgrade procedure (keep versions in sync):
   1) Update Go modules: `go get github.com/pulumi/pulumi/sdk/v3@<version>` in `provider/`, `integration-tests/`, `sdk/`, and Go test programs (e.g., `integration-tests/testdata/programs/hcloud-go`, `hcloud-ha-go`), then `go mod tidy` in each.
      Also bump `github.com/pulumi/pulumi/pkg/v3@<version>` in those same modules to avoid mismatch errors.
+     For Talos dependencies, align `github.com/siderolabs/talos/pkg/machinery` to the desired Talos release (e.g., `v1.11.5`) in `provider/` and tidy.
   2) Update Node dependencies: bump `@pulumi/pulumi` in `integration-tests/package.json` and JS test programs (e.g., `integration-tests/testdata/programs/hcloud-js/package.json`), then run `yarn install` to refresh locks.
+     Align `@pulumiverse/talos` to the Talos version in the schema generator and generated `schema.json` (e.g., `v0.6.1` for Talos 1.11.5).
   3) Update Python requirements: set `pulumi==<version>` in `integration-tests/requirements.txt` and Python test programs (e.g., `integration-tests/testdata/programs/hcloud-ha-py/requirements.txt`).
   4) Update `.pulumi.version` to the same version you just bumped.
   5) Regenerate provider/SDK artifacts if schema changes accompany the upgrade.
-  6) After version bumps, run `make build` (requires `pulumictl` and `pulumi` on PATH) to rebuild schema and all SDKs. If missing locally, ensure these binaries are installed before running.
+  6) After version bumps, regenerate SDKs with `make generate_schema && make generate && make build` (requires `pulumictl` and `pulumi` on PATH). If missing locally, ensure these binaries are installed before running.
+  7) Tidy modules/checksums after bumps: `go mod tidy` in `provider/` and `integration-tests/`, then `go work sync` at repo root to refresh `go.sum`/`go.work.sum`.
+  8) If stale Pulumi versions linger in `go.work.sum`, delete the file and run `go list -m all` (then `go work sync`) to regenerate it.
+  9) Packer images: when upgrading Talos/Pulumi, bump versions in `integration-tests/packer/hcloud-talos.pkr.hcl` and rebuild the test image (see `integration-tests/packer/README.md`).
 
 ## Testing Guidelines
 - **Framework**: The testing framework uses Go's standard `testing` package with `stretchr/testify` helpers. The integration tests, located in `integration-tests/`, are written in Go and orchestrate deployments of Pulumi programs written in various languages (Go, Python, Node.js).

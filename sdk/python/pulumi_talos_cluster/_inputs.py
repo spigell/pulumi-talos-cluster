@@ -172,7 +172,7 @@ if not MYPY:
         """
         Talos OS installation image. 
         Used in the `install` configuration and set via CLI. 
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.0.
+        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.
         """
 elif False:
     ClusterMachinesArgsDict: TypeAlias = Mapping[str, Any]
@@ -194,7 +194,7 @@ class ClusterMachinesArgs:
                For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         :param pulumi.Input[_builtins.str] talos_image: Talos OS installation image. 
                Used in the `install` configuration and set via CLI. 
-               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.0.
+               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.
         """
         pulumi.set(__self__, "machine_id", machine_id)
         pulumi.set(__self__, "machine_type", machine_type)
@@ -202,7 +202,7 @@ class ClusterMachinesArgs:
         if config_patches is not None:
             pulumi.set(__self__, "config_patches", config_patches)
         if talos_image is None:
-            talos_image = 'ghcr.io/siderolabs/installer:v1.11.0'
+            talos_image = 'ghcr.io/siderolabs/installer:v1.11.5'
         if talos_image is not None:
             pulumi.set(__self__, "talos_image", talos_image)
 
@@ -262,7 +262,7 @@ class ClusterMachinesArgs:
         """
         Talos OS installation image. 
         Used in the `install` configuration and set via CLI. 
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.0.
+        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.
         """
         return pulumi.get(self, "talos_image")
 

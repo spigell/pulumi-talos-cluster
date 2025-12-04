@@ -157,7 +157,7 @@ type ClusterMachines struct {
 	NodeIp string `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
-	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.0.
+	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.
 	TalosImage *string `pulumi:"talosImage"`
 }
 
@@ -168,7 +168,7 @@ func (val *ClusterMachines) Defaults() *ClusterMachines {
 	}
 	tmp := *val
 	if tmp.TalosImage == nil {
-		talosImage_ := "ghcr.io/siderolabs/installer:v1.11.0"
+		talosImage_ := "ghcr.io/siderolabs/installer:v1.11.5"
 		tmp.TalosImage = &talosImage_
 	}
 	return &tmp
@@ -198,7 +198,7 @@ type ClusterMachinesArgs struct {
 	NodeIp pulumi.StringInput `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
-	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.0.
+	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.
 	TalosImage pulumi.StringPtrInput `pulumi:"talosImage"`
 }
 
@@ -209,7 +209,7 @@ func (val *ClusterMachinesArgs) Defaults() *ClusterMachinesArgs {
 	}
 	tmp := *val
 	if tmp.TalosImage == nil {
-		tmp.TalosImage = pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.11.0")
+		tmp.TalosImage = pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.11.5")
 	}
 	return &tmp
 }
@@ -288,7 +288,7 @@ func (o ClusterMachinesOutput) NodeIp() pulumi.StringOutput {
 
 // Talos OS installation image.
 // Used in the `install` configuration and set via CLI.
-// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.0.
+// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.
 func (o ClusterMachinesOutput) TalosImage() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v ClusterMachines) *string { return v.TalosImage }).(pulumi.StringPtrOutput)
 }

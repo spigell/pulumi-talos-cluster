@@ -54,7 +54,7 @@ func generateSchema() schema.PackageSpec {
 		Language: map[string]schema.RawMessage{
 			"csharp": rawMessage(map[string]any{
 				"packageReferences": map[string]string{
-					"Pulumi":         "3.210.0",
+					"Pulumi":         "3.*",
 					"Pulumi.Command": "1.1.0",
 				},
 			}),
@@ -79,7 +79,7 @@ func generateSchema() schema.PackageSpec {
 				"dependencies": map[string]any{
 					"@pulumi/pulumi":     "3.210.0",
 					"@pulumi/command":    "v1.1.0",
-					"@pulumiverse/talos": "v0.6.0",
+					"@pulumiverse/talos": "v0.6.1", // aligned with Talos 1.11.5
 				},
 			}),
 			"go": rawMessage(map[string]any{
