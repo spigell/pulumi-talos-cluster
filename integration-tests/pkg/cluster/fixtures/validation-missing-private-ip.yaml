@@ -1,0 +1,12 @@
+name: cluster
+kubernetesVersion: v1.28.0
+usePrivateNetwork: true
+privateNetwork: 10.0.0.0/24
+privateSubnetwork: 10.0.0.0/24
+machines:
+  - id: no-ip
+    type: worker
+    platform: hcloud
+    variant: metal
+    hcloud:
+      serverType: cx11

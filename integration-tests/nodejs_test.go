@@ -22,8 +22,8 @@ func getJSBaseOptions(t *testing.T) integration.ProgramTestOptions {
 	baseJS := base.With(integration.ProgramTestOptions{
 		Dependencies: []string{
 			"@spigell/pulumi-talos-cluster",
+			"pulumi-talos-cluster-integration-tests-infra",
 		},
-		Verbose: true,
 	})
 
 	return baseJS

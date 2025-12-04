@@ -1,0 +1,15 @@
+anchors:
+  controlplaneDefaults:
+    type: controlplane
+
+name: anchors-allowed
+kubernetesVersion: v1.28.0
+usePrivateNetwork: false
+machines:
+  - id: worker-1
+    type: worker
+    platform: hcloud
+    variant: metal
+    privateIP: 10.0.0.10
+    hcloud:
+      serverType: cx11

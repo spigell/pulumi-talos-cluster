@@ -1,0 +1,63 @@
+anchors:
+  patches:
+    machineBase: &machineBase |
+      debug: false
+      machine:
+        kubelet:
+          nodeIP:
+            validSubnets:
+              - 10.10.10.0/24
+        time:
+          disabled: true
+    controlplaneCluster: &controlplaneCluster |
+      cluster:
+        etcd:
+          advertisedSubnets:
+            - 10.10.10.0/24
+    timeEnabled: &timeEnabled |
+      machine:
+        time:
+          disabled: false
+    cloudflared: &cloudflared |
+      apiVersion: v1alpha1
+      kind: ExtensionServiceConfig
+      name: cloudflared
+      environment:
+        - TUNNEL_TOKEN=CHANGE_ME_AGAIN
+        - TUNNEL_METRICS=localhost:2001
+        - TUNNEL_EDGE_IP_VERSION=auto
+    controlplane: &controlplanePatches
+      - *machineBase
+      - *controlplaneCluster
+      - *timeEnabled
+      - *cloudflared
+    worker: &workerPatches
+      - *machineBase
+      - *timeEnabled
+      - *cloudflared
+  machineDefaults: &machineDefaults
+    platform: hcloud
+    variant: cloud
+    hcloud:
+      serverType: cx22
+      datacenter: fsn1-dc14
+    apply-config-via-userdata: true
+    talosImage: ghcr.io/siderolabs/installer:v1.11.0
+
+name: hcloud-go
+kubernetesVersion: 1.32.0 
+usePrivateNetwork: true
+privateNetwork: 10.10.10.0/24
+privateSubnetwork: 10.10.10.0/25
+skipInitApply: true
+machines:
+  - <<: *machineDefaults
+    id: controlplane-1
+    type: init
+    privateIP: 10.10.10.5
+    configPatches: *controlplanePatches
+  - <<: *machineDefaults
+    id: worker-1
+    type: worker
+    privateIP: 10.10.10.3
+    configPatches: *workerPatches

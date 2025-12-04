@@ -1,0 +1,19 @@
+name: hcloud-js
+kubernetesVersion: v1.34.0
+privateNetwork: 10.10.0.0/16
+privateSubnetwork: 10.10.10.0/25
+usePrivateNetwork: true
+machines:
+  - id: controlplane-1
+    type: init
+    platform: hcloud
+    variant: metal
+    privateIP: 10.10.10.2
+    hcloud:
+      serverType: cax21
+    configPatches:
+      - |
+        debug: true
+        machine:
+          network:
+            hostname: master-1

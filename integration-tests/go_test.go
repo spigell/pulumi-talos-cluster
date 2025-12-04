@@ -41,7 +41,6 @@ func getGoBaseOptions(t *testing.T) integration.ProgramTestOptions {
 			getCwd(t) + "../../sdk",
 			getCwd(t) + "../../integration-tests",
 		},
-		Verbose: true,
 	})
 
 	return goBase

@@ -1,0 +1,9 @@
+name: cluster
+kubernetesVersion: v1.28.0
+usePrivateNetwork: false
+privateNetwork: 10.0.0.0/16
+machines:
+  - id: worker-1
+    platform: hcloud
+    variant: metal
+    privateIP: 10.0.0.10
