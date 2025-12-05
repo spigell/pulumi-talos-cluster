@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi-command/sdk v1.1.0
+	github.com/pulumi/pulumi-command/sdk v1.1.3
 	github.com/pulumi/pulumi/pkg/v3 v3.210.0
 	github.com/pulumi/pulumi/sdk/v3 v3.210.0
 	github.com/pulumiverse/pulumi-talos/sdk v0.6.0

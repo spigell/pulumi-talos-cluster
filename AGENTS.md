@@ -22,6 +22,7 @@
 - TypeScript: prefer `type` aliases over `interface` unless interface merging is required.
 - Schema validation: when a JSON Schema validates inputs, avoid repeating the same checks in code unless absolutely necessary; rely on the validated shape for type assertions.
 - Avoid generic coercion helpers (e.g., `toString(any) string`); prefer explicit typed access after validation or straightforward type assertions.
+- pulumi-command is pinned to v1.1.3 across schema generation and provider usage; regenerate SDKs via the standard schema/generate/build pipeline when upgrading.
 - Pulumi SDK/binaries upgrade procedure (keep versions in sync):
   1) Update Go modules: `go get github.com/pulumi/pulumi/sdk/v3@<version>` in `provider/`, `integration-tests/`, `sdk/`, and Go test programs (e.g., `integration-tests/testdata/programs/hcloud-go`, `hcloud-ha-go`), then `go mod tidy` in each.
      Also bump `github.com/pulumi/pulumi/pkg/v3@<version>` in those same modules to avoid mismatch errors.
