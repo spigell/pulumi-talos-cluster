@@ -2,7 +2,7 @@
 name = "pulumi-talos-cluster-integration-tests-infra"
 version = "0.0.0"
 description = "Shared integration test utilities for pulumi-talos-cluster"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dynamic = ["dependencies"]
 
 [build-system]
@@ -10,8 +10,20 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["spec", "validation"]
-package-dir = {"" = "pkg/cluster/python"}
+package-dir = {"" = "pkg"}
 
-[tool.setuptools.dynamic]
-  dependencies = {file = ["requirements.txt"]}
+[tool.setuptools.packages.find]
+where = ["pkg"]
+include = ["cluster*"]
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+pyyaml = "6.0.2"
+pytest = "8.3.3"
+jsonschema = "4.23.0"
+pulumi = "3.210.0"
+ruff = "0.14.7"
+
+[[tool.poetry.packages]]
+include = "cluster"
+from = "pkg"

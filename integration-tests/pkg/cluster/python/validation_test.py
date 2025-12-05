@@ -6,7 +6,7 @@ from typing import Optional
 import pytest
 import yaml
 
-from validation import validate_cluster
+from cluster.python.validation import validate_cluster
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 

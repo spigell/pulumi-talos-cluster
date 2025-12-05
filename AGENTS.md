@@ -54,6 +54,7 @@
   - The `cluster` package serves as the main entrypoint for tests. It orchestrates calls to the `cloud` and `talos` packages.
   - The `cluster` validation logic only covers the basic and common cluster specification.
   - Default values and specific validation for `talos` and `cloud` configurations are handled within their respective packages.
+- **Python helper modules**: Shared Python helpers now live under `integration-tests/pkg/cluster/python` as packages (see `__init__.py`). New helper directories (e.g., `integration-tests/pkg/talos/python`) should also be proper packages (`__init__.py`) and added to the codebase; Pyright resolves them because `pyrightconfig.json` points `extraPaths` at `integration-tests/pkg`. Keep that root path in `extraPaths` so new packages continue to resolve.
 
 #### Configuration File Validation (`cluster.yaml`)
 

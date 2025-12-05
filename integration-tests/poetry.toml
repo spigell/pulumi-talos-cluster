@@ -1,0 +1,4 @@
+[virtualenvs]
+# Place the Poetry-created virtual environment inside this project directory.
+in-project = true
+path = ".venv"

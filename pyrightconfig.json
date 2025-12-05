@@ -1,0 +1,25 @@
+{
+    "typeCheckingMode": "strict",
+    "include": [
+        "integration-tests/pkg",
+        "integration-tests/testdata/programs/hcloud-ha-py"
+    ],
+    "executionEnvironments": [
+        {
+            "root": "integration-tests/pkg",
+            "venvPath": "integration-tests",
+            "venv": ".venv",
+            "extraPaths": [
+                "integration-tests/pkg"
+            ]
+        },
+        {
+            "root": "integration-tests/testdata/programs/hcloud-ha-py",
+            "venvPath": "integration-tests/testdata/programs/hcloud-ha-py",
+            "venv": ".venv",
+            "extraPaths": [
+                "integration-tests/pkg"
+            ]
+        }
+    ]
+}

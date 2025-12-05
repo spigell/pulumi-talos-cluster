@@ -19,6 +19,13 @@ dev_ts_testprog: clean
 	yarn install
 	@echo "Now you can create stack for test project in the testdata directory"
 
+dev_py_testprog: clean
+	cd .. && $(MAKE) install_python_sdk
+	cd testdata/programs/hcloud-ha-py && \
+	poetry install && \
+	poetry run pip install -e ../../../sdk/python
+	@echo "Python test program ready; run pulumi up inside testdata/programs/hcloud-ha-py"
+
 clean: export PROG=$(shell cat .current_test_dir || true)
 clean:
 	yarn unlink --cwd dist || true
@@ -36,17 +43,15 @@ framework_lint_go:
 	golangci-lint run ./pkg/testdata/programs/...
 
 framework_lint_py:
-	test -d $(PY_VENV) || $(PYTHON) -m venv $(PY_VENV)
-	$(PY_VENV_BIN)/python -m pip install -r requirements.txt
-	$(PY_VENV_BIN)/python -m ruff check pkg
+	poetry install
+	poetry run ruff check pkg
 
 framework_unit_tests_go:
 	go test ./pkg/cluster/go ./pkg/cloud/go/...
 
 framework_unit_tests_py:
-	test -d $(PY_VENV) || $(PYTHON) -m venv $(PY_VENV)
-	$(PY_VENV_BIN)/python -m pip install -r requirements.txt
-	$(PY_VENV_BIN)/python -m pytest pkg/cluster/python
+	poetry install
+	poetry run pytest pkg/cluster/python
 
 install_nodejs_integration_tests_infra:
 	yarn install
@@ -54,6 +59,10 @@ install_nodejs_integration_tests_infra:
 	yarn build
 	cp package.json ./dist -v
 	yarn link --cwd dist
+
+install_python_integration_tests_infra:
+	poetry install
+	poetry run pip install -e ../sdk/python
 
 integration_tests: integration_tests_go integration_tests_nodejs integration_tests_python
 
