@@ -16,11 +16,7 @@ import (
 )
 
 const (
-	defaultDatacenter = "nbg1-dc3"
-	// It should be renamed; this value is not related to Talos.
-	defaultTalosInitialVersion = "v1.10.3"
-	testImageSelector          = "os=talos"
-	defaultServerType          = "cx11"
+	testImageSelector = "os=talos"
 )
 
 type Hetzner struct {
@@ -177,19 +173,9 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 		machine.Hcloud = &cluster.HcloudMachine{}
 	}
 
-	if machine.Hcloud.ServerType == "" {
-		machine.Hcloud.ServerType = defaultServerType
-	}
-
 	datacenter := machine.Hcloud.Datacenter
-	if datacenter == "" {
-		datacenter = defaultDatacenter
-	}
 
 	talosVersion := machine.TalosInitialVersion
-	if talosVersion == "" {
-		talosVersion = defaultTalosInitialVersion
-	}
 
 	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),

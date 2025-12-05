@@ -3,9 +3,6 @@ import * as pulumi from "@pulumi/pulumi";
 import forge from "node-forge"; // node-forge uses a default export under ESM
 import { Cluster, DeployedServer } from "./types.js";
 
-const defaultTalosInitialVersion = "v1.10.3";
-const variant = "metal";
-
 export function Hetzner(cluster: Cluster): DeployedServer[] {
   const networkRange = cluster.privateNetwork ?? "";
   const subnetRange = cluster.privateSubnetwork ?? "";
@@ -46,8 +43,8 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
     }
 
     const serverArch = architectureForServer(machine.hcloud.serverType);
-    const machineVariant = machine.variant ?? machine.platform ?? variant;
-    const talosVersion = machine.talosInitialVersion ?? defaultTalosInitialVersion;
+    const machineVariant = machine.variant ?? machine.platform;
+    const talosVersion = machine.talosInitialVersion;
     const selector = `os=talos,version=${talosVersion},variant=${machineVariant},arch=${serverArch}`;
     const image = hcloud.getImage({
       withSelector: selector,

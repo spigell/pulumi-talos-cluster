@@ -3,7 +3,7 @@ import AjvModule, { type ErrorObject } from "ajv";
 import clusterSchema from "../schema.json" with { type: "json" }; // ESM requires JSON imports to declare type
 
 const Ajv = AjvModule.default; // NodeNext: Ajv constructor lives on default export
-const ajv = new Ajv({ allErrors: true, strict: true });
+const ajv = new Ajv({ allErrors: true, strict: true, useDefaults: true });
 const validateSchema = ajv.compile(clusterSchema);
 
 export function validateCluster(spec: Record<string, unknown>): void {

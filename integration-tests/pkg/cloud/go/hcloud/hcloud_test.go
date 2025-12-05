@@ -144,17 +144,11 @@ func assertServerMatchesMachine(
 	require.NotNil(t, m)
 
 	expectedDC := m.Hcloud.Datacenter
-	if expectedDC == "" {
-		expectedDC = defaultDatacenter
-	}
 	if dc, ok := server.args.Datacenter.(pulumi.String); ok {
 		assert.Equal(t, expectedDC, string(dc))
 	}
 
 	expectedTalos := m.TalosInitialVersion
-	if expectedTalos == "" {
-		expectedTalos = defaultTalosInitialVersion
-	}
 	assert.Contains(t, server.imageSelector, expectedTalos)
 
 	if expectNetworks {
