@@ -7,7 +7,7 @@ import json
 import pytest
 import yaml
 from cluster.python.validation import validate_cluster
-from cluster.python.defaults import get_default, schema
+from cluster.python.defaults import get_default
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schema.json"

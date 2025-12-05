@@ -52,45 +52,67 @@ func applyDefaultsFromDoc(schema map[string]any, value any) {
 	}
 
 	if obj, ok := value.(map[string]any); ok {
-		if props, ok := schema["properties"].(map[string]any); ok {
-			for name, propRaw := range props {
-				prop, ok := propRaw.(map[string]any)
-				if !ok {
-					continue
-				}
-				if _, exists := obj[name]; !exists {
-					if def, ok := prop["default"]; ok {
-						obj[name] = def
-					}
-				}
-				if child, exists := obj[name]; exists {
-					applyDefaultsFromDoc(prop, child)
-				}
-			}
-		}
+		applyDefaultsObject(schema, obj)
 		return
 	}
 
 	if arr, ok := value.([]any); ok {
-		switch items := schema["items"].(type) {
-		case map[string]any:
-			for _, elem := range arr {
-				applyDefaultsFromDoc(items, elem)
+		applyDefaultsArray(schema, arr)
+	}
+}
+
+func applyDefaultsObject(schema map[string]any, obj map[string]any) {
+	props, ok := schema["properties"].(map[string]any)
+	if !ok {
+		return
+	}
+
+	for name, propRaw := range props {
+		prop, ok := propRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if _, exists := obj[name]; !exists {
+			if def, ok := prop["default"]; ok {
+				obj[name] = def
 			}
-		case []any:
-			for i, elem := range arr {
-				if i < len(items) {
-					if itemSchema, ok := items[i].(map[string]any); ok {
-						applyDefaultsFromDoc(itemSchema, elem)
-					}
-				} else if len(items) > 0 {
-					if itemSchema, ok := items[len(items)-1].(map[string]any); ok {
-						applyDefaultsFromDoc(itemSchema, elem)
-					}
-				}
+		}
+		if child, exists := obj[name]; exists {
+			applyDefaultsFromDoc(prop, child)
+		}
+	}
+}
+
+func applyDefaultsArray(schema map[string]any, arr []any) {
+	switch items := schema["items"].(type) {
+	case map[string]any:
+		for _, elem := range arr {
+			applyDefaultsFromDoc(items, elem)
+		}
+	case []any:
+		for i, elem := range arr {
+			itemSchema := pickItemSchema(items, i)
+			if itemSchema != nil {
+				applyDefaultsFromDoc(itemSchema, elem)
 			}
 		}
 	}
+}
+
+func pickItemSchema(items []any, idx int) map[string]any {
+	if idx < len(items) {
+		if itemSchema, ok := items[idx].(map[string]any); ok {
+			return itemSchema
+		}
+		return nil
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	if itemSchema, ok := items[len(items)-1].(map[string]any); ok {
+		return itemSchema
+	}
+	return nil
 }
 
 func schemaDefault(path ...string) (any, error) {
