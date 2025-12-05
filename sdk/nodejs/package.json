@@ -14,7 +14,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/command": "v1.1.0",
+        "@pulumi/command": "v1.1.3",
         "@pulumi/pulumi": "3.210.0",
         "@pulumiverse/talos": "v0.6.1"
     },

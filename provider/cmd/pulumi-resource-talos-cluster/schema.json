@@ -43,7 +43,7 @@
             "requires": {
                 "pulumi": "\u003e=3.210.0,\u003c4.0.0",
                 "pulumi-command": "==1.1.3",
-                "pulumiverse-talos": "\u003e=0.6.0,\u003c0.7.0"
+                "pulumiverse-talos": "==0.6.1"
             },
             "usesIOClasses": true
         }
