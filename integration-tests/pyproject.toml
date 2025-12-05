@@ -23,14 +23,7 @@ package-dir = {"" = "pkg"}
 where = ["pkg"]
 include = ["cluster*"]
 
-[tool.poetry.dependencies]
-python = ">=3.10"
-pyyaml = "6.0.2"
-pytest = "8.3.3"
-jsonschema = "4.23.0"
-pulumi = "3.210.0"
-ruff = "0.14.7"
-
 [[tool.poetry.packages]]
 include = "cluster"
 from = "pkg"
+

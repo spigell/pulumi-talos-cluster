@@ -51,7 +51,7 @@ framework_unit_tests_go:
 
 framework_unit_tests_py:
 	poetry install
-	poetry run pytest pkg
+	poetry run pytest pkg/cluster/python
 
 install_nodejs_integration_tests_infra:
 	yarn install
