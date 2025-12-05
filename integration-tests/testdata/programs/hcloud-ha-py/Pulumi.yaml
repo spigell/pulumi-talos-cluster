@@ -2,5 +2,6 @@ name: hcloud-ha-py
 runtime:
   name: python
   options:
-    virtualenv: venv
+    toolchain: pip
+    virtualenv: .venv
 description: HA Talos cluster on Hetzner Cloud (Python)
