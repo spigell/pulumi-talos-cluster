@@ -16,14 +16,24 @@ _DEMO_PUBLIC_KEY = (
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJtX7iBJ8zZCNdSP6NqBqXex12MNl81pHR38t0KBfZ1f demo@example"
 )
 
-_DEFAULT_TALOS_INITIAL_VERSION = "v1.10.3"
-_DEFAULT_VARIANT = "metal"
-
-
 def architecture_for_server(server_type: str) -> str:
     if server_type.startswith("cax") or server_type.startswith("cpx"):
         return "arm"
     return "x86"
+
+
+def _version_from_image(image: str | None) -> str:
+    if not image:
+        return ""
+    if ":" in image:
+        return image.rsplit(":", 1)[-1]
+    return ""
+
+
+def _talos_version(machine: Any, cluster: Any) -> str:
+    if getattr(machine, "talosInitialVersion", None):
+        return machine.talosInitialVersion
+    return _version_from_image(getattr(machine, "talosImage", None))
 
 
 def hetzner(cluster: Any) -> List[Dict[str, pulumi.Output]]:
@@ -57,8 +67,8 @@ def hetzner(cluster: Any) -> List[Dict[str, pulumi.Output]]:
             raise ValueError(f"machine {machine.id} is missing privateIP")
 
         server_arch = architecture_for_server(machine.hcloud.serverType)
-        machine_variant = machine.variant or _DEFAULT_VARIANT
-        talos_version = machine.talosInitialVersion or _DEFAULT_TALOS_INITIAL_VERSION
+        machine_variant = machine.variant
+        talos_version = _talos_version(machine, cluster)
         selector = f"os=talos,version={talos_version},variant={machine_variant},arch={server_arch}"
 
         image = get_image_output(with_selector=selector, with_architecture=server_arch)

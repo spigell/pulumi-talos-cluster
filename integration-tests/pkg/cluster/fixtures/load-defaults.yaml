@@ -1,0 +1,8 @@
+name: defaults-cluster
+usePrivateNetwork: false
+machines:
+  - id: worker-1
+    type: worker
+    platform: hcloud
+    variant: metal
+    hcloud: {}

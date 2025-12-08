@@ -3,16 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, List, Optional
 import ipaddress
-import json
 
 from jsonschema import Draft7Validator, ValidationError as SchemaValidationError
 
-SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schema.json"
-with SCHEMA_PATH.open("r", encoding="utf-8") as schema_file:
-    _VALIDATOR = Draft7Validator(json.load(schema_file))
+from .defaults import _SCHEMA, apply_defaults
 
+SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schema.json"
+_VALIDATOR = Draft7Validator(_SCHEMA)
 
 def validate_cluster(data: dict[str, Any]) -> None:
+    apply_defaults(data)
     message = _first_validation_error(data)
     if message:
         raise ValueError(message) from None

@@ -26,6 +26,11 @@ func validateCluster(raw map[string]any) error {
 	if err != nil {
 		return err
 	}
+
+	if err := applySchemaDefaults(raw); err != nil {
+		return err
+	}
+
 	if err := schema.Validate(raw); err != nil {
 		return fmt.Errorf("invalid cluster spec: %w", err)
 	}

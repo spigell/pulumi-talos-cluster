@@ -2,13 +2,18 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Optional
+import json
 
 import pytest
 import yaml
-
-from validation import validate_cluster
+from cluster.python.validation import validate_cluster
+from cluster.python.defaults import get_default
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
+SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schema.json"
+
+with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+    _SCHEMA = json.load(f)
 
 @pytest.mark.parametrize(
     ("fixture_name", "message"),
@@ -44,3 +49,25 @@ def test_validate_cluster(fixture_name: str, message: Optional[str]) -> None:
 def _load_fixture(name: str) -> dict:
     with open(FIXTURES_DIR / name, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def test_defaults_are_applied() -> None:
+    data = _load_fixture("load-defaults.yaml")
+
+    validate_cluster(data)
+
+    kubernetes_version = get_default(["properties", "kubernetesVersion", "default"])
+    talos_image = get_default(["properties", "machines", "items", "properties", "talosImage", "default"])
+
+    machine = data["machines"][0]
+    server_type = get_default(
+        ["properties", "machineDefaults", "properties", "hcloud", "properties", "serverType", "default"]
+    )
+    datacenter = get_default(
+        ["properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default"]
+    )
+
+    assert data["kubernetesVersion"] == kubernetes_version
+    assert machine["talosImage"] == talos_image
+    assert machine["hcloud"]["serverType"] == server_type
+    assert machine["hcloud"]["datacenter"] == datacenter

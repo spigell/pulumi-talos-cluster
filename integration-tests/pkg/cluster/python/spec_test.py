@@ -1,7 +1,8 @@
-import pytest
 from pathlib import Path
 
-from spec import load
+import pytest
+
+from cluster.python.spec import load
 
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"

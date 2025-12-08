@@ -3,7 +3,7 @@ from pathlib import Path
 import pulumi
 
 from hetzner import hetzner
-from spec import load  # provided by installed integration-tests package
+from cluster.python.spec import load  # provided by installed integration-tests package
 from pulumi_talos_cluster import Apply, Cluster as TalosCluster, MachineTypes
 
 base_dir = Path(__file__).resolve().parent

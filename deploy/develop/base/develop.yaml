@@ -24,7 +24,7 @@ spec:
   # ---- Native sidecar (restartable init container) ----
   initContainers:
     - name: plugin
-      image: &workbench-image ghcr.io/spigell/pulumi-talos-cluster-workbench:3.193.0-de755f
+      image: &workbench-image ghcr.io/spigell/pulumi-talos-cluster-workbench:3.210.0-1ec6b5
       restartPolicy: Always
       workingDir: /projects
       command:

@@ -5,8 +5,11 @@ Example Pulumi program in Python that loads an HA cluster spec from `cluster.yam
 ## Running
 
 ```sh
-python -m venv venv
+python -m venv .venv
 source venv/bin/activate
 pip install -r requirements.txt
+# If running from this directory in the repo, install helpers and SDK locally:
+# pip install -e ../../../              # integration-tests package (cluster.*)
+# pip install -e ../../../../sdk/python # pulumi-talos-cluster SDK
 pulumi up
 ```

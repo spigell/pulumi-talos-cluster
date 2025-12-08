@@ -43,6 +43,5 @@ jobs:
     uses: spigell/my-shared-workflows/.github/workflows/python-test-lint.yaml@main
     with:
       working-directory: integration-tests
-      python-version: '3.12'
-      requirements-file: 'requirements.txt'
+      python-version: '3.13.7'
       actions-branch: main

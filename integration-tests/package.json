@@ -10,7 +10,7 @@
     "prepare": "yarn run build"
   },
   "dependencies": {
-    "@pulumi/pulumi": "3.193.0",
+    "@pulumi/pulumi": "3.210.0",
     "ajv": "^8.17.1",
     "yaml": "^2.6.0"
   },

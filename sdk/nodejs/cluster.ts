@@ -64,7 +64,7 @@ export class Cluster extends pulumi.ComponentResource {
             resourceInputs["clusterMachines"] = args?.clusterMachines;
             resourceInputs["clusterName"] = args?.clusterName;
             resourceInputs["kubernetesVersion"] = (args?.kubernetesVersion) ?? "v1.33.0";
-            resourceInputs["talosVersionContract"] = (args?.talosVersionContract) ?? "v1.11.0";
+            resourceInputs["talosVersionContract"] = (args?.talosVersionContract) ?? "v1.11.5";
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
@@ -105,7 +105,7 @@ export interface ClusterArgs {
      * Used in NewSecrets() and GetConfigurationOutput() resources. 
      * This property is immutable to prevent version conflicts across provider updates. 
      * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-     * The default value is based on gendata.VersionTag, current: v1.11.0.
+     * The default value is based on gendata.VersionTag, current: v1.11.5.
      */
     talosVersionContract?: pulumi.Input<string>;
 }

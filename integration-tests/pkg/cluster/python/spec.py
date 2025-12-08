@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import yaml
 
-from validation import validate_cluster
+from .validation import validate_cluster
 
 
 @dataclass

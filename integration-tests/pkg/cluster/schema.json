@@ -5,9 +5,22 @@
   "required": ["name", "machines", "usePrivateNetwork"],
   "properties": {
     "patches": {},
-    "machineDefaults": {},
+    "machineDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hcloud": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "serverType": { "type": "string", "default": "cx21" },
+            "datacenter": { "type": "string", "default": "nbg1-dc3" }
+          }
+        }
+      }
+    },
     "name": { "type": "string", "minLength": 1 },
-    "kubernetesVersion": { "type": "string" },
+    "kubernetesVersion": { "type": "string", "default": "v1.33.0" },
     "privateNetwork": { "type": "string" },
     "privateSubnetwork": { "type": "string" },
     "usePrivateNetwork": { "type": "boolean" },
@@ -25,7 +38,7 @@
           "type": { "type": "string", "minLength": 1 },
           "platform": { "type": "string", "enum": ["hcloud"] },
           "talosInitialVersion": { "type": "string" },
-          "talosImage": { "type": "string" },
+          "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.11.5" },
           "variant": { "type": "string", "enum": ["cloud", "metal"] },
           "privateIP": { "type": "string", "minLength": 1 },
           "configPatches": {
@@ -39,8 +52,8 @@
             "additionalProperties": false,
             "required": ["serverType"],
             "properties": {
-              "serverType": { "type": "string" },
-              "datacenter": { "type": "string" }
+              "serverType": { "type": "string", "default": "cx21" },
+              "datacenter": { "type": "string", "default": "nbg1-dc3" }
             }
           }
         }
