@@ -4,7 +4,7 @@ go 1.25.3
 
 require (
 	github.com/pulumi/pulumi/sdk/v3 v3.210.0
-	github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20251204115016-f961b85464c1
+	github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20251208074559-8879f36b78f2
 )
 
 require (

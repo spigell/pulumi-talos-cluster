@@ -12,6 +12,7 @@ anchors:
     controlplaneCluster: &controlplaneCluster |
       cluster:
         etcd:
+          image: registry.k8s.io/etcd:v3.6.6
           advertisedSubnets:
             - 10.10.10.0/24
     controlplane: &controlplanePatches
@@ -24,9 +25,8 @@ anchors:
     platform: hcloud
     variant: metal
     apply-config-via-userdata: false
-    talosImage: ghcr.io/siderolabs/installer:v1.10.6
     hcloud:
-      serverType: cx22
+      serverType: cax11
 
   controlplaneDefaults: &controlplaneDefaults
     <<: *machineDefaults

@@ -42,7 +42,6 @@ anchors:
       serverType: cx22
       datacenter: fsn1-dc14
     apply-config-via-userdata: true
-    talosImage: ghcr.io/siderolabs/installer:v1.11.0
 
 name: hcloud-go
 kubernetesVersion: 1.32.0 
