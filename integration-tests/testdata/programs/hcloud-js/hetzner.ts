@@ -44,7 +44,7 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
 
     const serverArch = architectureForServer(machine.hcloud.serverType);
     const machineVariant = machine.variant ?? machine.platform;
-    const talosVersion = machine.talosInitialVersion;
+    const talosVersion = machine.talosInitialVersion ?? versionFromImage(machine.talosImage);
     const selector = `os=talos,version=${talosVersion},variant=${machineVariant},arch=${serverArch}`;
     const image = hcloud.getImage({
       withSelector: selector,
@@ -114,4 +114,11 @@ async function generateSSHKey(): Promise<{ publicKey: string }> {
       reject(`Error generating SSH keys: ${error}`);
     }
   });
+}
+
+function versionFromImage(image?: string): string | undefined {
+  if (!image) return undefined;
+  const idx = image.lastIndexOf(":");
+  if (idx === -1 || idx === image.length - 1) return undefined;
+  return image.slice(idx + 1);
 }

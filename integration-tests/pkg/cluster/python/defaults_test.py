@@ -9,7 +9,10 @@ from pathlib import Path
 def test_schema_defaults_present() -> None:
     assert "properties" in schema()
     assert get_default(["properties", "kubernetesVersion", "default"]) is not None
-    assert get_default(["properties", "talosImage", "default"]) is not None
+    assert (
+        get_default(["properties", "machines", "items", "properties", "talosImage", "default"])
+        is not None
+    )
     assert (
         get_default(
             ["properties", "machineDefaults", "properties", "hcloud", "properties", "serverType", "default"]
@@ -32,7 +35,6 @@ def test_defaults_are_applied() -> None:
     validate_cluster(data)
 
     assert data["kubernetesVersion"] == get_default(["properties", "kubernetesVersion", "default"])
-    assert data["talosImage"] == get_default(["properties", "talosImage", "default"])
 
     machine = data["machines"][0]
     assert (
@@ -46,4 +48,8 @@ def test_defaults_are_applied() -> None:
         == get_default(
             ["properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default"]
         )
+    )
+    assert (
+        machine["talosImage"]
+        == get_default(["properties", "machines", "items", "properties", "talosImage", "default"])
     )

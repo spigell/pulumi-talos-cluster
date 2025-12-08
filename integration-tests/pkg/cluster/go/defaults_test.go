@@ -13,15 +13,15 @@ func TestSchemaDefaults(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, val)
 
-	val, err = schemaDefault("properties", "talosImage", "default")
-	require.NoError(t, err)
-	require.NotNil(t, val)
-
 	val, err = schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "serverType", "default")
 	require.NoError(t, err)
 	require.NotNil(t, val)
 
 	val, err = schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default")
+	require.NoError(t, err)
+	require.NotNil(t, val)
+
+	val, err = schemaDefault("properties", "machines", "items", "properties", "talosImage", "default")
 	require.NoError(t, err)
 	require.NotNil(t, val)
 }
@@ -38,15 +38,14 @@ func TestDefaultsAreApplied(t *testing.T) {
 
 	kubeVersion, err := schemaDefault("properties", "kubernetesVersion", "default")
 	require.NoError(t, err)
-	talosImage, err := schemaDefault("properties", "talosImage", "default")
-	require.NoError(t, err)
 	serverType, err := schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "serverType", "default")
 	require.NoError(t, err)
 	datacenter, err := schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default")
 	require.NoError(t, err)
+	talosImage, err := schemaDefault("properties", "machines", "items", "properties", "talosImage", "default")
+	require.NoError(t, err)
 
 	require.Equal(t, kubeVersion, raw["kubernetesVersion"])
-	require.Equal(t, talosImage, raw["talosImage"])
 
 	machines, ok := raw["machines"].([]any)
 	require.True(t, ok)
@@ -56,4 +55,5 @@ func TestDefaultsAreApplied(t *testing.T) {
 	hcloud := machine["hcloud"].(map[string]any)
 	require.Equal(t, serverType, hcloud["serverType"])
 	require.Equal(t, datacenter, hcloud["datacenter"])
+	require.Equal(t, talosImage, machine["talosImage"])
 }

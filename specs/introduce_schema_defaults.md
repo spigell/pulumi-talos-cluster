@@ -10,7 +10,7 @@ By introducing `default` fields directly into the JSON schema, we establish a si
 ### 1. Update `integration-tests/pkg/cluster/schema.json`
 Add tightly scoped defaults:
 *   `kubernetesVersion`: `"v1.33.0"`
-*   `talosImage`: `"ghcr.io/siderolabs/talos:v1.11.5"`
+*   `machines[].talosImage`: `"ghcr.io/siderolabs/talos:v1.11.5"`
 *   `machineDefaults.hcloud.serverType`: `"cx21"`
 *   `machineDefaults.hcloud.datacenter`: `"nbg1-dc3"`
 
@@ -32,7 +32,13 @@ Add tightly scoped defaults:
       }
     },
     "kubernetesVersion": { "type": "string", "default": "v1.33.0" },
-    "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.11.5" },
+    "machines": {
+      "items": {
+        "properties": {
+          "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.11.5" }
+        }
+      }
+    },
     ...
   }
 }

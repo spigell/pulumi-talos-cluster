@@ -22,6 +22,7 @@
 - TypeScript: prefer `type` aliases over `interface` unless interface merging is required.
 - Schema validation: when a JSON Schema validates inputs, avoid repeating the same checks in code unless absolutely necessary; rely on the validated shape for type assertions.
 - Avoid generic coercion helpers (e.g., `toString(any) string`); prefer explicit typed access after validation or straightforward type assertions.
+- Avoid tiny pass-through helpers; if a helper just wraps a single function call without adding clarity, inline the call instead.
 
 ## Versions sync
 - Pulumi upgrades:

@@ -57,7 +57,7 @@ def test_defaults_are_applied() -> None:
     validate_cluster(data)
 
     kubernetes_version = get_default(["properties", "kubernetesVersion", "default"])
-    talos_image = get_default(["properties", "talosImage", "default"])
+    talos_image = get_default(["properties", "machines", "items", "properties", "talosImage", "default"])
 
     machine = data["machines"][0]
     server_type = get_default(
@@ -68,6 +68,6 @@ def test_defaults_are_applied() -> None:
     )
 
     assert data["kubernetesVersion"] == kubernetes_version
-    assert data["talosImage"] == talos_image
+    assert machine["talosImage"] == talos_image
     assert machine["hcloud"]["serverType"] == server_type
     assert machine["hcloud"]["datacenter"] == datacenter

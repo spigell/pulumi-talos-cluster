@@ -176,6 +176,9 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 	datacenter := machine.Hcloud.Datacenter
 
 	talosVersion := machine.TalosInitialVersion
+	if talosVersion == "" {
+		talosVersion = versionFromImage(machine.TalosImage)
+	}
 
 	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),
@@ -243,6 +246,16 @@ func architectureForServer(serverType string) string {
 	}
 
 	return "x86"
+}
+
+func versionFromImage(image string) string {
+	if image == "" {
+		return ""
+	}
+	if idx := strings.LastIndex(image, ":"); idx != -1 && idx+1 < len(image) {
+		return image[idx+1:]
+	}
+	return ""
 }
 
 // generatePrivateKey creates a RSA Private Key of specified byte size.

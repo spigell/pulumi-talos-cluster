@@ -22,6 +22,20 @@ def architecture_for_server(server_type: str) -> str:
     return "x86"
 
 
+def _version_from_image(image: str | None) -> str:
+    if not image:
+        return ""
+    if ":" in image:
+        return image.rsplit(":", 1)[-1]
+    return ""
+
+
+def _talos_version(machine: Any, cluster: Any) -> str:
+    if getattr(machine, "talosInitialVersion", None):
+        return machine.talosInitialVersion
+    return _version_from_image(getattr(machine, "talosImage", None))
+
+
 def hetzner(cluster: Any) -> List[Dict[str, pulumi.Output]]:
     ssh_key = SshKey(
         "ssh",
@@ -54,7 +68,7 @@ def hetzner(cluster: Any) -> List[Dict[str, pulumi.Output]]:
 
         server_arch = architecture_for_server(machine.hcloud.serverType)
         machine_variant = machine.variant
-        talos_version = machine.talosInitialVersion
+        talos_version = _talos_version(machine, cluster)
         selector = f"os=talos,version={talos_version},variant={machine_variant},arch={server_arch}"
 
         image = get_image_output(with_selector=selector, with_architecture=server_arch)

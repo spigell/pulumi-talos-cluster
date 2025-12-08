@@ -25,7 +25,6 @@
     "privateSubnetwork": { "type": "string" },
     "usePrivateNetwork": { "type": "boolean" },
     "skipInitApply": { "type": "boolean" },
-    "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.11.5" },
     "anchors": { "type": "object", "additionalProperties": true },
     "machines": {
       "type": "array",
@@ -39,7 +38,7 @@
           "type": { "type": "string", "minLength": 1 },
           "platform": { "type": "string", "enum": ["hcloud"] },
           "talosInitialVersion": { "type": "string" },
-          "talosImage": { "type": "string" },
+          "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.11.5" },
           "variant": { "type": "string", "enum": ["cloud", "metal"] },
           "privateIP": { "type": "string", "minLength": 1 },
           "configPatches": {

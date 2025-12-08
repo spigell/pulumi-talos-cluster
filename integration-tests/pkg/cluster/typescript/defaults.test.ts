@@ -16,10 +16,13 @@ function loadSchemaDefaults() {
   const props = (clusterSchema as { properties?: Record<string, SchemaNode> }).properties ?? {};
   const machineDefaults =
     props.machineDefaults?.properties?.hcloud?.properties ?? ({} as Record<string, SchemaNode>);
+  const machineProps =
+    (props.machines?.items as { properties?: Record<string, SchemaNode> } | undefined)
+      ?.properties ?? {};
 
   return {
     kubernetesVersion: props.kubernetesVersion?.default,
-    talosImage: props.talosImage?.default,
+    talosImage: machineProps.talosImage?.default,
     hcloudServerType: machineDefaults.serverType?.default,
     hcloudDatacenter: machineDefaults.datacenter?.default,
   };
@@ -49,11 +52,11 @@ describe("defaults", () => {
     expect(() => validateCluster(spec)).not.toThrowError();
     expect(spec).toMatchObject({
       kubernetesVersion: defaults.kubernetesVersion,
-      talosImage: defaults.talosImage,
     });
 
     const machine = (spec["machines"] as Record<string, unknown>[])[0];
     expect(machine).toMatchObject({
+      talosImage: defaults.talosImage,
       hcloud: {
         serverType: defaults.hcloudServerType,
         datacenter: defaults.hcloudDatacenter,
