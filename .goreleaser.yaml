@@ -23,5 +23,6 @@ changelog:
   use: github-native
 release:
   disable: false
+  prerelease: auto
 snapshot:
   version_template: '{{ .Tag }}-SNAPSHOT'
