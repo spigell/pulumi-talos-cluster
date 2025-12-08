@@ -10,6 +10,7 @@ packer {
 
 variable "talos_version" {
   type    = string
+  default = "v1.11.5"
 }
 
 variable "talos_schematic_id" {
@@ -77,4 +78,3 @@ build {
   provisioner "shell" { inline = [local.write_image] }
   provisioner "shell" { inline = [local.clean_up] }
 }
-

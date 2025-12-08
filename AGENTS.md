@@ -40,6 +40,7 @@
 - Talos SDK:
   1) Bump `github.com/siderolabs/talos/pkg/machinery` to the target Talos release in `provider/` and tidy.
   2) Packer: when upgrading Talos, bump versions in `integration-tests/packer/hcloud-talos.pkr.hcl`.
+  3) GitHub Actions: keep `TALOS_VERSION` in `.github/workflows/triggers-build-test-images.yaml` and `TALOSCTL_VERSION` in `.github/workflows/reuse-run-integration-tests.yaml` aligned with the current Talos release.
 
 ## Testing Guidelines
 - **Framework**: The testing framework uses Go's standard `testing` package with `stretchr/testify` helpers. The integration tests, located in `integration-tests/`, are written in Go and orchestrate deployments of Pulumi programs written in various languages (Go, Python, Node.js).
