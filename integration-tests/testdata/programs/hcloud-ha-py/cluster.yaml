@@ -24,7 +24,7 @@ anchors:
     platform: hcloud
     variant: metal
     apply-config-via-userdata: false
-    talosImage: ghcr.io/siderolabs/installer:v1.10.6
+    talosImage: ghcr.io/siderolabs/installer:v1.12.0
     hcloud:
       serverType: cx22
 
