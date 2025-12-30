@@ -27,7 +27,7 @@
             "dependencies": {
                 "@pulumi/command": "v1.1.3",
                 "@pulumi/pulumi": "3.210.0",
-                "@pulumiverse/talos": "v0.6.1"
+                "@pulumiverse/talos": "v0.7.0"
             },
             "devDependencies": {
                 "@types/node": "^20.0.0",
@@ -43,7 +43,7 @@
             "requires": {
                 "pulumi": "\u003e=3.210.0,\u003c4.0.0",
                 "pulumi-command": "==1.1.3",
-                "pulumiverse-talos": "==0.6.1"
+                "pulumiverse-talos": "==0.7.0"
             },
             "usesIOClasses": true
         }
@@ -122,8 +122,8 @@
                 },
                 "talosImage": {
                     "type": "string",
-                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.11.5.",
-                    "default": "ghcr.io/siderolabs/installer:v1.11.5"
+                    "description": "Talos OS installation image. \nUsed in the `install` configuration and set via CLI. \nThe default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.12.0.",
+                    "default": "ghcr.io/siderolabs/installer:v1.12.0"
                 }
             },
             "type": "object",
@@ -293,8 +293,8 @@
                 },
                 "talosVersionContract": {
                     "type": "string",
-                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.11.5.",
-                    "default": "v1.11.5"
+                    "description": "Version of Talos features used for configuration generation. \nDo not confuse this with the talosImage property. \nUsed in NewSecrets() and GetConfigurationOutput() resources. \nThis property is immutable to prevent version conflicts across provider updates. \nSee issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 \nThe default value is based on gendata.VersionTag, current: v1.12.0.",
+                    "default": "v1.12.0"
                 }
             },
             "requiredInputs": [

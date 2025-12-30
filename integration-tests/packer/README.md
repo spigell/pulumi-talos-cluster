@@ -9,7 +9,7 @@ Prerequisites:
 Run the following command to build a new image version:
 
 ```
-go run ./run-packer.go -var=talos_version=v1.11.5 -template ./hcloud-talos.pkr.hcl
+go run ./run-packer.go -var=talos_version=v1.12.0 -template ./hcloud-talos.pkr.hcl
 ```
 
 When upgrading Talos or Pulumi versions in this repo, also bump the versions in `hcloud-talos.pkr.hcl` so the test images stay in sync with the integration framework.***

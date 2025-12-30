@@ -38,7 +38,7 @@
           "type": { "type": "string", "minLength": 1 },
           "platform": { "type": "string", "enum": ["hcloud"] },
           "talosInitialVersion": { "type": "string" },
-          "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.11.5" },
+          "talosImage": { "type": "string", "default": "ghcr.io/siderolabs/talos:v1.12.0" },
           "variant": { "type": "string", "enum": ["cloud", "metal"] },
           "privateIP": { "type": "string", "minLength": 1 },
           "configPatches": {
