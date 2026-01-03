@@ -444,10 +444,10 @@
     tmp "^0.2.4"
     upath "^1.1.0"
 
-"@pulumiverse/talos@v0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@pulumiverse/talos/-/talos-0.7.0.tgz#f77bd8f7cb20c3e51062f721e705b357a646701d"
-  integrity sha512-4iqOz78Z6vYQ70UrshuJIbTF/Ab00S9gQwib46Eu9jeJdT8kNEuKH4+eVoZAp63+iPa/ueOgPxKZxCkTCrdvcw==
+"@pulumiverse/talos@v0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@pulumiverse/talos/-/talos-0.6.1.tgz#cca237e45f4d61e9465066c36beccea28a892d3a"
+  integrity sha512-kMtx5R/qYvfl4+mh662N2sKrL+xQ1tBghoSEzUTH5/cnn67CcOw3IoQZOLNqAuHNq3g/RxK3FCHnmoJVOVKnIw==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
