@@ -79,7 +79,7 @@ func generateSchema() schema.PackageSpec {
 				"dependencies": map[string]any{
 					"@pulumi/pulumi":     "3.210.0",
 					"@pulumi/command":    "v1.1.3",
-					"@pulumiverse/talos": "v0.6.1", // aligned with Talos 1.11.5
+					"@pulumiverse/talos": "v0.6.1", // aligned with Talos 1.12.0
 				},
 			}),
 			"go": rawMessage(map[string]any{

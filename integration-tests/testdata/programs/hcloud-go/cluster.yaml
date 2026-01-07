@@ -39,10 +39,9 @@ anchors:
     platform: hcloud
     variant: cloud
     hcloud:
-      serverType: cx22
+      serverType: cx23
       datacenter: fsn1-dc14
     apply-config-via-userdata: true
-    talosImage: ghcr.io/siderolabs/installer:v1.11.0
 
 name: hcloud-go
 kubernetesVersion: 1.32.0 

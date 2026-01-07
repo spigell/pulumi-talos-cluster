@@ -1,11 +1,13 @@
-import { describe, expect, test } from "vitest";
-import { parse } from "yaml";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
-import { validateCluster } from "./validation.js";
+import { describe, expect, test } from "vitest";
+import { parse } from "yaml";
+
 import clusterSchema from "../schema.json" with { type: "json" };
+
+import { validateCluster } from "./validation.js";
 
 type SchemaNode = { default?: unknown; properties?: Record<string, SchemaNode> } & Record<
   string,

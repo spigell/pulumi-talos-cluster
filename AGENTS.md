@@ -46,6 +46,7 @@
 - **Unit Tests**:
   - Run with: `make unit_tests`
   - These are standard Go tests located in the `provider/` directory. They focus on testing individual components of the provider and exclude generated code.
+- **Remote runner**: Integration tests can be executed via the remote `pulumi-talos-cluster-mcp` server using the `shell_execute` tool; provide `command`, `timeout`, and `directory` fields.
 - **Integration Tests**:
   - Run all: `make integration_tests`
   - These are end-to-end tests that deploy real infrastructure. They can be time-consuming (default timeout is 25m).
