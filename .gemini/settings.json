@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pulumi-talos-cluster-mcp": {
+      "httpUrl": "http://pulumi-talos-cluster-runner.pulumi-talos-cluster-workbench:80/mcp/",
+      "timeout": 3600000
+    }
+  }
+}
