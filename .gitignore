@@ -46,3 +46,12 @@ talosctl.yaml
 
 # Python artifacts
 *.egg-info/
+
+# Codex
+.codex/history.jsonl
+.codex/version.json
+.codex/AGENTS.md
+.codex/auth.json
+.codex/log
+.codex/sessions
+
