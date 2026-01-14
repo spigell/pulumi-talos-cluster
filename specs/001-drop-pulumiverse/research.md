@@ -21,3 +21,19 @@
 - **Decision**: Migration guide will mandate `pulumi stack export` backup before changes and describe restore on failure; block apply if pulumiverse resources detected in state. 
 - **Rationale**: FR-004/FR-005 require safe migration and rollback; preserves determinism. 
 - **Alternatives considered**: Optional backups — rejected due to risk of unintended deletes.
+
+## Alignment guidance (talosctl vs Terraform provider)
+
+- First apply often needs `--insecure` until talosconfig/CA align; expect to use insecure mode initially when hitting fresh nodes.
+- Generate secrets/config to stdout (avoid intermediate files) and stash via `pulumi.Stash` instead of writing to disk.
+- Follow Terraform provider semantics for secrets generation (no custom doc/example flow): mirror `talos_machine_secrets` + `machine_configuration_apply` calls rather than ad-hoc gen/apply sequences.
+- Stash usage reference: see `specs/001-drop-pulumiverse/research_stash.md` for how to persist generated `talosconfig`/kubeconfig/secrets in stack state (helps avoid regeneration and aligns with FR-007 idempotency).
+
+### Pulumiverse resources currently in use (to replace with talosctl flow)
+
+- `machine.NewSecrets` (`github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine`) – generates cluster secrets/client config.
+- `machine.GetConfigurationOutput` – renders per-machine Talos configs.
+- `machine.NewConfigurationApply` – applies initial configs (init/worker/CP).
+- `machine.NewBootstrap` – etcd bootstrap on init node.
+- `client.GetConfigurationOutput` – builds talosconfig (CA/cert/key + endpoints/nodes).
+- `pulumi_cluster.NewKubeconfig` (`github.com/pulumiverse/pulumi-talos/sdk/go/talos/cluster`) – emits kubeconfig.
