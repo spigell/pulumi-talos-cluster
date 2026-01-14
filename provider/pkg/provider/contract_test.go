@@ -1,6 +1,11 @@
 package provider
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+)
 
 func TestClusterApplyContractConstants(t *testing.T) {
 	expected := map[string]string{
@@ -42,4 +47,45 @@ func TestClusterApplyResourceTypeNames(t *testing.T) {
 	if got := ApplyType(); got != "talos-cluster:index:Apply" {
 		t.Fatalf("apply resource type changed: %q", got)
 	}
+}
+
+func TestClusterApplyClientConfigurationContract(t *testing.T) {
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		input := pulumi.StringMap{
+			ClusterResourceOutputsClientConfigurationCAKey:                pulumi.String("ca"),
+			ClusterResourceOutputsClientConfigurationClientKey:            pulumi.String("client-key"),
+			ClusterResourceOutputsClientConfigurationClientCertificateKey: pulumi.String("client-cert"),
+		}.ToStringMapOutput()
+
+		conf := buildClientConfigurationFromMap(input)
+
+		var assertErr error
+		pulumi.All(conf.CaCertificate, conf.ClientKey, conf.ClientCertificate).ApplyT(func(vals []any) error {
+			if vals[0].(string) != "ca" {
+				assertErr = fmt.Errorf("caCertificate mismatch: got %q", vals[0].(string))
+			}
+			if vals[1].(string) != "client-key" {
+				assertErr = fmt.Errorf("clientKey mismatch: got %q", vals[1].(string))
+			}
+			if vals[2].(string) != "client-cert" {
+				assertErr = fmt.Errorf("clientCertificate mismatch: got %q", vals[2].(string))
+			}
+			return nil
+		})
+
+		return assertErr
+	}, pulumi.WithMocks("contract-project", "dev", &contractMocks{}))
+	if err != nil {
+		t.Fatalf("contract between Cluster and Apply client configuration changed: %v", err)
+	}
+}
+
+type contractMocks struct{}
+
+func (contractMocks) NewResource(args pulumi.MockResourceArgs) (string, map[string]any, error) {
+	return fmt.Sprintf("%s-id", args.Name), args.Inputs, nil
+}
+
+func (contractMocks) Call(args pulumi.MockCallArgs) (map[string]any, error) {
+	return map[string]any{}, nil
 }
