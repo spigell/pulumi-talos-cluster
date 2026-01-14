@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -82,10 +83,10 @@ func TestClusterApplyClientConfigurationContract(t *testing.T) {
 
 type contractMocks struct{}
 
-func (contractMocks) NewResource(args pulumi.MockResourceArgs) (string, map[string]any, error) {
+func (contractMocks) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
 	return fmt.Sprintf("%s-id", args.Name), args.Inputs, nil
 }
 
-func (contractMocks) Call(args pulumi.MockCallArgs) (map[string]any, error) {
-	return map[string]any{}, nil
+func (contractMocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
+	return resource.PropertyMap{}, nil
 }
