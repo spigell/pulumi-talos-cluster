@@ -13,8 +13,8 @@
 - **Alternatives considered**: Declare unlimited scale — rejected as unvalidated; would require dedicated performance testing not in scope.
 
 ### Talosctl Dependency Practices
-- **Decision**: Require operator-supplied talosctl on PATH with checksum/source provenance and version validation against a documented matrix. 
-- **Rationale**: Removes pulumiverse downloads while keeping deterministic tooling; aligns with FR-002 and constitution security/version discipline. 
+- **Decision**: Require operator-supplied talosctl on PATH with checksum/source provenance; document a recommended version/arch matrix for operators but do not enforce automated version validation. 
+- **Rationale**: Removes pulumiverse downloads while keeping deterministic tooling; trusts operator choice while still guiding compatibility; aligns with FR-002 and constitution security/version discipline without adding validation coupling. 
 - **Alternatives considered**: Bundling talosctl — rejected as against feature goal and increases supply-chain risk.
 
 ### Pulumi State Safety

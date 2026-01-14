@@ -16,7 +16,7 @@ Remove pulumiverse provider usage in favor of talosctl-only flows: use operator-
 **Target Platform**: Linux runners with talosctl on PATH; supports x86_64/arm64 runners aligned to talosctl binary  
 **Project Type**: Provider + SDK/tooling repo (no frontend/mobile)  
 **Performance Goals**: Zero-downtime migration; no additional latency SLOs beyond talosctl command expectations  
-**Constraints**: No pulumiverse provider usage; talosctl version must match documented matrix; architecture alignment between runner and binary; no bundled binaries; secrets/kubeconfigs must remain redacted and persisted deterministically  
+**Constraints**: No pulumiverse provider usage; operator supplies talosctl (document recommended matrix but do not enforce validation); architecture alignment between runner and binary; no bundled binaries; secrets/kubeconfigs must remain redacted and persisted deterministically  
 **Scale/Scope**: Small/medium Talos clusters as covered by existing integration suites; document multi-arch/version expectations in migration guide
 
 ## Constitution Check
@@ -27,7 +27,7 @@ Remove pulumiverse provider usage in favor of talosctl-only flows: use operator-
 - Security: No credentials or kubeconfigs checked in; rely on operator-provided talosctl on Linux runners; stash keeps secrets encrypted in state; logs must redact sensitive data.  
 - Testing: gofmt, golangci-lint, unit tests, and scoped integration tests for talosctl-only lifecycle and migration guide validation are required before release.  
 - Observability: Command executions keep stdout/stderr separated; failure artifacts (talos workdir) preserved under stack-scoped temp dirs; clear success/failure signals in logs.  
-- Version Discipline: talosctl version matrix documented and validated; Pulumi/Talos libs stay pinned with regenerate commands (`make build && make install_provider`) when schema changes.
+- Version Discipline: talosctl version guidance documented (operator enforced); Pulumi/Talos libs stay pinned with regenerate commands (`make build && make install_provider`) when schema changes.
 
 ## Project Structure
 
@@ -55,6 +55,11 @@ Makefile                 # build/lint/test targets (make build, make install_pro
 ```
 
 **Structure Decision**: Provider-centric repo with generated SDKs and integration fixtures; feature work touches provider/, integration-tests/, sdk/ regeneration, and specs/ for docs.
+
+## Testing Commitments
+
+- Unit tests in `provider/pkg/provider` to keep public API signatures stable, validate talosctl command generation (flags/args), and verify Stash integration paths.
+- Integration test covering migration path: start from pulumiverse-backed state, apply talosctl-only migration steps, and validate lifecycle/kubeconfig without pulumiverse artifacts.
 
 ## Complexity Tracking
 
