@@ -61,7 +61,7 @@
 ### Tests for User Story 2
 
 - [ ] T011 [P] [US2] Add integration test for clean install using external talosctl binary in `integration-tests/install/install_test.go` with fixture `integration-tests/testdata/programs/install-talosctl-go/`
-- [ ] T012 [P] [US2] Add unit test ensuring default provider config prefers operator talosctl and avoids pulumiverse downloads in `provider/pkg/provider/provider_test.go`
+- [X] T012 [P] [US2] Add unit test ensuring default provider config prefers operator talosctl and avoids pulumiverse downloads in `provider/pkg/provider/applier/talosctl/talosctl_test.go`
 
 ### Implementation for User Story 2
 
