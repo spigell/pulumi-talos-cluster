@@ -37,22 +37,16 @@
 
 ## Phase 3: User Story 1 - Migrate existing stacks off pulumiverse (Priority: P1) 🎯 MVP
 
-**Goal**: Existing stacks migrate from pulumiverse resources to talosctl-only flows without downtime or unintended deletes.
+**Goal**: Deliver a complete migration document so operators can manually move stacks from pulumiverse resources to talosctl-only flows without downtime or unintended deletes.
 
-**Independent Test**: Starting from a stack containing pulumiverse resources, follow migration guide to switch to talosctl-only apply/bootstrap; stack operations succeed, no pulumiverse downloads, kubeconfig/talosconfig preserved.
-
-### Tests for User Story 1
-
-- [ ] T007 [P] [US1] Add provider unit tests for API signature stability, talosctl command generation, and Stash wiring in `provider/pkg/provider/applier/apply_test.go`
-- [ ] T008 [P] [US1] Add migration integration test (pulumiverse state → talosctl-only) in `integration-tests/migration/migration_test.go` with fixture `integration-tests/testdata/programs/migration-talosctl-go/`
+**Independent Test**: Follow the migration guide on a sample stack to export state, detect pulumiverse usage, switch to talosctl-only apply/bootstrap manually, validate lifecycle succeeds, and roll back via stack import if needed.
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Implement pulumiverse state detection and blocking with remediation messaging in `provider/pkg/provider/apply.go`
-- [ ] T010 [US1] Implement talosctl secrets/config generation using ClusterSecrets/ClusterConfig Stash in `provider/pkg/provider/applier/apply.go`
-- [ ] T011 [US1] Implement talosctl apply/bootstrap execution replacing pulumiverse resources with structured logging in `provider/pkg/provider/applier/apply.go`
-- [ ] T012 [US1] Export talosconfig/kubeconfig from stashed config to maintain provider contract in `provider/pkg/provider/cluster.go`
-- [ ] T013 [US1] Expand migration guide with prerequisites, detection/remediation steps, rollback, and validation flows in `specs/001-drop-pulumiverse/contracts/migration-guide.md`
+- [ ] T007 [US1] Author migration guide covering prerequisites, backups, manual talosctl flows, detection/remediation, validation, and rollback in `specs/001-drop-pulumiverse/contracts/migration-guide.md`
+- [ ] T008 [P] [US1] Add pulumiverse state/config detection checklist and blocking criteria in `specs/001-drop-pulumiverse/contracts/migration-guide.md`
+- [ ] T009 [P] [US1] Document manual talosctl commands for secrets/config generation, apply/bootstrap, and exports with Stash persistence guidance in `specs/001-drop-pulumiverse/contracts/migration-guide.md`
+- [ ] T010 [US1] Validate migration guide by dry-run walkthrough and capture notes in `specs/001-drop-pulumiverse/review.md`
 
 **Checkpoint**: User Story 1 independently delivers migration without pulumiverse usage.
 
@@ -66,14 +60,14 @@
 
 ### Tests for User Story 2
 
-- [ ] T014 [P] [US2] Add integration test for clean install using external talosctl binary in `integration-tests/install/install_test.go` with fixture `integration-tests/testdata/programs/install-talosctl-go/`
-- [ ] T015 [P] [US2] Add unit test ensuring default provider config prefers operator talosctl and avoids pulumiverse downloads in `provider/pkg/provider/provider_test.go`
+- [ ] T011 [P] [US2] Add integration test for clean install using external talosctl binary in `integration-tests/install/install_test.go` with fixture `integration-tests/testdata/programs/install-talosctl-go/`
+- [ ] T012 [P] [US2] Add unit test ensuring default provider config prefers operator talosctl and avoids pulumiverse downloads in `provider/pkg/provider/provider_test.go`
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Ensure create/update/delete flows use talosctl executor with PATH resolution and arch guidance in `provider/pkg/provider/apply.go`
-- [ ] T017 [US2] Update quickstart with external talosctl onboarding and validation steps in `specs/001-drop-pulumiverse/quickstart.md`
-- [ ] T018 [US2] Add logging/diagnostics for talosctl availability and arch mismatch guidance in `provider/pkg/provider/applier/talosctl_exec.go`
+- [ ] T013 [US2] Ensure create/update/delete flows use talosctl executor with PATH resolution and arch guidance in `provider/pkg/provider/apply.go`
+- [ ] T014 [US2] Update quickstart with external talosctl onboarding and validation steps in `specs/001-drop-pulumiverse/quickstart.md`
+- [ ] T015 [US2] Add logging/diagnostics for talosctl availability and arch mismatch guidance in `provider/pkg/provider/applier/talosctl_exec.go`
 
 **Checkpoint**: User Story 2 independently delivers talosctl-only onboarding for new installs.
 
@@ -83,9 +77,9 @@
 
 **Purpose**: Repo-wide quality and documentation alignment
 
-- [ ] T019 [P] Run lint/format/unit suite and rebuild provider artifacts as needed via `make lint` and `make unit_tests` from repo root
-- [ ] T020 [P] Align documentation references (plan.md, research.md, migration-guide.md) to reflect non-enforcing talosctl guidance in `specs/001-drop-pulumiverse/`
-- [ ] T021 Validate quickstart steps against a sample stack and record notes in `specs/001-drop-pulumiverse/review.md`
+- [ ] T016 [P] Run lint/format/unit suite and rebuild provider artifacts as needed via `make lint` and `make unit_tests` from repo root
+- [ ] T017 [P] Align documentation references (plan.md, research.md, migration-guide.md) to reflect non-enforcing talosctl guidance in `specs/001-drop-pulumiverse/`
+- [ ] T018 Validate quickstart steps against a sample stack and record notes in `specs/001-drop-pulumiverse/review.md`
 
 ---
 
@@ -107,8 +101,8 @@
 ### Parallel Opportunities
 
 - Setup tasks T001–T002 can run in parallel.
-- Tests T007/T008 (US1) and T014/T015 (US2) are parallelizable once prerequisites land.
-- Documentation tasks (T013, T017, T020–T021) can run in parallel with code once respective flows are defined.
+- Tests T011/T012 (US2) are parallelizable once prerequisites land.
+- Documentation tasks (T007–T010, T014, T017–T018) can run in parallel with code once respective flows are defined.
 
 ---
 
@@ -128,12 +122,11 @@
 ### MVP First (User Story 1 Only)
 
 1. Complete Phase 1 and Phase 2.
-2. Implement User Story 1 (migration) and validate integration test passes without pulumiverse downloads.
-3. Pause for review/demo; migration guide becomes deliverable MVP.
+2. Produce and validate User Story 1 migration documentation; no automated migration code required.
+3. Pause for review/demo; migration guide becomes deliverable MVP for operators.
 
 ### Incremental Delivery
 
 1. Deliver US1 migration path (P1).
 2. Deliver US2 new-install path (P2) once migration is stable.
 3. Finish polish tasks and doc alignment.
-
