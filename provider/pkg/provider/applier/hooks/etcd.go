@@ -47,7 +47,9 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			// 3.1) health/status
 			if err := checkEtcdStatus(run, healthTimeout); err != nil {
 				logger.Debug(fmt.Sprintf("talos-cluster: etcd status attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
-				time.Sleep(backoff)
+				if err := sleepWithContext(args.Context, backoff); err != nil {
+					return err
+				}
 				continue
 			}
 
@@ -55,7 +57,9 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			peers, err := listEtcdPeers(run, listTimeout)
 			if err != nil {
 				logger.Debug(fmt.Sprintf("talos-cluster: etcd members attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
-				time.Sleep(backoff)
+				if err := sleepWithContext(args.Context, backoff); err != nil {
+					return err
+				}
 				continue
 			}
 
@@ -64,7 +68,9 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			if !ok {
 				consecutiveOK = 0
 				logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: %s", attempt, maxRetries, reason), nil)
-				time.Sleep(backoff)
+				if err := sleepWithContext(args.Context, backoff); err != nil {
+					return err
+				}
 				continue
 			}
 
@@ -75,7 +81,9 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 					"talos-cluster: attempt %d/%d: matched (%d). waiting for stability %d/%d",
 					attempt, maxRetries, len(peers), consecutiveOK, okStreak,
 				), nil)
-				time.Sleep(backoff / 2)
+				if err := sleepWithContext(args.Context, backoff/2); err != nil {
+					return err
+				}
 				continue
 			}
 
@@ -164,6 +172,27 @@ func peersReady(peers []PeerStatus, expected int) (bool, string) {
 		}
 	}
 	return true, "ok"
+}
+
+/* An example of talosctl etcd members
+NODE            ID                 HOSTNAME        PEER URLS                  CLIENT URLS                LEARNER
+91.98.138.169   97f365161a13b437   talos-8me-09g   https://10.10.10.2:2380    https://10.10.10.2:2379    false
+91.98.138.169   c22a6165837acd5b   talos-apx-beq   https://10.10.10.10:2380   https://10.10.10.10:2379   false
+91.98.138.169   d65010d57cf22d49   talos-q2p-yyy   https://10.10.10.5:2380    https://10.10.10.5:2379    false
+*/
+
+// sleepWithContext waits for the duration to elapse or the context to be cancelled.
+// It returns an error if the context is cancelled before the duration has passed.
+func sleepWithContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 /* An example of talosctl etcd members
