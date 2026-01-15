@@ -103,11 +103,12 @@ flowchart TD
         InitCP["Select First/Leader CP Node"]
         ApplyLeader["talosctl apply-config --insecure (leader)"]
         RebootLeader["Leader Installs & Reboots"]
+        BootstrapEtcd["talosctl bootstrap"]
 
-        LeaderStart --> InitCP --> ApplyLeader --> RebootLeader
+        LeaderStart --> InitCP --> ApplyLeader --> RebootLeader --> BootstrapEtcd
     end
 
-    RebootLeader --> CheckSkip{"skipInitApply?"}
+    BootstrapEtcd --> CheckSkip{"skipInitApply?"}
 
     CheckSkip -- "False" --> BootstrapStart[Bootstrap Remaining Nodes]
     CheckSkip -- "True" --> Done
