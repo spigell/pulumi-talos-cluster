@@ -58,10 +58,12 @@ func TestClusterApplyClientConfigurationContract(t *testing.T) {
 			ClusterResourceOutputsClientConfigurationClientCertificateKey: pulumi.String("client-cert"),
 		}.ToStringMapOutput()
 
-		conf := buildClientConfigurationFromMap(input)
-
 		var assertErr error
-		pulumi.All(conf.CaCertificate, conf.ClientKey, conf.ClientCertificate).ApplyT(func(vals []any) error {
+		pulumi.All(
+			input.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey)),
+			input.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey)),
+			input.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey)),
+		).ApplyT(func(vals []any) error {
 			if vals[0].(string) != "ca" {
 				assertErr = fmt.Errorf("caCertificate mismatch: got %q", vals[0].(string))
 			}

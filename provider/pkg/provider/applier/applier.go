@@ -209,6 +209,14 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 	return a.reboot(m, deps)
 }
 
+func (a *Applier) GenerateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, error) {
+	return a.generateSecrets(deps)
+}
+
+func (a *Applier) GenerateConfig(workDir, clusterName string, endpoint pulumi.StringInput, deps []pulumi.Resource) (pulumi.Resource, error) {
+	return GenerateConfig(a.ctx, a.name, workDir, clusterName, endpoint, deps, opts...)
+}
+
 func (a *Applier) basicClient() client.GetConfigurationResultOutput {
 	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
 		ClusterName: pulumi.String(a.name),

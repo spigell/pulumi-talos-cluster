@@ -26,6 +26,15 @@ type Talosctl struct {
 	BasicCommand string
 }
 
+// CatFile produces a StringOutput with the contents of a file in Dir.
+func (t *Talosctl) CatFile(ctx *pulumi.Context, dir, filename string, deps []pulumi.Resource) pulumi.StringOutput {
+	out := local.RunOutput(ctx, local.RunOutputArgs{
+		Command:     pulumi.Sprintf("cat %s", filepath.Join(dir, filename)),
+		Interpreter: pulumi.ToStringArray(interpreter),
+	}, pulumi.DependsOn(deps))
+	return out.Stdout()
+}
+
 // Args groups arguments used to execute a talosctl command.
 type Args struct {
 	TalosConfig     pulumi.StringInput
