@@ -213,8 +213,8 @@ func (a *Applier) GenerateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, 
 	return a.generateSecrets(deps)
 }
 
-func (a *Applier) GenerateConfig(workDir, clusterName string, endpoint pulumi.StringInput, deps []pulumi.Resource) (pulumi.Resource, error) {
-	return GenerateConfig(a.ctx, a.name, workDir, clusterName, endpoint, deps, opts...)
+func (a *Applier) GenerateConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.Resource, error) {
+	return a.generateConfig(c, m, secrets)
 }
 
 func (a *Applier) basicClient() client.GetConfigurationResultOutput {
