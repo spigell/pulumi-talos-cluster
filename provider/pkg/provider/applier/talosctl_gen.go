@@ -17,7 +17,6 @@ func (a *Applier) generateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, 
 	home := generateWorkDirNameForTalosctl(a.name, stageName, "common")
 
 	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s", a.name, stageName), &talosctl.Args{
-		TalosConfig: pulumi.String(""),
 		Dir:         home,
 		CommandArgs: pulumi.String(talosctlGenerateSecretsArgs()),
 	}, []pulumi.ResourceOption{
@@ -44,8 +43,7 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 	t := talosctl.New()
 
 	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: pulumi.String(""),
-		Dir:         home,
+		Dir: home,
 		AdditionalFiles: []talosctl.ExtraFile{
 			{
 				Name:    "secrets.yaml",
