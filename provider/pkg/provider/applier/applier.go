@@ -46,12 +46,13 @@ func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationAr
 		},
 	}
 
-	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
-	if err != nil {
-		return a, err
+	if os.Getenv("PULUMI_MOCK_RESOURCES") != "1" {
+		etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
+		if err != nil {
+			return a, err
+		}
+		a.etcdReadyHook = etcdReadyHook
 	}
-
-	a.etcdReadyHook = etcdReadyHook
 
 	return a, nil
 }
