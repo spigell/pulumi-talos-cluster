@@ -46,12 +46,13 @@ func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationAr
 		},
 	}
 
-	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
-	if err != nil {
-		return a, err
+	if os.Getenv("PULUMI_MOCK_RESOURCES") != "1" {
+		etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
+		if err != nil {
+			return a, err
+		}
+		a.etcdReadyHook = etcdReadyHook
 	}
-
-	a.etcdReadyHook = etcdReadyHook
 
 	return a, nil
 }
@@ -207,6 +208,14 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 	deps = append(deps, apply)
 
 	return a.reboot(m, deps)
+}
+
+func (a *Applier) GenerateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, error) {
+	return a.generateSecrets(deps)
+}
+
+func (a *Applier) GenerateConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.Resource, error) {
+	return a.generateConfig(c, m, secrets)
 }
 
 func (a *Applier) basicClient() client.GetConfigurationResultOutput {

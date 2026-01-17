@@ -26,6 +26,15 @@ type Talosctl struct {
 	BasicCommand string
 }
 
+// CatFile produces a StringOutput with the contents of a file in Dir.
+func (t *Talosctl) CatFile(ctx *pulumi.Context, dir, filename string, deps []pulumi.Resource) pulumi.StringOutput {
+	out := local.RunOutput(ctx, local.RunOutputArgs{
+		Command:     pulumi.Sprintf("cat %s", filepath.Join(dir, filename)),
+		Interpreter: pulumi.ToStringArray(interpreter),
+	}, pulumi.DependsOn(deps))
+	return out.Stdout()
+}
+
 // Args groups arguments used to execute a talosctl command.
 type Args struct {
 	TalosConfig     pulumi.StringInput
@@ -48,7 +57,7 @@ type ExtraFile struct {
 func New() *Talosctl {
 	return &Talosctl{
 		Binary:       talosctlBinary,
-		BasicCommand: fmt.Sprintf("%s --talosconfig %s", talosctlBinary, talosctlConfigName),
+		BasicCommand: talosctlBinary,
 	}
 }
 
@@ -72,12 +81,7 @@ func (t *Talosctl) RunCommand(
 	}
 
 	main, err := local.NewCommand(ctx, name, &local.CommandArgs{
-		Create: createGated.ApplyT(func(args string) string {
-			return withBashRetry(
-				fmt.Sprintf("%s %s", t.BasicCommand, args),
-				fmt.Sprint(a.RetryCount+1),
-			)
-		}).(pulumi.StringOutput),
+		Create:      createGated,
 		Dir:         pulumi.String(a.Dir),
 		Interpreter: pulumi.ToStringArray(interpreter),
 		Environment: env,
@@ -108,18 +112,8 @@ func (t *Talosctl) RunGetCommand(
 		return pulumi.StringOutput{}, err
 	}
 
-	// Compose main + inline cleanup (no resource to depend on)
-	cmd := createGated.ApplyT(func(args string) string {
-		main := withBashRetry(
-			fmt.Sprintf("%s %s", t.BasicCommand, args),
-			fmt.Sprint(a.RetryCount+1),
-		)
-		cleanup := fmt.Sprintf("rm -rf %s", a.Dir)
-		return main + " && " + cleanup
-	}).(pulumi.StringOutput)
-
 	out := local.RunOutput(ctx, local.RunOutputArgs{
-		Command:     cmd,
+		Command:     createGated,
 		Interpreter: pulumi.ToStringArray(interpreter),
 		// Only log stderr since stdout can keep a sensitive data.
 		Logging:     local.LoggingStderr,
@@ -144,25 +138,53 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 		env = pulumi.StringMap{}
 	}
 
-	// Prepare: write talosctl.yaml + additional files
-	prepared := t.prepareAll(ctx, args)
+	var (
+		useTalosconfig pulumi.BoolOutput
+		talosConfig    pulumi.StringInput
+	)
 
-	createGated = pulumi.All(prepared, args.CommandArgs).
+	if args.TalosConfig == nil {
+		// No talosconfig provided; skip writing/flag entirely.
+		useTalosconfig = pulumi.Bool(false).ToBoolOutput()
+		talosConfig = pulumi.String("")
+	} else {
+		talosConfig = args.TalosConfig
+		useTalosconfig = pulumi.StringInput(args.TalosConfig).ToStringPtrOutput().ApplyT(func(v *string) bool {
+			return v != nil
+		}).(pulumi.BoolOutput)
+	}
+
+	// Prepare: write talosctl.yaml + additional files
+	prepared := t.prepareAll(ctx, args, talosConfig, useTalosconfig)
+
+	createGated = pulumi.All(prepared, args.CommandArgs, useTalosconfig).
 		ApplyT(func(v []any) string {
 			if !v[0].(bool) {
 				return ""
 			}
-			return v[1].(string)
+
+			cmdArgs := v[1].(string)
+			withConfig := v[2].(bool)
+
+			base := t.BasicCommand
+			if withConfig {
+				base = fmt.Sprintf("%s --talosconfig %s", base, talosctlConfigName)
+			}
+
+			return withBashRetry(
+				fmt.Sprintf("%s %s", base, cmdArgs),
+				fmt.Sprint(args.RetryCount+1),
+			)
 		}).(pulumi.StringOutput)
 
 	return createGated, env, nil
 }
 
-// prepareAll builds one shell that writes talosctl.yaml and any AdditionalFiles.
+// prepareAll builds one shell that writes talosctl.yaml (if provided) and any AdditionalFiles.
 // It uses `local.RunOutput` as the prepare step, returning a BoolOutput.
-func (t *Talosctl) prepareAll(ctx *pulumi.Context, args *Args) pulumi.BoolOutput {
+func (t *Talosctl) prepareAll(ctx *pulumi.Context, args *Args, talosConfig pulumi.StringInput, useTalosconfig pulumi.BoolOutput) pulumi.BoolOutput {
 	// Gather inputs: main config + each extra file content
-	inputs := []any{args.TalosConfig}
+	inputs := []any{talosConfig, useTalosconfig}
 	for _, f := range args.AdditionalFiles {
 		inputs = append(inputs, f.Content)
 	}
@@ -171,20 +193,24 @@ func (t *Talosctl) prepareAll(ctx *pulumi.Context, args *Args) pulumi.BoolOutput
 	cmd := pulumi.All(inputs...).ApplyT(func(resolved []any) string {
 		// resolved[0] = main talosctl.yaml content
 		main := resolved[0].(string)
+		useConfig := resolved[1].(bool)
 
 		// 1) talosctl.yaml
 		talosConfigPath := filepath.Join(args.Dir, talosctlConfigName)
-		mainB64 := base64.StdEncoding.EncodeToString([]byte(main))
 		var b strings.Builder
 		// Ensure TALOS_HOME exists, private perms
-		fmt.Fprintf(&b, `mkdir -p %s && umask 077; `, args.Dir)
-		// Write talosctl.yaml
-		fmt.Fprintf(&b, `printf %%s %q | base64 -d > %s && chmod 600 %s`,
-			mainB64, talosConfigPath, talosConfigPath)
+		fmt.Fprintf(&b, `mkdir -p %s && umask 077`, args.Dir)
+
+		// Write talosctl.yaml only if provided
+		if useConfig {
+			mainB64 := base64.StdEncoding.EncodeToString([]byte(main))
+			fmt.Fprintf(&b, ` && printf %%s %q | base64 -d > %s && chmod 600 %s`,
+				mainB64, talosConfigPath, talosConfigPath)
+		}
 
 		// 2) Additional files
 		for i, ef := range args.AdditionalFiles {
-			content := resolved[1+i].(string)
+			content := resolved[2+i].(string)
 			contentB64 := base64.StdEncoding.EncodeToString([]byte(content))
 
 			finalPath := filepath.Join(args.Dir, ef.Name)

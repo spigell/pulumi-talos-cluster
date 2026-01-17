@@ -21,6 +21,15 @@ const (
 	TalosconfigKey       = "talosconfig"
 )
 
+type Cluster struct {
+	ClusterName          string             `pulumi:"clusterName"`
+	TalosVersionContract pulumi.StringInput `pulumi:"talosVersionContract"`
+	ClusterEndpoint      pulumi.StringInput `pulumi:"clusterEndpoint"`
+	KubernetesVersion    pulumi.StringInput `pulumi:"kubernetesVersion"`
+
+	ClusterMachines []*ClusterMachine `pulumi:"clusterMachines"`
+}
+
 type ClusterMachine struct {
 	MachineID     string                  `pulumi:"machineId"`
 	MachineType   string                  `pulumi:"machineType"`
