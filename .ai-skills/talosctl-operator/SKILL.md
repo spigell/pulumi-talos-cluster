@@ -1,3 +1,4 @@
+---
 name: talosctl-operator
 description: How to work on pulumi-talos-cluster provider code using talosctl/applier patterns and available MCP tools.
 ---
@@ -21,6 +22,7 @@ description: How to work on pulumi-talos-cluster provider code using talosctl/ap
 - Regenerate schema/SDKs: `["make","generate_schema"]`, `["make","generate"]`
 - Unit tests: `["make","unit_tests"]`
 - Go integration (scoped): `["make","-C","integration-tests","integration_tests_go","TEST=TestHcloudClusterGo"]` (timeout ~1800s)
+- Full SDK regen/install pipeline: run `make generate_schema`, `make generate`, `make build`, then install the SDK as needed (e.g., `make install_nodejs_sdk`).
 
 ## Editing Guidelines
 - Keep talosctl invocations inside applier helpers; avoid ad-hoc shell.
