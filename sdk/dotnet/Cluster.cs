@@ -35,6 +35,12 @@ namespace Pulumi.TalosCluster
         [Output("machines")]
         public Output<Outputs.ApplyMachines> Machines { get; private set; } = null!;
 
+        /// <summary>
+        /// Raw talosconfig including endpoints for all nodes and control planes.
+        /// </summary>
+        [Output("talosconfig")]
+        public Output<string> Talosconfig { get; private set; } = null!;
+
 
         /// <summary>
         /// Create a Cluster resource with the given unique name, arguments, and options.

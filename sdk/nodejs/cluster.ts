@@ -39,6 +39,10 @@ export class Cluster extends pulumi.ComponentResource {
      * Machine information grouped by machine type.
      */
     declare public /*out*/ readonly machines: pulumi.Output<outputs.ApplyMachines>;
+    /**
+     * Raw talosconfig including endpoints for all nodes and control planes.
+     */
+    declare public /*out*/ readonly talosconfig: pulumi.Output<string>;
 
     /**
      * Create a Cluster resource with the given unique name, arguments, and options.
@@ -68,10 +72,12 @@ export class Cluster extends pulumi.ComponentResource {
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
+            resourceInputs["talosconfig"] = undefined /*out*/;
         } else {
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
+            resourceInputs["talosconfig"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Cluster.__pulumiType, name, resourceInputs, opts, true /*remote*/);

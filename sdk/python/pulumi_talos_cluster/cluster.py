@@ -211,6 +211,7 @@ class Cluster(pulumi.ComponentResource):
             __props__.__dict__["client_configuration"] = None
             __props__.__dict__["generated_configurations"] = None
             __props__.__dict__["machines"] = None
+            __props__.__dict__["talosconfig"] = None
         super(Cluster, __self__).__init__(
             'talos-cluster:index:Cluster',
             resource_name,
@@ -241,4 +242,12 @@ class Cluster(pulumi.ComponentResource):
         Machine information grouped by machine type.
         """
         return pulumi.get(self, "machines")
+
+    @_builtins.property
+    @pulumi.getter
+    def talosconfig(self) -> pulumi.Output[_builtins.str]:
+        """
+        Raw talosconfig including endpoints for all nodes and control planes.
+        """
+        return pulumi.get(self, "talosconfig")
 

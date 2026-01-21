@@ -24,6 +24,8 @@ type Cluster struct {
 	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
 	// Machine information grouped by machine type.
 	Machines ApplyMachinesOutput `pulumi:"machines"`
+	// Raw talosconfig including endpoints for all nodes and control planes.
+	Talosconfig pulumi.StringOutput `pulumi:"talosconfig"`
 }
 
 // NewCluster registers a new resource with the given unique name, arguments, and options.
@@ -193,6 +195,11 @@ func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
 // Machine information grouped by machine type.
 func (o ClusterOutput) Machines() ApplyMachinesOutput {
 	return o.ApplyT(func(v *Cluster) ApplyMachinesOutput { return v.Machines }).(ApplyMachinesOutput)
+}
+
+// Raw talosconfig including endpoints for all nodes and control planes.
+func (o ClusterOutput) Talosconfig() pulumi.StringOutput {
+	return o.ApplyT(func(v *Cluster) pulumi.StringOutput { return v.Talosconfig }).(pulumi.StringOutput)
 }
 
 type ClusterArrayOutput struct{ *pulumi.OutputState }
