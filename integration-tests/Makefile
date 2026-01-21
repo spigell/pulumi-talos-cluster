@@ -53,6 +53,7 @@ framework_unit_tests_py:
 	poetry install
 	poetry run pytest pkg
 
+
 install_nodejs_integration_tests_infra:
 	yarn install
 	rm -rf dist
@@ -65,6 +66,9 @@ install_python_integration_tests_infra:
 	poetry run pip install -e ../sdk/python
 
 integration_tests: integration_tests_go integration_tests_nodejs integration_tests_python
+
+integration_tests_talosctl:
+	TALOSCTL_TEST_LOG_LIMIT=500 go test -v ./applier
 
 integration_tests_go: clean
 	$(MAKE) -C .. build_provider_tests gen_go_sdk

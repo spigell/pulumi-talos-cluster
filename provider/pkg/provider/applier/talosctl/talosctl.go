@@ -149,7 +149,7 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 		talosConfig = pulumi.String("")
 	} else {
 		talosConfig = args.TalosConfig
-		useTalosconfig = pulumi.StringInput(args.TalosConfig).ToStringPtrOutput().ApplyT(func(v *string) bool {
+		useTalosconfig = args.TalosConfig.ToStringPtrOutput().ApplyT(func(v *string) bool {
 			return v != nil
 		}).(pulumi.BoolOutput)
 	}
@@ -171,9 +171,14 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 				base = fmt.Sprintf("%s --talosconfig %s", base, talosctlConfigName)
 			}
 
+			maxTries := args.RetryCount + 1
+			if maxTries <= 1 {
+				return fmt.Sprintf("%s %s", base, cmdArgs)
+			}
+
 			return withBashRetry(
 				fmt.Sprintf("%s %s", base, cmdArgs),
-				fmt.Sprint(args.RetryCount+1),
+				fmt.Sprint(maxTries),
 			)
 		}).(pulumi.StringOutput)
 

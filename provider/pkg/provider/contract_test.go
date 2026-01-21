@@ -51,7 +51,7 @@ func TestClusterApplyResourceTypeNames(t *testing.T) {
 }
 
 func TestClusterApplyClientConfigurationContract(t *testing.T) {
-	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+	err := pulumi.RunErr(func(_ *pulumi.Context) error {
 		input := pulumi.StringMap{
 			ClusterResourceOutputsClientConfigurationCAKey:                pulumi.String("ca"),
 			ClusterResourceOutputsClientConfigurationClientKey:            pulumi.String("client-key"),
@@ -89,6 +89,6 @@ func (contractMocks) NewResource(args pulumi.MockResourceArgs) (string, resource
 	return fmt.Sprintf("%s-id", args.Name), args.Inputs, nil
 }
 
-func (contractMocks) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
+func (contractMocks) Call(_ pulumi.MockCallArgs) (resource.PropertyMap, error) {
 	return resource.PropertyMap{}, nil
 }

@@ -1,11 +1,13 @@
 package applier
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
@@ -42,6 +44,23 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New()
 
+	genType := m.MachineType
+	if genType == "" {
+		genType = tmachine.TypeControlPlane.String()
+	}
+	outType := genType
+	if genType == tmachine.TypeInit.String() {
+		// talosctl doesn't support init output type; use controlplane config and patch type to init.
+		outType = tmachine.TypeControlPlane.String()
+	}
+
+	patches := m.ConfigPatches.ToStringArrayOutput().ApplyTWithContext(a.ctx.Context(), func(_ context.Context, p []string) (string, error) {
+		if genType == tmachine.TypeInit.String() {
+			p = append([]string{"machine:\n  type: init"}, p...)
+		}
+		return mergePatchesYAML(p)
+	}).(pulumi.StringOutput)
+
 	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		Dir: home,
 		AdditionalFiles: []talosctl.ExtraFile{
@@ -50,14 +69,39 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 				Content: secrets,
 			},
 			{
-				Name: "patches.yaml",
-				Content: m.ConfigPatches.ToStringArrayOutput().ApplyT(func(p []string) string {
-					return strings.Join(p, "\n---\n")
-				}).(pulumi.StringOutput),
+				Name:    "patches.yaml",
+				Content: patches,
 			},
 		},
-		CommandArgs: pulumi.Sprintf("%s %s %s --with-secrets secrets.yaml --config-patch @patches.yaml --output-dir -",
-			talosctlGenerateConfigArgs(), c.ClusterName, c.ClusterEndpoint),
+		CommandArgs: pulumi.All(
+			patches,
+			c.ClusterName,
+			c.ClusterEndpoint,
+			m.TalosImage.ToStringPtrOutput().Elem(),
+			c.KubernetesVersion.ToStringOutput(),
+			c.TalosVersionContract.ToStringOutput(),
+		).ApplyT(func(args []any) string {
+			patch := strings.TrimSpace(args[0].(string))
+			clusterName := args[1].(string)
+			clusterEndpoint := args[2].(string)
+			installImage := args[3].(string)
+			k8sVersion := args[4].(string)
+			talosVersion := args[5].(string)
+
+			base := fmt.Sprintf("%s %s %s --install-image %s --kubernetes-version %s --talos-version %s --output-types %s --with-secrets secrets.yaml",
+				talosctlGenerateConfigArgs(),
+				clusterName,
+				clusterEndpoint,
+				installImage,
+				k8sVersion,
+				talosVersion,
+				outType,
+			)
+			if patch != "" {
+				base = fmt.Sprintf("%s --config-patch @patches.yaml", base)
+			}
+			return base + " --output -"
+		}).(pulumi.StringOutput),
 	}, []pulumi.ResourceOption{
 		a.parent,
 	}...)
@@ -76,8 +120,24 @@ func talosctlGenerateConfigArgs() string {
 	}, " ")
 }
 
-// Wrapper methods on Applier for reuse.
+func mergePatchesYAML(patches []string) (string, error) {
+	merged := ""
+	for i, patch := range patches {
+		if strings.TrimSpace(patch) == "" {
+			continue
+		}
 
-func workDirForCluster(stack, name string) string {
-	return generateWorkDirNameForTalosctl(stack, name, "common")
+		if merged == "" {
+			merged = patch
+			continue
+		}
+
+		out, err := MergeYAML(merged, patch).Build()
+		if err != nil {
+			return "", fmt.Errorf("merge patch %d: %w", i+1, err)
+		}
+		merged = out
+	}
+
+	return merged, nil
 }

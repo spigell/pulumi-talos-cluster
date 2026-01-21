@@ -1,65 +1,16 @@
 package applier_test
 
 import (
-	"os"
-	"os/exec"
 	"testing"
 
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"github.com/stretchr/testify/assert"
 )
 
-// ProxyMock intercepts local.Command resources and executes them for real.
-type ProxyMock struct {
-	pulumi.MockResourceMonitor
-	lastStdout string
-}
-
-func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
-	return args.Args, nil
-}
-
-func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
-	if args.TypeToken == "command:local:Command" {
-		cmdStr := args.Inputs["create"].StringValue()
-		dir := ""
-		if args.Inputs["dir"].HasValue() {
-			dir = args.Inputs["dir"].StringValue()
-		}
-
-		if dir != "" {
-			_ = os.MkdirAll(dir, 0o700)
-		}
-
-		cmd := exec.Command("sh", "-c", cmdStr)
-		if dir != "" {
-			cmd.Dir = dir
-		}
-
-		output, err := cmd.CombinedOutput()
-		m.lastStdout = string(output)
-		if err != nil {
-			return "", nil, err
-		}
-
-		return args.Name + "_id", resource.PropertyMap{
-			"stdout": resource.NewStringProperty(m.lastStdout),
-			"stderr": resource.NewStringProperty(""),
-		}, nil
-	}
-
-	return args.Name + "_id", args.Inputs, nil
-}
-
 func TestGenerateSecretsWithRealTalosctl(t *testing.T) {
 	t.Setenv("PULUMI_MOCK_RESOURCES", "1")
-
-	if _, err := exec.LookPath("talosctl"); err != nil {
-		t.Fatalf("talosctl not found: %v", err)
-	}
 
 	mock := &ProxyMock{}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
@@ -87,11 +38,7 @@ func TestGenerateSecretsWithRealTalosctl(t *testing.T) {
 func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 	t.Setenv("PULUMI_MOCK_RESOURCES", "1")
 
-	if _, err := exec.LookPath("talosctl"); err != nil {
-		t.Fatalf("talosctl not found: %v", err)
-	}
-
-	mock := &ProxyMock{}
+	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
 		app, err := applier.New(ctx, "test-cluster", nil, nil)
 		if err != nil {
@@ -102,13 +49,16 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 		assert.NoError(t, err)
 
 		cluster := &types.Cluster{
-			ClusterName:     "test-cluster",
-			ClusterEndpoint: pulumi.String("https://10.0.0.1:6443"),
+			ClusterName:          "test-cluster",
+			ClusterEndpoint:      pulumi.String("https://10.0.0.1:6443"),
+			KubernetesVersion:    pulumi.String("1.35.0"),
+			TalosVersionContract: pulumi.String("v1.12.0"),
 		}
 		machine := &types.ClusterMachine{
 			MachineID:     "cp-1",
 			MachineType:   "controlplane",
 			ConfigPatches: pulumi.StringArray{pulumi.String("")},
+			TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
 		}
 
 		cmd, err := app.GenerateConfig(cluster, machine, secrets)
@@ -117,6 +67,16 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 		// Capture stdout via the mock for validation.
 		cmd.(pulumi.CustomResource).URN().ApplyT(func(_ any) error {
 			assert.NotEmpty(t, mock.lastStdout)
+			assert.Equal(t, 0, mock.lastExit, "talosctl gen config failed: stdout=%s stderr=%s", mock.lastStdout, mock.lastStderr)
+			return nil
+		})
+
+		cmd.(pulumi.CustomResource).URN().ApplyT(func(_ any) error {
+			assert.Contains(t, mock.lastCreate, "--install-image ghcr.io/siderolabs/installer:v1.12.1")
+			assert.Contains(t, mock.lastCreate, "--kubernetes-version 1.35.0")
+			assert.Contains(t, mock.lastCreate, "--talos-version v1.12.0")
+			assert.Contains(t, mock.lastCreate, "--output-types controlplane")
+			assert.Contains(t, mock.lastCreate, "--output -")
 			return nil
 		})
 
@@ -125,4 +85,95 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotEmpty(t, mock.lastStdout)
+}
+
+func TestGenerateConfigMachineTypes(t *testing.T) {
+	t.Setenv("PULUMI_MOCK_RESOURCES", "1")
+
+	tests := []struct {
+		name         string
+		machineType  string
+		expectTypeIn string
+		patches      []string
+		expectSnips  []string
+	}{
+		{name: "controlplane", machineType: "controlplane", expectTypeIn: "type: controlplane"},
+		{name: "worker", machineType: "worker", expectTypeIn: "type: worker"},
+		{name: "init", machineType: "init", expectTypeIn: "type: init"},
+		{
+			name:         "controlplane-with-patch",
+			machineType:  "controlplane",
+			expectTypeIn: "type: controlplane",
+			patches: []string{
+				// machineBase from hcloud-go cluster.yaml
+				"machine:\n  kubelet:\n    nodeIP:\n      validSubnets:\n        - 10.10.10.0/24\n  time:\n    disabled: true\n",
+				// controlplaneCluster
+				"cluster:\n  etcd:\n    advertisedSubnets:\n      - 10.10.10.0/24\n",
+				// timeEnabled overrides
+				"machine:\n  time:\n    disabled: false\n",
+				// cloudflared extension
+				"apiVersion: v1alpha1\nkind: ExtensionServiceConfig\nname: cloudflared\nenvironment:\n  - TUNNEL_TOKEN=CHANGE_ME_AGAIN\n  - TUNNEL_METRICS=localhost:2001\n  - TUNNEL_EDGE_IP_VERSION=auto\n",
+			},
+			expectSnips: []string{
+				"validSubnets:",
+				"10.10.10.0/24",
+				"advertisedSubnets:",
+				"10.10.10.0/24",
+				"disabled: false", // from timeEnabled patch
+				"kind: ExtensionServiceConfig",
+				"name: cloudflared",
+			},
+		},
+		{
+			name:         "worker-with-empty-patch",
+			machineType:  "worker",
+			expectTypeIn: "type: worker",
+			patches:      []string{"", "machine:\n  type: worker"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mock := &ProxyMock{t: t}
+			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+				app, err := applier.New(ctx, "test-cluster", nil, nil)
+				if err != nil {
+					return err
+				}
+
+				secrets, err := app.GenerateSecrets(nil)
+				assert.NoError(t, err)
+
+				cluster := &types.Cluster{
+					ClusterName:          "test-cluster",
+					ClusterEndpoint:      pulumi.String("https://10.0.0.1:6443"),
+					KubernetesVersion:    pulumi.String("1.35.0"),
+					TalosVersionContract: pulumi.String("v1.12.0"),
+				}
+				machine := &types.ClusterMachine{
+					MachineID:     tt.name,
+					MachineType:   tt.machineType,
+					ConfigPatches: pulumi.ToStringArray(tt.patches),
+					TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
+				}
+
+				cmd, err := app.GenerateConfig(cluster, machine, secrets)
+				assert.NoError(t, err)
+
+				cmd.(pulumi.CustomResource).URN().ApplyT(func(_ any) error {
+					assert.NotEmpty(t, mock.lastStdout)
+					assert.Equal(t, 0, mock.lastExit, "talosctl gen config failed: stdout=%s stderr=%s", mock.lastStdout, mock.lastStderr)
+					assert.Contains(t, mock.lastStdout, tt.expectTypeIn)
+					for _, snip := range tt.expectSnips {
+						assert.Contains(t, mock.lastStdout, snip)
+					}
+					return nil
+				})
+
+				return nil
+			}, pulumi.WithMocks("project", "stack", mock))
+
+			assert.NoError(t, err)
+		})
+	}
 }

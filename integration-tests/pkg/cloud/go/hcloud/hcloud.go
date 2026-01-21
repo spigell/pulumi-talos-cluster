@@ -186,7 +186,7 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 		Type:         pulumi.String("ipv4"),
 		AssigneeType: pulumi.String("server"),
 		AutoDelete:   pulumi.Bool(false),
-	})
+	}, pulumi.IgnoreChanges([]string{"datacenter"}))
 	if err != nil {
 		return nil, fmt.Errorf("allocate ipv4 for machine %q: %w", machine.ID, err)
 	}
@@ -197,7 +197,7 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 		Type:         pulumi.String("ipv6"),
 		AssigneeType: pulumi.String("server"),
 		AutoDelete:   pulumi.Bool(false),
-	})
+	}, pulumi.IgnoreChanges([]string{"datacenter"}))
 	if err != nil {
 		return nil, fmt.Errorf("allocate ipv6 for machine %q: %w", machine.ID, err)
 	}
