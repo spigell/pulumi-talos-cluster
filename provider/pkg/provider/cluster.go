@@ -35,10 +35,10 @@ type Cluster struct {
 	pulumi.ResourceState
 	types.Cluster
 
-	ClientConfiguration     pulumi.MapOutput    `pulumi:"clientConfiguration"`
-	GeneratedConfigurations pulumi.StringMap    `pulumi:"generatedConfigurations"`
-	Machines                pulumi.ArrayMap     `pulumi:"machines"`
-	Talosconfig             pulumi.StringOutput `pulumi:"talosconfig"`
+	ClientConfiguration     pulumi.StringMapOutput `pulumi:"clientConfiguration"`
+	GeneratedConfigurations pulumi.StringMap       `pulumi:"generatedConfigurations"`
+	Machines                pulumi.ArrayMap        `pulumi:"machines"`
+	Talosconfig             pulumi.StringOutput    `pulumi:"talosconfig"`
 }
 
 func ClusterType() string {
@@ -154,18 +154,18 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		return nil, errors.Wrap(err, "generating talosconfig")
 	}
 
-	c.ClientConfiguration = talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (pulumi.Map, error) {
+	c.ClientConfiguration = talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (pulumi.StringMap, error) {
 		ca, key, cert, err := applier.ExtractTalosconfigCreds(raw, args.ClusterName)
 		if err != nil {
 			return nil, err
 		}
 
-		return pulumi.Map{
+		return pulumi.StringMap{
 			ClusterResourceOutputsClientConfigurationCAKey:                pulumi.String(ca),
 			ClusterResourceOutputsClientConfigurationClientKey:            pulumi.String(key),
 			ClusterResourceOutputsClientConfigurationClientCertificateKey: pulumi.String(cert),
 		}, nil
-	}).(pulumi.MapOutput)
+	}).(pulumi.StringMapOutput)
 	c.Talosconfig = talosconfig
 
 	if err := ctx.RegisterResourceOutputs(c, pulumi.Map{
