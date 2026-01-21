@@ -19,6 +19,7 @@ func TestClusterApplyContractConstants(t *testing.T) {
 		"ClusterResourceOutputsClientConfigurationCAKey":                "caCertificate",
 		"ClusterResourceOutputsClientConfigurationClientKey":            "clientKey",
 		"ClusterResourceOutputsClientConfigurationClientCertificateKey": "clientCertificate",
+		"ClusterResourceOutputsTalosconfig":                             "talosconfig",
 	}
 
 	actual := map[string]string{
@@ -31,6 +32,7 @@ func TestClusterApplyContractConstants(t *testing.T) {
 		"ClusterResourceOutputsClientConfigurationCAKey":                ClusterResourceOutputsClientConfigurationCAKey,
 		"ClusterResourceOutputsClientConfigurationClientKey":            ClusterResourceOutputsClientConfigurationClientKey,
 		"ClusterResourceOutputsClientConfigurationClientCertificateKey": ClusterResourceOutputsClientConfigurationClientCertificateKey,
+		"ClusterResourceOutputsTalosconfig":                             ClusterResourceOutputsTalosconfig,
 	}
 
 	for name, expectedValue := range expected {
