@@ -1,21 +1,18 @@
 ---
 name: delve-debugger
-description: How to attach to the remote Delve server, inspect state, set breakpoints, and continue execution.
+description: How to attach to the remote Delve server, inspect state, and control execution flow.
 ---
 
 ## Overview
 - Delve server runs headless at `pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345`.
 - Use local `dlv` client; commands run from repo root.
-- Rebuilds restart the process; breakpoints are lost and must be re-set.
+- **Breakpoints:** Do not use the `break` command. Insert `runtime.Breakpoint()` in your Go code and rebuild.
 
 ## Common Commands
 - Attach + run one or more commands from a file:
   - `printf 'goroutines\nexit\n' > /tmp/dlv_cmds`
   - `dlv connect pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345 --init=/tmp/dlv_cmds`
 - Quick inline command (fails if file missing): `dlv connect <addr> --init='goroutines'`
-- Set a breakpoint:
-  - `printf 'break provider/pkg/provider/applier/talosctl_gen.go:16\nexit\n' > /tmp/dlv_cmds`
-  - `dlv connect pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345 --init=/tmp/dlv_cmds`
 - Continue from current stop:
   - `printf 'continue\n' > /tmp/dlv_cmds`
   - `dlv connect pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345 --init=/tmp/dlv_cmds`
@@ -24,7 +21,7 @@ description: How to attach to the remote Delve server, inspect state, set breakp
   - `dlv connect ... --init=/tmp/dlv_cmds`
 
 ## Notes
-- If the server is rebuilt/restarted, reattach and reapply breakpoints.
+- To stop execution at a specific point, add `runtime.Breakpoint()` to the code and rebuild the provider.
 - To avoid “no such file” errors with `--init`, always write commands to a temp file first.
 - If asked to keep the server running, answer “n” when Delve prompts “Would you like to kill the headless instance?”.
 - Common flow with `pulumi pre`: the user runs `pulumi pre`, which stops the provider in Delve. When asked to start a provider session, send `rebuild` then `continue` and wait indefinitely for exit; if Delve drops you back, inspect and explain the current step (locals/args/backtrace) before proceeding.

@@ -11,7 +11,7 @@
 - `make generate`: Regenerate all SDKs from the current schema.
 - `make lint`: Run `golangci-lint` across provider and integration helpers.
 - `make unit_tests`: Run Go unit tests (excludes generated/CRD packages).
-- `make integration_tests`: Build provider and SDKs, then run long E2E suites (set `TEST=<regex>` to scope, e.g., `TEST=TestHcloud make integration_tests_go`).
+- `make -C integration-tests integration_tests`: Build provider and SDKs, then run long E2E suites (set `TEST=<regex>` to scope, e.g., `TEST=TestHcloud make -C integration-tests integration_tests_go`).
 - Node SDK iteration: `make build_nodejs_sdk` then `yarn link --cwd sdk/nodejs/bin` for local use.
 
 ## Coding Style & Naming Conventions
@@ -45,12 +45,14 @@
   - These are standard Go tests located in the `provider/` directory. They focus on testing individual components of the provider and exclude generated code.
 - **Remote runner**: Integration tests can be executed via the remote `pulumi-talos-cluster-mcp` server using the `shell_execute` tool; provide `command`, `timeout`, and `directory` fields.
 - **Integration Tests**:
-  - Run all: `make integration_tests`
+  - Run all: `make -C integration-tests integration_tests`
   - These are end-to-end tests that deploy real infrastructure. They can be time-consuming (default timeout is 25m).
-  - You can run tests for a specific language SDK, for example: `make integration_tests_go` or `make integration_tests_nodejs`.
-  - To run a specific test case, use the `TEST` variable: `TEST=TestHcloud make integration_tests_go`.
+  - You can run tests for a specific language SDK, for example: `make -C integration-tests integration_tests_go` or `make -C integration-tests integration_tests_nodejs`.
+  - To run a specific test case, use the `TEST` variable: `TEST=TestHcloud make -C integration-tests integration_tests_go`.
   - Test programs (the Pulumi apps being deployed) are located in `integration-tests/testdata/programs/`.
   - Shared test helper code is in `integration-tests/pkg/`.
+**Note**: Only scoped test are allowed to run via agents.
+
 - **Prerequisites**: Integration tests require credentials for the target cloud provider and a working `talosctl` configuration.
 - **Layout**: The test helpers contain spec files for different languages (`spec.go`, `spec.py`, `spec.ts`). These implementations share a common `schema.json` source of truth to ensure consistent validation logic across all supported languages.
 - **Architecture**:
@@ -60,7 +62,7 @@
 - **Python helper modules**: Shared Python helpers now live under `integration-tests/pkg/cluster/python` as packages (see `__init__.py`). New helper directories (e.g., `integration-tests/pkg/talos/python`) should also be proper packages (`__init__.py`) and added to the codebase; Pyright resolves them because `pyrightconfig.json` points `extraPaths` at `integration-tests/pkg`. Keep that root path in `extraPaths` so new packages continue to resolve.
 - **Talos provider pinning**: The schema generator pins `pulumiverse-talos` for Python to `==0.6.1` (aligned with Talos 1.11.5). When bumping Talos, change the version in `provider/cmd/pulumi-gen-talos-cluster/main.go` (language.python.requires), then regenerate schema/SDKs so `provider/cmd/pulumi-resource-talos-cluster/schema.json` and `sdk/python/pyproject.toml` pick up the new pin.
 
-#### Configuration File Validation (`cluster.yaml`)
+### Configuration File Validation (`cluster.yaml`)
 
 When loading and validating configuration files like the cluster specification YAML, a consistent, multi-language pattern is enforced to ensure robustness and maintainability. This pattern is implemented for TypeScript, Go, and Python in `integration-tests/pkg/cluster/`.
 
@@ -144,12 +146,34 @@ flowchart TD
     class RebootLeader,RebootCP,RebootWork dangerous;
 ```
 
-## Talos Workdir Layout (talosctl)
-Talos client state is scoped per stack under the OS temp dir:
-```
-<tmp>/talos-home-for-<stack>/
-  <step>-<machine-id>/   # e.g., cli-apply-controlplane-1, cli-upgrade-worker-1
-    talosctl.yaml
-    ...other artifacts...
-```
-Each Apply/step gets its own nested folder to avoid state clashes across machines/operations.
+## MCP Shell Server & Tooling
+
+This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) with the `shell_execute` tool for performing safe, remote operations within the workspace.
+
+**Configuration:**
+- **Tool:** `shell_execute`
+- **Default Directory:** `/project/workspace-pulumi/pulumi-talos-cluster` (Always use absolute paths)
+- **Timeouts:** Mandatory. Use reasonable limits (e.g., 300s for quick checks, 1800s for integration tests).
+
+**Allowed Commands:**
+`cat`, `find`, `go`, `grep`, `ls`, `make`, `pulumi`, `pwd`, `talosctl`, `touch`, `wc`.
+
+**Capabilities & Workflows:**
+
+1.  **Build & Test:**
+    - **Provider Build:** `["make", "build"]`
+    - **Full SDK regen/install pipeline**: run `make generate_schema`, `make generate`, `make build`, then install the SDK as needed (e.g., `make install_nodejs_sdk`).
+    - **Unit Tests:** `["make", "unit_tests"]`
+    - **Integration Tests:** Run via make targets. Only scoped mode is allowed.
+      - Scoped: `["make", "-C", "integration-tests", "integration_tests_go", "TEST=<TestName>"]`.
+    - There are a skill called pulumi-integration-tests-runner with additional context. You should ask to enable it if you think should use the skill.
+
+2.  **Talosctl Operations:**
+    - The environment in the MCP shell server has `talosctl` configured.
+    - Automation logic resides in the skill called talosctl-operator. You should ask if you think you need the skill.
+
+3.  **Debugging (Delve):**
+    - A headless Delve server runs at `pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345`.
+    - Connect using a local `dlv` client from the repo root.
+    - *Note:* The `dlv` command is run locally (not via `shell_execute`), but interacts with the provider process managed within this environment.
+    - Always use the skill delve-debuger which holds context about the operations.
