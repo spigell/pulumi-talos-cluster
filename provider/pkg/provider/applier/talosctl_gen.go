@@ -45,9 +45,6 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 	t := talosctl.New()
 
 	genType := m.MachineType
-	if genType == "" {
-		genType = tmachine.TypeControlPlane.String()
-	}
 	outType := genType
 	if genType == tmachine.TypeInit.String() {
 		// talosctl doesn't support init output type; use controlplane config and patch type to init.
@@ -59,6 +56,13 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 			p = append([]string{"machine:\n  type: init"}, p...)
 		}
 		return mergePatchesYAML(p)
+	}).(pulumi.StringOutput)
+
+	patchFlag := patches.ApplyT(func(p string) string {
+		if strings.TrimSpace(p) != "" {
+			return " --config-patch @patches.yaml"
+		}
+		return ""
 	}).(pulumi.StringOutput)
 
 	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
@@ -73,35 +77,16 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 				Content: patches,
 			},
 		},
-		CommandArgs: pulumi.All(
-			patches,
+		CommandArgs: pulumi.Sprintf("%s %s %s --install-image %s --kubernetes-version %s --talos-version %s --output-types %s --with-secrets secrets.yaml%s --output -",
+			talosctlGenerateConfigArgs(),
 			c.ClusterName,
 			c.ClusterEndpoint,
 			m.TalosImage.ToStringPtrOutput().Elem(),
 			c.KubernetesVersion.ToStringOutput(),
 			c.TalosVersionContract.ToStringOutput(),
-		).ApplyT(func(args []any) string {
-			patch := strings.TrimSpace(args[0].(string))
-			clusterName := args[1].(string)
-			clusterEndpoint := args[2].(string)
-			installImage := args[3].(string)
-			k8sVersion := args[4].(string)
-			talosVersion := args[5].(string)
-
-			base := fmt.Sprintf("%s %s %s --install-image %s --kubernetes-version %s --talos-version %s --output-types %s --with-secrets secrets.yaml",
-				talosctlGenerateConfigArgs(),
-				clusterName,
-				clusterEndpoint,
-				installImage,
-				k8sVersion,
-				talosVersion,
-				outType,
-			)
-			if patch != "" {
-				base = fmt.Sprintf("%s --config-patch @patches.yaml", base)
-			}
-			return base + " --output -"
-		}).(pulumi.StringOutput),
+			outType,
+			patchFlag,
+		),
 	}, []pulumi.ResourceOption{
 		a.parent,
 	}...)

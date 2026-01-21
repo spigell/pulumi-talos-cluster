@@ -3,7 +3,6 @@ package applier_test
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -53,8 +52,12 @@ func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error)
 		m.lastStderr = stderr.String()
 		m.lastExit = exitCode
 	}
-	if err != nil && ctx.Err() == context.DeadlineExceeded {
-		err = fmt.Errorf("command timed out: %w", err)
+	if err != nil {
+		return resource.PropertyMap{
+			"stdout":   resource.NewStringProperty(stdout.String()),
+			"stderr":   resource.NewStringProperty(stderr.String()),
+			"exitCode": resource.NewNumberProperty(float64(exitCode)),
+		}, err
 	}
 
 	return resource.PropertyMap{
@@ -98,8 +101,11 @@ func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.
 			m.lastExit = -1
 		}
 	}
-	if err != nil && ctx.Err() == context.DeadlineExceeded {
-		err = fmt.Errorf("command timed out: %w", err)
+	if err != nil {
+		return args.Name + "_id", resource.PropertyMap{
+			"stdout": resource.NewStringProperty(string(output)),
+			"stderr": resource.NewStringProperty(""),
+		}, err
 	}
 
 	return args.Name + "_id", resource.PropertyMap{
