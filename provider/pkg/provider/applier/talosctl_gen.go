@@ -7,23 +7,29 @@ import (
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
+var talosctlGenerateBaseArgs = strings.Join([]string{
+	"gen config",
+	"--force",
+	"--with-docs=false --with-examples=false",
+}, " ")
+
 // GenerateSecrets runs "talosctl gen secrets" into a generated workDir and returns the command resource, file contents, and workDir used.
-func (a *Applier) generateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, error) {
+func (a *Applier) generateSecrets() (pulumi.StringOutput, error) {
 	stageName := "gen-secrets"
 	t := talosctl.New()
 	home := generateWorkDirNameForTalosctl(a.name, stageName, "common")
 
 	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s", a.name, stageName), &talosctl.Args{
 		Dir:         home,
-		CommandArgs: pulumi.String(talosctlGenerateSecretsArgs()),
+		CommandArgs: pulumi.String("gen secrets --force -o -"),
 	}, []pulumi.ResourceOption{
 		a.parent,
-		pulumi.DependsOn(deps),
 	}...)
 	if err != nil {
 		return pulumi.StringOutput{}, err
@@ -32,15 +38,9 @@ func (a *Applier) generateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, 
 	return cmd.(*local.Command).Stdout, nil
 }
 
-func talosctlGenerateSecretsArgs() string {
-	return strings.Join([]string{
-		"gen secrets --force -o -",
-	}, " ; ")
-}
-
 // GenerateConfig runs "talosctl gen config" into workDir/configs and returns the command resource.
-func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.Resource, error) {
-	stageName := "gen-config"
+func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.Resource, error) {
+	stageName := "gen-machine-config"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New()
 
@@ -65,7 +65,7 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 		return ""
 	}).(pulumi.StringOutput)
 
-	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
+	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		Dir: home,
 		AdditionalFiles: []talosctl.ExtraFile{
 			{
@@ -78,7 +78,7 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 			},
 		},
 		CommandArgs: pulumi.Sprintf("%s %s %s --install-image %s --kubernetes-version %s --talos-version %s --output-types %s --with-secrets secrets.yaml%s --output -",
-			talosctlGenerateConfigArgs(),
+			talosctlGenerateBaseArgs,
 			c.ClusterName,
 			c.ClusterEndpoint,
 			m.TalosImage.ToStringPtrOutput().Elem(),
@@ -90,19 +90,27 @@ func (a *Applier) generateConfig(c *types.Cluster, m *types.ClusterMachine, secr
 	}, []pulumi.ResourceOption{
 		a.parent,
 	}...)
-	if err != nil {
-		return nil, err
-	}
-
-	return cmd, nil
 }
 
-func talosctlGenerateConfigArgs() string {
-	return strings.Join([]string{
-		"gen config",
-		"--force",
-		"--with-docs=false --with-examples=false",
-	}, " ")
+func (a *Applier) generateTalosconfig(c *types.Cluster, secrets pulumi.StringOutput) (pulumi.Resource, error) {
+	stageName := "gen-talosconfig"
+	home := generateWorkDirNameForTalosctl(a.name, stageName, "")
+	t := talosctl.New()
+
+	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s", c.ClusterName, stageName), &talosctl.Args{
+		Dir: home,
+		AdditionalFiles: []talosctl.ExtraFile{
+			{
+				Name:    "secrets.yaml",
+				Content: secrets,
+			},
+		},
+		CommandArgs: pulumi.Sprintf("%s %s %s --output-types talosconfig --with-secrets secrets.yaml --output -",
+			talosctlGenerateBaseArgs,
+			c.ClusterName,
+			c.ClusterEndpoint,
+		),
+	})
 }
 
 func mergePatchesYAML(patches []string) (string, error) {
@@ -125,4 +133,39 @@ func mergePatchesYAML(patches []string) (string, error) {
 	}
 
 	return merged, nil
+}
+
+func ExtractTalosconfigCreds(raw, clusterName string) (ca, key, cert string, err error) {
+	cfg, err := clientconfig.FromString(raw)
+	if err != nil {
+		return "", "", "", fmt.Errorf("parse talosconfig: %w", err)
+	}
+
+	if len(cfg.Contexts) == 0 {
+		return "", "", "", fmt.Errorf("talosconfig contexts missing")
+	}
+
+	ctx := cfg.Contexts[cfg.Context]
+	if ctx == nil {
+		if ctx = cfg.Contexts[clusterName]; ctx == nil {
+			for _, candidate := range cfg.Contexts {
+				ctx = candidate
+				break
+			}
+		}
+	}
+
+	if ctx == nil {
+		return "", "", "", fmt.Errorf("talosconfig contexts missing")
+	}
+
+	caVal := strings.TrimSpace(ctx.CA)
+	keyVal := strings.TrimSpace(ctx.Key)
+	certVal := strings.TrimSpace(ctx.Crt)
+
+	if caVal == "" || keyVal == "" || certVal == "" {
+		return "", "", "", fmt.Errorf("talosconfig missing client credentials")
+	}
+
+	return caVal, keyVal, certVal, nil
 }

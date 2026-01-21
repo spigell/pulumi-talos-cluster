@@ -12,8 +12,8 @@ func TestTalosctlDefaultsUseLocalBinary(t *testing.T) {
 		t.Fatalf("expected default binary to be talosctl, got %q", talos.Binary)
 	}
 
-	if !strings.Contains(talos.BasicCommand, "talosctl --talosconfig talosctl.yaml") {
-		t.Fatalf("expected basic command to use talosctl config, got %q", talos.BasicCommand)
+	if talos.BasicCommand != talosctlBinary {
+		t.Fatalf("expected basic command to equal binary %q, got %q", talosctlBinary, talos.BasicCommand)
 	}
 
 	if strings.Contains(talos.BasicCommand, "pulumiverse") {

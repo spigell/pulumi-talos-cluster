@@ -92,24 +92,41 @@ func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.
 		cmd.Dir = dir
 	}
 
-	output, err := cmd.CombinedOutput()
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
 	if strings.Contains(cmdStr, "talosctl") {
-		m.lastStdout = string(output)
+		m.lastStdout = stdout.String()
+		m.lastStderr = stderr.String()
+		exitCode := -1
 		if cmd.ProcessState != nil {
-			m.lastExit = cmd.ProcessState.ExitCode()
-		} else {
-			m.lastExit = -1
+			exitCode = cmd.ProcessState.ExitCode()
 		}
+		m.lastExit = exitCode
 	}
 	if err != nil {
 		return args.Name + "_id", resource.PropertyMap{
-			"stdout": resource.NewStringProperty(string(output)),
-			"stderr": resource.NewStringProperty(""),
+			"stdout": resource.NewStringProperty(stdout.String()),
+			"stderr": resource.NewStringProperty(stderr.String()),
+			"exitCode": func() resource.PropertyValue {
+				if cmd.ProcessState != nil {
+					return resource.NewNumberProperty(float64(cmd.ProcessState.ExitCode()))
+				}
+				return resource.NewNumberProperty(-1)
+			}(),
 		}, err
 	}
 
 	return args.Name + "_id", resource.PropertyMap{
-		"stdout": resource.NewStringProperty(m.lastStdout),
-		"stderr": resource.NewStringProperty(""),
+		"stdout": resource.NewStringProperty(stdout.String()),
+		"stderr": resource.NewStringProperty(stderr.String()),
+		"exitCode": func() resource.PropertyValue {
+			if cmd.ProcessState != nil {
+				return resource.NewNumberProperty(float64(cmd.ProcessState.ExitCode()))
+			}
+			return resource.NewNumberProperty(0)
+		}(),
 	}, nil
 }

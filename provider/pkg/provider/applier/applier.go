@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/client"
 	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
@@ -210,12 +211,26 @@ func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulum
 	return a.reboot(m, deps)
 }
 
-func (a *Applier) GenerateSecrets(deps []pulumi.Resource) (pulumi.StringOutput, error) {
-	return a.generateSecrets(deps)
+func (a *Applier) GenerateSecrets() (pulumi.StringOutput, error) {
+	return a.generateSecrets()
 }
 
-func (a *Applier) GenerateConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.Resource, error) {
-	return a.generateConfig(c, m, secrets)
+func (a *Applier) GenerateMachineConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.StringOutput, error) {
+	configuration, err := a.generateMachineConfig(c, m, secrets)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+
+	return configuration.(*local.Command).Stdout, nil
+}
+
+func (a *Applier) GenerateTalosconfig(c *types.Cluster, secrets pulumi.StringOutput) (pulumi.StringOutput, error) {
+	talosconfig, err := a.generateTalosconfig(c, secrets)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+
+	return talosconfig.(*local.Command).Stdout, nil
 }
 
 func (a *Applier) basicClient() client.GetConfigurationResultOutput {

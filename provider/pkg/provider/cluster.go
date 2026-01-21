@@ -3,18 +3,14 @@ package provider
 import (
 	"context"
 	"fmt"
-	"runtime"
-	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/provider"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/gendata"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -32,15 +28,17 @@ const (
 	ClusterResourceOutputsClientConfigurationCAKey                = "caCertificate"
 	ClusterResourceOutputsClientConfigurationClientKey            = "clientKey"
 	ClusterResourceOutputsClientConfigurationClientCertificateKey = "clientCertificate"
+	ClusterResourceOutputsTalosconfig                             = "talosconfig"
 )
 
 type Cluster struct {
 	pulumi.ResourceState
 	types.Cluster
 
-	ClientConfiguration     pulumi.StringMapOutput `pulumi:"clientConfiguration"`
-	GeneratedConfigurations pulumi.StringMap       `pulumi:"generatedConfigurations"`
-	Machines                pulumi.ArrayMap        `pulumi:"machines"`
+	ClientConfiguration     pulumi.MapOutput    `pulumi:"clientConfiguration"`
+	GeneratedConfigurations pulumi.StringMap    `pulumi:"generatedConfigurations"`
+	Machines                pulumi.ArrayMap     `pulumi:"machines"`
+	Talosconfig             pulumi.StringOutput `pulumi:"talosconfig"`
 }
 
 func ClusterType() string {
@@ -74,19 +72,10 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	}
 
 	// Generate secrets via talosctl.
-	secrets, err := app.GenerateSecrets(nil)
+	secrets, err := app.GenerateSecrets()
 	if err != nil {
 		return nil, errors.Wrap(err, "generating secrets")
 	}
-
-	// secretsStash, err := pulumi.NewStash(ctx, fmt.Sprintf("%s:secrets", name), &pulumi.StashArgs{
-	//	Input: secrets,
-	// }, pulumi.Parent(c))
-	// if err != nil {
-	//	return nil, errors.Wrap(err, "stashing secrets")
-	// }
-
-	// secretsContent := secrets
 
 	workers := make(pulumi.Array, 0)
 	controlplanes := make(pulumi.Array, 0)
@@ -130,16 +119,14 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		// -               generated[m.MachineID] = configuration.MachineConfiguration()
 
 		// Generate configs via talosctl using the generated secrets.
-		configuration, err := app.GenerateConfig(args, m, secrets)
+		configuration, err := app.GenerateMachineConfig(args, m, secrets)
 		if err != nil {
 			return nil, errors.Wrap(err, "generating configs")
 		}
 
-		cfg := configuration.(*local.Command).Stdout
+		generated[m.MachineID] = configuration
 
-		generated[m.MachineID] = cfg
-
-		mInfo := m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, cfg)
+		mInfo := m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration)
 
 		switch m.MachineType {
 		case tmachine.TypeControlPlane.String():
@@ -162,65 +149,34 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 
 	c.GeneratedConfigurations = generated
 
-	runtime.Breakpoint()
+	talosconfig, err := app.GenerateTalosconfig(args, secrets)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating talosconfig")
+	}
 
-	c.ClientConfiguration = secrets.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (pulumi.StringMap, error) {
-		ca, key, cert, err := extractTalosClientCreds(raw)
+	c.ClientConfiguration = talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (pulumi.Map, error) {
+		ca, key, cert, err := applier.ExtractTalosconfigCreds(raw, args.ClusterName)
 		if err != nil {
 			return nil, err
 		}
 
-		return pulumi.StringMap{
+		return pulumi.Map{
 			ClusterResourceOutputsClientConfigurationCAKey:                pulumi.String(ca),
 			ClusterResourceOutputsClientConfigurationClientKey:            pulumi.String(key),
 			ClusterResourceOutputsClientConfigurationClientCertificateKey: pulumi.String(cert),
 		}, nil
-	}).(pulumi.StringMapOutput)
+	}).(pulumi.MapOutput)
+	c.Talosconfig = talosconfig
 
 	if err := ctx.RegisterResourceOutputs(c, pulumi.Map{
 		ClusterResourceOutputsClientConfiguration:     c.ClientConfiguration,
 		ClusterResourceOutputsMachines:                c.Machines,
 		ClusterResourceOutputsGeneratedConfigurations: generated,
+		ClusterResourceOutputsTalosconfig:             c.Talosconfig,
 		// "secretsStash": secretsStash.Output,
 	}); err != nil {
 		return nil, err
 	}
 
 	return provider.NewConstructResult(c)
-}
-
-func extractTalosClientCreds(raw string) (ca, key, cert string, err error) {
-	var doc map[string]any
-	if err = yaml.Unmarshal([]byte(raw), &doc); err != nil {
-		return "", "", "", fmt.Errorf("parse secrets yaml: %w", err)
-	}
-
-	tc, ok := doc["talosconfig"].(map[string]any)
-	if !ok {
-		return "", "", "", fmt.Errorf("talosconfig section missing")
-	}
-
-	ca, key, cert = pick(tc, "ca", "crt"), pick(tc, "client", "key"), pick(tc, "client", "crt")
-	if ca == "" || key == "" || cert == "" {
-		return "", "", "", fmt.Errorf("talosconfig missing client credentials")
-	}
-	return ca, key, cert, nil
-}
-
-func pick(root map[string]any, path ...string) string {
-	cur := root
-	for i, p := range path {
-		if i == len(path)-1 {
-			if v, ok := cur[p].(string); ok {
-				return strings.TrimSpace(v)
-			}
-			return ""
-		}
-		nxt, ok := cur[p].(map[string]any)
-		if !ok {
-			return ""
-		}
-		cur = nxt
-	}
-	return ""
 }

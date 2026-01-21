@@ -27,9 +27,9 @@ func ApplyType() string {
 }
 
 type ApplyArgs struct {
-	ClientConfiguration pulumi.StringMapOutput `pulumi:"clientConfiguration"`
-	ApplyMachines       pulumi.ArrayMapOutput  `pulumi:"applyMachines"`
-	SkipInitApply       pulumi.BoolOutput      `pulumi:"skipInitApply"`
+	ClientConfiguration pulumi.MapOutput      `pulumi:"clientConfiguration"`
+	ApplyMachines       pulumi.ArrayMapOutput `pulumi:"applyMachines"`
+	SkipInitApply       pulumi.BoolOutput     `pulumi:"skipInitApply"`
 }
 
 type ApplyMachines struct {
@@ -171,10 +171,24 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 	return provider.NewConstructResult(a)
 }
 
-func buildClientConfigurationFromMap(client pulumi.StringMapOutput) *machine.ClientConfigurationArgs {
+func buildClientConfigurationFromMap(client pulumi.MapOutput) *machine.ClientConfigurationArgs {
 	return &machine.ClientConfigurationArgs{
-		CaCertificate:     client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey)),
-		ClientKey:         client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey)),
-		ClientCertificate: client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey)),
+		CaCertificate:     mapValueToStringOutput(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey))),
+		ClientKey:         mapValueToStringOutput(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey))),
+		ClientCertificate: mapValueToStringOutput(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey))),
 	}
+}
+
+func mapValueToStringOutput(v pulumi.Output) pulumi.StringOutput {
+	return v.ApplyT(func(val any) string {
+		switch t := val.(type) {
+		case string:
+			return t
+		case *string:
+			if t != nil {
+				return *t
+			}
+		}
+		return ""
+	}).(pulumi.StringOutput)
 }

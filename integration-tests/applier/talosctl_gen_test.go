@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func TestGenerateSecretsWithRealTalosctl(t *testing.T) {
 			return err
 		}
 
-		output, err := app.GenerateSecrets(nil)
+		output, err := app.GenerateSecrets()
 		assert.NoError(t, err)
 
 		output.ApplyT(func(yaml string) error {
@@ -45,7 +46,7 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 			return err
 		}
 
-		secrets, err := app.GenerateSecrets(nil)
+		secrets, err := app.GenerateSecrets()
 		assert.NoError(t, err)
 
 		cluster := &types.Cluster{
@@ -61,22 +62,76 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 			TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
 		}
 
-		cmd, err := app.GenerateConfig(cluster, machine, secrets)
+		cmd, err := app.GenerateMachineConfig(cluster, machine, secrets)
 		assert.NoError(t, err)
 
-		// Capture stdout via the mock for validation.
-		cmd.(pulumi.CustomResource).URN().ApplyT(func(_ any) error {
+		cmd.ApplyT(func(raw string) error {
 			assert.NotEmpty(t, mock.lastStdout)
 			assert.Equal(t, 0, mock.lastExit, "talosctl gen config failed: stdout=%s stderr=%s", mock.lastStdout, mock.lastStderr)
-			return nil
-		})
-
-		cmd.(pulumi.CustomResource).URN().ApplyT(func(_ any) error {
 			assert.Contains(t, mock.lastCreate, "--install-image ghcr.io/siderolabs/installer:v1.12.1")
 			assert.Contains(t, mock.lastCreate, "--kubernetes-version 1.35.0")
 			assert.Contains(t, mock.lastCreate, "--talos-version v1.12.0")
 			assert.Contains(t, mock.lastCreate, "--output-types controlplane")
 			assert.Contains(t, mock.lastCreate, "--output -")
+			assert.Contains(t, raw, "type: controlplane")
+			return nil
+		})
+
+		return nil
+	}, pulumi.WithMocks("project", "stack", mock))
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, mock.lastStdout)
+}
+
+func TestGenerateTalosconfigWithRealTalosctl(t *testing.T) {
+	t.Setenv("PULUMI_MOCK_RESOURCES", "1")
+
+	mock := &ProxyMock{t: t}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		app, err := applier.New(ctx, "test-cluster", nil, nil)
+		if err != nil {
+			return err
+		}
+
+		secrets, err := app.GenerateSecrets()
+		assert.NoError(t, err)
+
+		cluster := &types.Cluster{
+			ClusterName:          "test-cluster",
+			ClusterEndpoint:      pulumi.String("https://10.0.0.1:6443"),
+			KubernetesVersion:    pulumi.String("1.35.0"),
+			TalosVersionContract: pulumi.String("v1.12.0"),
+			ClusterMachines: []*types.ClusterMachine{{
+				MachineID:     "cp-1",
+				MachineType:   "controlplane",
+				ConfigPatches: pulumi.StringArray{pulumi.String("")},
+				TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
+			}},
+		}
+
+		output, err := app.GenerateTalosconfig(cluster, secrets)
+		assert.NoError(t, err)
+
+		output.ApplyT(func(raw string) error {
+			assert.NotEmpty(t, raw)
+
+			cfg, err := clientconfig.FromString(raw)
+			assert.NoError(t, err)
+			assert.NotEmpty(t, cfg.Contexts)
+
+			ctx := cfg.Contexts[cfg.Context]
+			if ctx == nil {
+				for _, candidate := range cfg.Contexts {
+					ctx = candidate
+					break
+				}
+			}
+			assert.NotNil(t, ctx)
+			assert.NotEmpty(t, ctx.CA)
+			assert.NotEmpty(t, ctx.Crt)
+			assert.NotEmpty(t, ctx.Key)
+
 			return nil
 		})
 
@@ -141,7 +196,7 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 					return err
 				}
 
-				secrets, err := app.GenerateSecrets(nil)
+				secrets, err := app.GenerateSecrets()
 				assert.NoError(t, err)
 
 				cluster := &types.Cluster{
@@ -157,15 +212,15 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 					TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
 				}
 
-				cmd, err := app.GenerateConfig(cluster, machine, secrets)
+				cmd, err := app.GenerateMachineConfig(cluster, machine, secrets)
 				assert.NoError(t, err)
 
-				cmd.(pulumi.CustomResource).URN().ApplyT(func(_ any) error {
+				cmd.ApplyT(func(raw string) error {
 					assert.NotEmpty(t, mock.lastStdout)
 					assert.Equal(t, 0, mock.lastExit, "talosctl gen config failed: stdout=%s stderr=%s", mock.lastStdout, mock.lastStderr)
-					assert.Contains(t, mock.lastStdout, tt.expectTypeIn)
+					assert.Contains(t, raw, tt.expectTypeIn)
 					for _, snip := range tt.expectSnips {
-						assert.Contains(t, mock.lastStdout, snip)
+						assert.Contains(t, raw, snip)
 					}
 					return nil
 				})

@@ -261,12 +261,17 @@
                     "type": "object",
                     "$ref": "#types/talos-cluster:index:applyMachines",
                     "description": "Machine information grouped by machine type."
+                },
+                "talosconfig": {
+                    "type": "string",
+                    "description": "Raw talosconfig including endpoints for all nodes and control planes."
                 }
             },
             "required": [
                 "machines",
                 "generatedConfigurations",
-                "clientConfiguration"
+                "clientConfiguration",
+                "talosconfig"
             ],
             "inputProperties": {
                 "clusterEndpoint": {

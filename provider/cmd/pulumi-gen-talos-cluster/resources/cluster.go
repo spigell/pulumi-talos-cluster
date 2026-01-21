@@ -127,6 +127,12 @@ func ClusterProperties() map[string]schema.PropertySpec {
 			},
 			Description: "Client configuration for bootstrapping and applying resources.",
 		},
+		provider.ClusterResourceOutputsTalosconfig: {
+			TypeSpec: schema.TypeSpec{
+				Type: "string",
+			},
+			Description: "Raw talosconfig including endpoints for all nodes and control planes.",
+		},
 		provider.ClusterResourceOutputsGeneratedConfigurations: {
 			TypeSpec: schema.TypeSpec{
 				Type: "object",
@@ -148,6 +154,7 @@ func ClusterRequiredProperties() []string {
 		provider.ClusterResourceOutputsMachines,
 		provider.ClusterResourceOutputsGeneratedConfigurations,
 		provider.ClusterResourceOutputsClientConfiguration,
+		provider.ClusterResourceOutputsTalosconfig,
 	}
 }
 
