@@ -14,12 +14,24 @@ on:
           - TestHcloudClusterJS
           - TestHcloudHAClusterGo
           - TestHcloudHAClusterPy
+          - TestTalosctl
           - all
         description: "The test to run. Defaults to `all`"
         required: true
         default: 'TestHcloudClusterGo'
 
 jobs:
+  TestTalosctl:
+    if: contains(fromJson('["all", "TestTalosctl"]'), inputs.test) || github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/reuse-run-integration-tests.yaml
+    with:
+      name: ${{ inputs.test }}
+      runtime: go
+      test: TestTalosctl
+      make_target: integration_tests_talosctl
+    secrets:
+      google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+      hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
   TestHcloudClusterGo:
     if: contains(fromJson('["all", "TestHcloudClusterGo"]'), inputs.test) || github.ref == 'refs/heads/main'
     uses: ./.github/workflows/reuse-run-integration-tests.yaml

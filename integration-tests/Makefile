@@ -67,7 +67,8 @@ install_python_integration_tests_infra:
 
 integration_tests: integration_tests_go integration_tests_nodejs integration_tests_python
 
-integration_tests_talosctl:
+integration_tests_talosctl: clean
+	$(MAKE) -C .. gen_go_sdk
 	TALOSCTL_TEST_LOG_LIMIT=500 go test -v ./applier
 
 integration_tests_go: clean

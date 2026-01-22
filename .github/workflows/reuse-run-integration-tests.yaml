@@ -1,11 +1,6 @@
 name: The reusable workflow for deploying the exacly one cluster and execute tests
 run-name: The test ${{ inputs.name }} by @${{ github.actor }}
 
-env:
-  PULUMI_BACKEND: gs://spigell-infra-talos-pulumi-states
-  PULUMI_SECRET_PROVIDER: gcpkms://projects/spigell-infra/locations/global/keyRings/spigell-infra-keyring/cryptoKeys/spigell-infra-talos-pulumi-key
-  TALOSCTL_VERSION: v1.12.0
-
 on:
   workflow_call:
     inputs:
@@ -16,14 +11,17 @@ on:
         type: string
         required: true
         default: go
+      make_target:
+        type: string
+        required: false
       test:
         type: string
         required: true
     secrets:
       google-credentials:
-        required: true
+        required: false
       hcloud-token:
-        required: true
+        required: false
 
 
 jobs:
@@ -31,6 +29,8 @@ jobs:
     runs-on: ubuntu-24.04
     name: Run tests
     timeout-minutes: 30
+    env:
+      TALOSCTL_VERSION: v1.12.0
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,6 +38,7 @@ jobs:
           fetch-tags: true
 
       - name: Set gcloud auth pulumi
+        if: ${{ secrets.google-credentials != '' }}
         uses: 'google-github-actions/auth@v1'
         with:
           credentials_json: '${{ secrets.google-credentials }}'
@@ -63,8 +64,33 @@ jobs:
       - name: Run the test
         env:
           HCLOUD_TOKEN: ${{ secrets.hcloud-token }}
-          PULUMI_CLOUD_URL: ${{ env.PULUMI_BACKEND }}
-        run: make integration_tests_${{ inputs.runtime }} TEST=${{ inputs.test }}
+          PULUMI_CLOUD_URL: ${{ (inputs.test == 'TestTalosctl' || secrets.google-credentials == '') && 'file:///tmp/pulumi-backend' || 'gs://spigell-infra-talos-pulumi-states' }}
+          PULUMI_BACKEND: ${{ (inputs.test == 'TestTalosctl' || secrets.google-credentials == '') && 'file:///tmp/pulumi-backend' || 'gs://spigell-infra-talos-pulumi-states' }}
+          PULUMI_SECRET_PROVIDER: ${{ (inputs.test == 'TestTalosctl' || secrets.google-credentials == '') && 'passphrase' || 'gcpkms://projects/spigell-infra/locations/global/keyRings/spigell-infra-keyring/cryptoKeys/spigell-infra-talos-pulumi-key' }}
+          PULUMI_CONFIG_PASSPHRASE: ${{ (inputs.test == 'TestTalosctl' || secrets.google-credentials == '') && 'dummy' || '' }}
+          MAKE_TARGET: ${{ inputs.make_target }}
+          RUNTIME: ${{ inputs.runtime }}
+        run: |
+          # Setup local backend if needed (for unit tests or forks)
+          if [[ "$PULUMI_BACKEND" == file://* ]]; then
+             echo "Configuring local Pulumi backend: $PULUMI_BACKEND"
+             # Unset PULUMI_ACCESS_TOKEN to avoid conflicts with local backend
+             unset PULUMI_ACCESS_TOKEN
+             mkdir -p /tmp/pulumi-backend
+             pulumi logout || true
+             pulumi login "$PULUMI_BACKEND"
+             pulumi whoami -v || true
+             export PULUMI_BACKEND_URL="$PULUMI_BACKEND"
+          fi
+
+          # Debug
+          talosctl version --client || true
+
+          TARGET="${MAKE_TARGET}"
+          if [ -z "$TARGET" ]; then
+            TARGET="integration_tests_${RUNTIME}"
+          fi
+          make $TARGET TEST=${{ inputs.test }}
         working-directory: integration-tests
 
       - name: Upload talos home artifacts

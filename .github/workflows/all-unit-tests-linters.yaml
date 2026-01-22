@@ -45,3 +45,14 @@ jobs:
       working-directory: integration-tests
       python-version: '3.13.7'
       actions-branch: main
+
+  integration-talosctl-tests:
+    name: Integration Talosctl Tests
+    uses: ./.github/workflows/reuse-run-integration-tests.yaml
+    with:
+      name: TestTalosctl
+      test: TestTalosctl
+      make_target: integration_tests_talosctl
+    secrets:
+      google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
+      hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
