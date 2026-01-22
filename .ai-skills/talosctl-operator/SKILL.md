@@ -15,7 +15,7 @@ description: How to work with talosctl inside the pulumi-talos-cluster provider.
 ## Editing Guidelines
 - Keep talosctl invocations inside applier helpers; avoid ad-hoc shell.
 - Run `gofmt -w` locally on Go edits.
-- Run `["make", "build"]` via MCP after each edit.
+- Run `["make", "build_provider"]` via MCP after each edit.
 - Run talosctl integration-tests via MCP after each edit.
 - Do not edit testdata programs when fixing provider code.
 

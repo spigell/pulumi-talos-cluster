@@ -14,7 +14,7 @@ description: How to attach to the remote Delve server, inspect state, and contro
   - `dlv connect pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345 --init=/tmp/dlv_cmds`
 - Quick inline command (fails if file missing): `dlv connect <addr> --init='goroutines'`
 - Continue from current stop:
-  - `printf 'continue\n' > /tmp/dlv_cmds`
+  - `printf 'rebuild\ncontinue\n' > /tmp/dlv_cmds`
   - `dlv connect pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345 --init=/tmp/dlv_cmds`
 - Inspect locals/args at the current frame:
   - `printf 'locals\nargs\n' > /tmp/dlv_cmds`
