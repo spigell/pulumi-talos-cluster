@@ -40,9 +40,10 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 	stageName := "cli-upgrade"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().WithNodeIP(m.NodeIP)
+	talosconfig := a.NewTalosconfig([]string{m.NodeIP}, []string{m.NodeIP})
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: a.basicClient().TalosConfig(),
+		TalosConfig: talosconfig,
 		PrepareDeps: deps,
 		Dir:         home,
 		CommandArgs: pulumi.String(args),

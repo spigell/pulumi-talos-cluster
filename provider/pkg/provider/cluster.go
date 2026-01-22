@@ -154,16 +154,16 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		return nil, errors.Wrap(err, "generating talosconfig")
 	}
 
-	c.ClientConfiguration = talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (pulumi.StringMap, error) {
+	c.ClientConfiguration = talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (map[string]string, error) {
 		ca, key, cert, err := applier.ExtractTalosconfigCreds(raw, args.ClusterName)
 		if err != nil {
 			return nil, err
 		}
 
-		return pulumi.StringMap{
-			ClusterResourceOutputsClientConfigurationCAKey:                pulumi.String(ca),
-			ClusterResourceOutputsClientConfigurationClientKey:            pulumi.String(key),
-			ClusterResourceOutputsClientConfigurationClientCertificateKey: pulumi.String(cert),
+		return map[string]string{
+			ClusterResourceOutputsClientConfigurationCAKey:                ca,
+			ClusterResourceOutputsClientConfigurationClientKey:            key,
+			ClusterResourceOutputsClientConfigurationClientCertificateKey: cert,
 		}, nil
 	}).(pulumi.StringMapOutput)
 	c.Talosconfig = talosconfig

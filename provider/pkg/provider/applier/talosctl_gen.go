@@ -8,9 +8,9 @@ import (
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
-	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
+	"gopkg.in/yaml.v3"
 )
 
 var talosctlGenerateBaseArgs = strings.Join([]string{
@@ -46,13 +46,13 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 
 	genType := m.MachineType
 	outType := genType
-	if genType == tmachine.TypeInit.String() {
+	if genType == "init" {
 		// talosctl doesn't support init output type; use controlplane config and patch type to init.
-		outType = tmachine.TypeControlPlane.String()
+		outType = "controlplane"
 	}
 
 	patches := m.ConfigPatches.ToStringArrayOutput().ApplyTWithContext(a.ctx.Context(), func(_ context.Context, p []string) (string, error) {
-		if genType == tmachine.TypeInit.String() {
+		if genType == "init" {
 			p = append([]string{"machine:\n  type: init"}, p...)
 		}
 		return mergePatchesYAML(p)
@@ -168,4 +168,41 @@ func ExtractTalosconfigCreds(raw, clusterName string) (ca, key, cert string, err
 	}
 
 	return caVal, keyVal, certVal, nil
+}
+
+func buildTalosconfig(ctx *pulumi.Context, clusterName string, endpoints []string, nodes []string, client *types.ClientConfigurationArgs) pulumi.StringOutput {
+	return pulumi.All(
+		pulumi.ToStringArray(endpoints),
+		pulumi.ToStringArray(nodes),
+		client.CaCertificate.ToStringOutput(),
+		client.ClientKey.ToStringOutput(),
+		client.ClientCertificate.ToStringOutput(),
+	).ApplyT(func(args []any) (string, error) {
+		eps := args[0].([]string)
+		nds := args[1].([]string)
+		ca := args[2].(string)
+		key := args[3].(string)
+		cert := args[4].(string)
+
+		cfg := clientconfig.Config{
+			Context: clusterName,
+			Contexts: map[string]*clientconfig.Context{
+				clusterName: {
+					Endpoints: eps,
+					Nodes:     nds,
+					CA:        ca,
+					Key:       key,
+					Crt:       cert,
+					Cluster:   clusterName,
+				},
+			},
+		}
+
+		out, err := yaml.Marshal(cfg)
+		if err != nil {
+			return "", fmt.Errorf("marshal talosconfig: %w", err)
+		}
+
+		return string(out), nil
+	}).(pulumi.StringOutput)
 }

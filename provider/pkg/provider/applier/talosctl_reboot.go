@@ -14,8 +14,10 @@ func (a *Applier) reboot(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.R
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().WithNodeIP(m.NodeIP)
 
+	talosconfig := a.NewTalosconfig([]string{m.NodeIP}, []string{m.NodeIP})
+
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: a.basicClient().TalosConfig(),
+		TalosConfig: talosconfig,
 		PrepareDeps: deps,
 		Dir:         home,
 		CommandArgs: pulumi.String(talosctlFastRebootArgs()),

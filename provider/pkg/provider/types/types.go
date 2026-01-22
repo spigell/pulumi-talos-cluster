@@ -38,6 +38,12 @@ type ClusterMachine struct {
 	ConfigPatches pulumi.StringArrayInput `pulumi:"configPatches"`
 }
 
+type ClientConfigurationArgs struct {
+	CaCertificate     pulumi.StringInput `pulumi:"caCertificate"`
+	ClientKey         pulumi.StringInput `pulumi:"clientKey"`
+	ClientCertificate pulumi.StringInput `pulumi:"clientCertificate"`
+}
+
 func (m *ClusterMachine) ToMachineInfoMap(clusterEndpoint pulumi.StringInput, k8sVer pulumi.StringInput, config pulumi.StringOutput) *pulumi.Map {
 	return &pulumi.Map{
 		MachineIDKey: pulumi.String(m.MachineID),

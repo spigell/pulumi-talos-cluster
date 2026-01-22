@@ -12,9 +12,10 @@ func (a *Applier) upgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) (pulu
 	stageName := "cli-upgrade-k8s"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().WithNodeIP(m.NodeIP)
+	talosconfig := a.NewTalosconfig([]string{m.NodeIP}, []string{m.NodeIP})
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: a.basicClient().TalosConfig(),
+		TalosConfig: talosconfig,
 		PrepareDeps: deps,
 		Dir:         home,
 		CommandArgs: pulumi.Sprintf("upgrade-k8s --with-docs=false --with-examples=false --to %s", m.KubernetesVersion),

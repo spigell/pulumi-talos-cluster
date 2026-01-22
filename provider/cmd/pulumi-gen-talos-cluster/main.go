@@ -60,9 +60,8 @@ func generateSchema() schema.PackageSpec {
 			}),
 			"python": rawMessage(map[string]any{
 				"requires": map[string]string{
-					"pulumi":            ">=3.210.0,<4.0.0",
-					"pulumiverse-talos": "==0.6.1",
-					"pulumi-command":    "==1.1.3",
+					"pulumi":         ">=3.210.0,<4.0.0",
+					"pulumi-command": "==1.1.3",
 				},
 				"usesIOClasses":                true,
 				"liftSingleValueMethodReturns": true,
@@ -77,9 +76,8 @@ func generateSchema() schema.PackageSpec {
 					"@types/node": "^20.0.0",
 				},
 				"dependencies": map[string]any{
-					"@pulumi/pulumi":     "3.210.0",
-					"@pulumi/command":    "v1.1.3",
-					"@pulumiverse/talos": "v0.6.1", // aligned with Talos 1.12.0
+					"@pulumi/pulumi":  "3.210.0",
+					"@pulumi/command": "v1.1.3",
 				},
 			}),
 			"go": rawMessage(map[string]any{

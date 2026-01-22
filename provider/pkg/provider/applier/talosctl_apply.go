@@ -57,7 +57,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		stageName := "cli-get-machine-config"
 
 		current, err := t2.RunGetCommand(a.ctx, &talosctl.Args{
-			TalosConfig: a.basicClient().TalosConfig(),
+			TalosConfig: a.NewTalosconfig([]string{ip}, []string{ip}),
 			Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
 			CommandArgs: pulumi.String("get machineconfig v1alpha1 -oyaml"),
 			// No retry. Need to implement another way to retry for get functions.
@@ -96,7 +96,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 	machineConfigName := "machineconfig.yaml"
 
 	apply, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: a.basicClient().TalosConfig(),
+		TalosConfig: a.NewTalosconfig([]string{m.NodeIP}, []string{m.NodeIP}),
 		AdditionalFiles: []talosctl.ExtraFile{
 			{Name: machineConfigName, Content: machineFile},
 		},

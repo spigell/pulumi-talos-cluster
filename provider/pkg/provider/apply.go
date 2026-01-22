@@ -8,8 +8,6 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/provider"
-	pulumi_cluster "github.com/pulumiverse/pulumi-talos/sdk/go/talos/cluster"
-	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
 
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
@@ -27,9 +25,9 @@ func ApplyType() string {
 }
 
 type ApplyArgs struct {
-	ClientConfiguration pulumi.StringMapOutput `pulumi:"clientConfiguration"`
-	ApplyMachines       pulumi.ArrayMapOutput  `pulumi:"applyMachines"`
-	SkipInitApply       pulumi.BoolOutput      `pulumi:"skipInitApply"`
+	ClientConfiguration pulumi.StringMapInput `pulumi:"clientConfiguration"`
+	ApplyMachines       pulumi.ArrayMapOutput `pulumi:"applyMachines"`
+	SkipInitApply       pulumi.BoolOutput     `pulumi:"skipInitApply"`
 }
 
 type ApplyMachines struct {
@@ -66,8 +64,10 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		cp := ma[tmachine.TypeControlPlane.String()]
 		workers := ma[tmachine.TypeWorker.String()]
 
+		cfg := args.ClientConfiguration.ToStringMapOutput()
+
 		app, err := applier.New(ctx, name,
-			buildClientConfigurationFromMap(args.ClientConfiguration),
+			buildClientConfigurationFromMap(cfg),
 			pulumi.Parent(a),
 		)
 		if err != nil {
@@ -130,33 +130,23 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 			nodes = append(nodes, node.NodeIP)
 
-			_, err := app.ApplyToWorker(node, inited)
+			workerDeps, err := app.ApplyToWorker(node, inited)
 			if err != nil {
 				return creds.ToStringMapOutput(), err
 			}
+
+			controlplanesReady = append(controlplanesReady, workerDeps...)
 		}
 
-		upgraded, err := app.UpgradeK8S(i, controlplanesReady)
+		controlplanesReady, err = app.UpgradeK8S(i, controlplanesReady)
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
 
-		kubeconfig, err := pulumi_cluster.NewKubeconfig(ctx, types.KubeconfigKey, &pulumi_cluster.KubeconfigArgs{
-			Node: pulumi.String(i.NodeIP),
-			ClientConfiguration: &pulumi_cluster.KubeconfigClientConfigurationArgs{
-				CaCertificate:     args.ClientConfiguration.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey)),
-				ClientKey:         args.ClientConfiguration.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey)),
-				ClientCertificate: args.ClientConfiguration.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey)),
-			},
-		}, pulumi.Parent(a),
-			pulumi.DependsOn(upgraded),
-		)
-		if err != nil {
-			return creds.ToStringMapOutput(), err
-		}
-
-		creds[types.TalosconfigKey] = app.NewTalosconfig(endpoints, nodes).TalosConfig()
-		creds[types.KubeconfigKey] = kubeconfig.KubeconfigRaw
+		creds[types.TalosconfigKey] = app.NewTalosconfig(endpoints, nodes)
+		// We use only one endpoint for kubeconfig because talosctl doesn't support multiple endpoints for this command.
+		// It is safe because we can fetch kubeconfig from any node.
+		creds[types.KubeconfigKey] = app.NewKubeconfig([]string{endpoints[0]}, nodes, controlplanesReady)
 
 		return creds.ToStringMapOutput(), nil
 	}).(pulumi.StringMapOutput)
@@ -171,10 +161,22 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 	return provider.NewConstructResult(a)
 }
 
-func buildClientConfigurationFromMap(client pulumi.StringMapOutput) *machine.ClientConfigurationArgs {
-	return &machine.ClientConfigurationArgs{
-		CaCertificate:     client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey)),
-		ClientKey:         client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey)),
-		ClientCertificate: client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey)),
+func buildClientConfigurationFromMap(client pulumi.StringMapOutput) *types.ClientConfigurationArgs {
+	return &types.ClientConfigurationArgs{
+		CaCertificate:     mapOutputToString(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey))),
+		ClientKey:         mapOutputToString(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey))),
+		ClientCertificate: mapOutputToString(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey))),
 	}
+}
+
+func mapOutputToString(o pulumi.Output) pulumi.StringInput {
+	return o.ApplyT(func(v any) (string, error) {
+		if v == nil {
+			return "", nil
+		}
+		if s, ok := v.(string); ok {
+			return s, nil
+		}
+		return "", fmt.Errorf("expected string, got %T", v)
+	}).(pulumi.StringInput)
 }
