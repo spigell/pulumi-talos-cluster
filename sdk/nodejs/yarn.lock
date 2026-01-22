@@ -410,10 +410,10 @@
     tmp "^0.2.4"
     upath "^1.1.0"
 
-"@pulumi/pulumi@^3.0.0", "@pulumi/pulumi@^3.142.0":
-  version "3.214.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.214.1.tgz#b3a1457ce4c3feba1b740e15feac414364bc03af"
-  integrity sha512-SgUrYq6tRn8EeZ0PszVVXVfeCms/tUkjLnt9pcRp/f9+5fIDKy8ak3ehlJcdqQCEOsn9lg/q/mZBjqy7CaPB7g==
+"@pulumi/pulumi@^3.142.0":
+  version "3.216.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.216.0.tgz#de7ea9efb3ce349f2be70412ac8d57f868fd94db"
+  integrity sha512-trrYuGE76HirIpA8McuomXNSkkccQyQajP9ZNLd0WHqnxXstTjRR+Zxizwo/0NJ3/HTUsA7wJE1Qt5auf7jL2g==
   dependencies:
     "@grpc/grpc-js" "^1.10.1"
     "@logdna/tail-file" "^2.0.6"
@@ -443,13 +443,6 @@
     source-map-support "^0.5.6"
     tmp "^0.2.4"
     upath "^1.1.0"
-
-"@pulumiverse/talos@v0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@pulumiverse/talos/-/talos-0.6.1.tgz#cca237e45f4d61e9465066c36beccea28a892d3a"
-  integrity sha512-kMtx5R/qYvfl4+mh662N2sKrL+xQ1tBghoSEzUTH5/cnn67CcOw3IoQZOLNqAuHNq3g/RxK3FCHnmoJVOVKnIw==
-  dependencies:
-    "@pulumi/pulumi" "^3.0.0"
 
 "@sigstore/bundle@^2.3.2":
   version "2.3.2"
@@ -550,16 +543,16 @@
     "@types/node" "*"
 
 "@types/node@*", "@types/node@>=13.7.0":
-  version "25.0.3"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.0.3.tgz#79b9ac8318f373fbfaaf6e2784893efa9701f269"
-  integrity sha512-W609buLVRVmeW693xKfzHeIV6nJGGz98uCPfeXI1ELMLXVeKYZ9m15fAMSaUPBHYLGFsVRcMmSCksQOrZV9BYA==
+  version "25.0.10"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-25.0.10.tgz#4864459c3c9459376b8b75fd051315071c8213e7"
+  integrity sha512-zWW5KPngR/yvakJgGOmZ5vTBemDoSqF3AcV/LrO5u5wTWyEAVVh+IT39G4gtyAkh3CtTZs8aX/yRM82OfzHJRg==
   dependencies:
     undici-types "~7.16.0"
 
 "@types/node@^20.0.0":
-  version "20.19.27"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.27.tgz#d51333f77953a5e4e71d3b5aefa83ec5297fbb80"
-  integrity sha512-N2clP5pJhB2YnZJ3PIHFk5RkygRX5WO/5f0WC08tp0wd+sv0rsJk3MqWn3CbNmT2J505a5336jaQj4ph1AdMug==
+  version "20.19.30"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.19.30.tgz#84fa87498ade5cd2b6ba8f8eec01d3b138ca60d0"
+  integrity sha512-WJtwWJu7UdlvzEAUm484QNg5eAoq5QR08KDNx7g45Usrs2NtOPiX8ugDqmKdXkyL03rBqU5dYNYVQetEpBHq2g==
   dependencies:
     undici-types "~6.21.0"
 

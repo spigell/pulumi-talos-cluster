@@ -15,8 +15,7 @@
     },
     "dependencies": {
         "@pulumi/command": "v1.1.3",
-        "@pulumi/pulumi": "3.210.0",
-        "@pulumiverse/talos": "v0.6.1"
+        "@pulumi/pulumi": "3.210.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
