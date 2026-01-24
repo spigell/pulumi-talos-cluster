@@ -2,15 +2,16 @@ package applier
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/siderolabs/crypto/x509"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
-	"gopkg.in/yaml.v3"
 )
 
 var talosctlGenerateBaseArgs = strings.Join([]string{
@@ -170,39 +171,45 @@ func ExtractTalosconfigCreds(raw, clusterName string) (ca, key, cert string, err
 	return caVal, keyVal, certVal, nil
 }
 
-func buildTalosconfig(ctx *pulumi.Context, clusterName string, endpoints []string, nodes []string, client *types.ClientConfigurationArgs) pulumi.StringOutput {
-	return pulumi.All(
-		pulumi.ToStringArray(endpoints),
-		pulumi.ToStringArray(nodes),
-		client.CaCertificate.ToStringOutput(),
-		client.ClientKey.ToStringOutput(),
-		client.ClientCertificate.ToStringOutput(),
-	).ApplyT(func(args []any) (string, error) {
-		eps := args[0].([]string)
-		nds := args[1].([]string)
-		ca := args[2].(string)
-		key := args[3].(string)
-		cert := args[4].(string)
+func (a *Applier) buildTalosConfig(endpoints []string, nodes []string) pulumi.StringOutput {
+	return a.clientConfiguration.ApplyT(func(rawCfg map[string]string) (string, error) {
+		ca := decodeMaybeBase64(rawCfg["caCertificate"])
+		key := decodeMaybeBase64(rawCfg["clientKey"])
+		cert := decodeMaybeBase64(rawCfg["clientCertificate"])
 
-		cfg := clientconfig.Config{
-			Context: clusterName,
-			Contexts: map[string]*clientconfig.Context{
-				clusterName: {
-					Endpoints: eps,
-					Nodes:     nds,
-					CA:        ca,
-					Key:       key,
-					Crt:       cert,
-					Cluster:   clusterName,
-				},
+		cfg := clientconfig.NewConfig(
+			a.name,
+			endpoints,
+			[]byte(ca),
+			&x509.PEMEncodedCertificateAndKey{
+				Crt: []byte(cert),
+				Key: []byte(key),
 			},
+		)
+
+		if ctx, ok := cfg.Contexts[a.name]; ok {
+			ctx.Nodes = nodes
 		}
 
-		out, err := yaml.Marshal(cfg)
+		out, err := cfg.Bytes()
 		if err != nil {
 			return "", fmt.Errorf("marshal talosconfig: %w", err)
 		}
 
 		return string(out), nil
 	}).(pulumi.StringOutput)
+}
+
+// decodeMaybeBase64 returns the original string unless it is valid base64, in which case it returns the decoded bytes as a string.
+func decodeMaybeBase64(s string) string {
+	if s == "" {
+		return s
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return s
+	}
+
+	return string(decoded)
 }

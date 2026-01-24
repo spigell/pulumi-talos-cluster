@@ -36,7 +36,6 @@ type ApplyMachines struct {
 	WorkerMachineConfigurations       []*types.MachineInfo `pulumi:"worker"`
 }
 
-//nolint:gocognit // apply is complex but mirrors provider logic
 func apply(ctx *pulumi.Context, a *Apply, name string,
 	args *ApplyArgs, inputs provider.ConstructInputs, opts ...pulumi.ResourceOption,
 ) (*provider.ConstructResult, error) {
@@ -64,12 +63,9 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		cp := ma[tmachine.TypeControlPlane.String()]
 		workers := ma[tmachine.TypeWorker.String()]
 
-		cfg := args.ClientConfiguration.ToStringMapOutput()
+		cfg := args.ClientConfiguration
 
-		app, err := applier.New(ctx, name,
-			buildClientConfigurationFromMap(cfg),
-			pulumi.Parent(a),
-		)
+		app, err := applier.New(ctx, name, cfg, pulumi.Parent(a))
 		if err != nil {
 			return creds.ToStringMapOutput(), err
 		}
@@ -143,10 +139,10 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			return creds.ToStringMapOutput(), err
 		}
 
-		creds[types.TalosconfigKey] = app.NewTalosconfig(endpoints, nodes)
+		creds[types.TalosconfigKey] = app.Talosconfig(endpoints, nodes)
 		// We use only one endpoint for kubeconfig because talosctl doesn't support multiple endpoints for this command.
 		// It is safe because we can fetch kubeconfig from any node.
-		creds[types.KubeconfigKey] = app.NewKubeconfig([]string{endpoints[0]}, nodes, controlplanesReady)
+		creds[types.KubeconfigKey] = app.GetKubeconfig(controlplanesReady)
 
 		return creds.ToStringMapOutput(), nil
 	}).(pulumi.StringMapOutput)
@@ -159,24 +155,4 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 	}
 
 	return provider.NewConstructResult(a)
-}
-
-func buildClientConfigurationFromMap(client pulumi.StringMapOutput) *types.ClientConfigurationArgs {
-	return &types.ClientConfigurationArgs{
-		CaCertificate:     mapOutputToString(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationCAKey))),
-		ClientKey:         mapOutputToString(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientKey))),
-		ClientCertificate: mapOutputToString(client.MapIndex(pulumi.String(ClusterResourceOutputsClientConfigurationClientCertificateKey))),
-	}
-}
-
-func mapOutputToString(o pulumi.Output) pulumi.StringInput {
-	return o.ApplyT(func(v any) (string, error) {
-		if v == nil {
-			return "", nil
-		}
-		if s, ok := v.(string); ok {
-			return s, nil
-		}
-		return "", fmt.Errorf("expected string, got %T", v)
-	}).(pulumi.StringInput)
 }

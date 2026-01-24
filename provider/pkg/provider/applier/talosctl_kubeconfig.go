@@ -7,16 +7,14 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 )
 
-// NewKubeconfig fetches a kubeconfig via talosctl using the generated talosconfig.
-func (a *Applier) NewKubeconfig(endpoints []string, nodes []string, deps []pulumi.Resource) pulumi.StringOutput {
-	t := talosctl.New()
-	if len(endpoints) > 0 {
-		t = t.WithNodeIP(endpoints[0])
-	}
+// GetKubeconfig fetches a kubeconfig via talosctl using the generated talosconfig.
+func (a *Applier) GetKubeconfig(deps []pulumi.Resource) pulumi.StringOutput {
+	t := talosctl.New().
+		WithTalosConfig(a.TalosconfigForNode(a.InitNode.IP)).
+		WithNodeIP(a.InitNode.IP)
 	dir := generateWorkDirNameForTalosctl(a.name, "kubeconfig", "kubeconfig")
 
 	out, err := t.RunGetCommand(a.ctx, &talosctl.Args{
-		TalosConfig: a.NewTalosconfig(endpoints, nodes),
 		Dir:         dir,
 		CommandArgs: pulumi.String("kubeconfig -"),
 		RetryCount:  2,

@@ -9,15 +9,15 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
+//nolint:unused // retained for potential reuse in future flows
 func (a *Applier) reboot(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	stageName := "cli-reboot"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
-	t := talosctl.New().WithNodeIP(m.NodeIP)
-
-	talosconfig := a.NewTalosconfig([]string{m.NodeIP}, []string{m.NodeIP})
+	t := talosctl.New().
+		WithNodeIP(m.NodeIP).
+		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: talosconfig,
 		PrepareDeps: deps,
 		Dir:         home,
 		CommandArgs: pulumi.String(talosctlFastRebootArgs()),
@@ -31,6 +31,7 @@ func (a *Applier) reboot(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.R
 	)
 }
 
+//nolint:unused // retained for potential reuse in future flows
 func talosctlFastRebootArgs() string {
 	// Do not wait for succesfull reboot.
 	return strings.Join([]string{

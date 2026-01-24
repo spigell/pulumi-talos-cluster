@@ -15,7 +15,7 @@ import (
 type Applier struct {
 	ctx                 *pulumi.Context
 	name                string
-	clientConfiguration *types.ClientConfigurationArgs
+	clientConfiguration pulumi.StringMapOutput
 	parent              pulumi.ResourceOption
 	commnanInterpreter  pulumi.StringArray
 	skipInitNode        bool
@@ -31,12 +31,12 @@ type InitNode struct {
 	Name string
 }
 
-func New(ctx *pulumi.Context, name string, client *types.ClientConfigurationArgs, parent pulumi.ResourceOption) (*Applier, error) {
+func New(ctx *pulumi.Context, name string, client pulumi.StringMapInput, parent pulumi.ResourceOption) (*Applier, error) {
 	a := &Applier{
 		name:                name,
 		ctx:                 ctx,
 		parent:              parent,
-		clientConfiguration: client,
+		clientConfiguration: client.ToStringMapOutput(),
 		// 1 is default value, because we have at least one init node.
 		etcdMembers: 1,
 		commnanInterpreter: pulumi.StringArray{
@@ -68,8 +68,14 @@ func (a *Applier) WithEtcdMembersCount(count int) *Applier {
 	return a
 }
 
-func (a *Applier) NewTalosconfig(endpoints []string, nodes []string) pulumi.StringOutput {
-	return buildTalosconfig(a.ctx, a.name, endpoints, nodes, a.clientConfiguration)
+// TalosconfigForNode generates a talosconfig for a single node (IP used for endpoint and node).
+func (a *Applier) TalosconfigForNode(ip string) pulumi.StringOutput {
+	return a.buildTalosConfig([]string{ip}, []string{ip})
+}
+
+// Talosconfig generates a talosconfig for a set of endpoints and nodes.
+func (a *Applier) Talosconfig(endpoints []string, nodes []string) pulumi.StringOutput {
+	return a.buildTalosConfig(endpoints, nodes)
 }
 
 func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, error) {
@@ -164,12 +170,12 @@ func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulu
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	return a.initApplyWithTalosctl(m, deps)
-	//apply, err := a.initApplyWithTalosctl(m, deps)
-	//if err != nil {
-	//	return nil, err
-	//}
+	// apply, err := a.initApplyWithTalosctl(m, deps)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	//deps = append(deps, apply)
+	// deps = append(deps, apply)
 
 	// return a.reboot(m, deps)
 }

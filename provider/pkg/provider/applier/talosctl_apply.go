@@ -2,6 +2,7 @@ package applier
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
@@ -53,11 +54,14 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		ip := args[1].(string)
 		machineConfig := args[2].(string)
 
-		t2 := talosctl.New().WithNodeIP(ip)
+		nodeCfg := a.TalosconfigForNode(ip)
+
+		t2 := talosctl.New().
+			WithNodeIP(ip).
+			WithTalosConfig(nodeCfg)
 		stageName := "cli-get-machine-config"
 
 		current, err := t2.RunGetCommand(a.ctx, &talosctl.Args{
-			TalosConfig: a.NewTalosconfig([]string{ip}, []string{ip}),
 			Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
 			CommandArgs: pulumi.String("get machineconfig v1alpha1 -oyaml"),
 			// No retry. Need to implement another way to retry for get functions.
@@ -92,11 +96,17 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 	}).(pulumi.StringOutput)
 
 	stageName := "cli-apply-config"
-	t := talosctl.New().WithNodeIP(m.NodeIP)
+
+	t := talosctl.New().
+		WithNodeIP(m.NodeIP).
+		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
+
 	machineConfigName := "machineconfig.yaml"
 
+	// Breakpoint to inspect talosctl client configuration during apply.
+	runtime.Breakpoint()
+
 	apply, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: a.NewTalosconfig([]string{m.NodeIP}, []string{m.NodeIP}),
 		AdditionalFiles: []talosctl.ExtraFile{
 			{Name: machineConfigName, Content: machineFile},
 		},

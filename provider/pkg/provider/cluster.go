@@ -64,7 +64,7 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		return nil, err
 	}
 	app, err := applier.New(ctx, name,
-		nil,
+		pulumi.StringMap{},
 		pulumi.Parent(c),
 	)
 	if err != nil {
