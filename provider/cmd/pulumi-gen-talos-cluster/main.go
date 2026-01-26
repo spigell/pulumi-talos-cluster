@@ -79,6 +79,9 @@ func generateSchema() schema.PackageSpec {
 					"@pulumi/pulumi":  "3.210.0",
 					"@pulumi/command": "v1.1.3",
 				},
+				"resolutions": map[string]any{
+					"@pulumi/pulumi": "3.210.0",
+				},
 			}),
 			"go": rawMessage(map[string]any{
 				"generateResourceContainerTypes": true,

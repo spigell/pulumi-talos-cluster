@@ -21,6 +21,9 @@
         "@types/node": "^20.0.0",
         "typescript": "^4.3.5"
     },
+    "resolutions": {
+        "@pulumi/pulumi": "3.210.0"
+    },
     "pulumi": {
         "resource": true,
         "name": "talos-cluster",
