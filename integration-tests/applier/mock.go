@@ -32,6 +32,7 @@ func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error)
 
 	start := time.Now()
 
+	// #nosec G204 -- test helper executes known commands from Pulumi mocks.
 	cmd := exec.CommandContext(ctx, interp[0], append(interp[1:], cmdStr)...)
 	if args.Args["dir"].HasValue() {
 		cmd.Dir = args.Args["dir"].StringValue()
@@ -79,6 +80,7 @@ func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.
 
 	start := time.Now()
 
+	// #nosec G204 -- test helper executes known commands from Pulumi mocks.
 	cmd := exec.CommandContext(ctx, interp[0], append(interp[1:], cmdStr)...)
 	if dir != "" {
 		cmd.Dir = dir
