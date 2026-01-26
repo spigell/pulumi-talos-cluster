@@ -6,6 +6,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"gopkg.in/yaml.v3"
@@ -25,11 +26,16 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 	}
 
 	if role == tmachine.TypeInit || role == tmachine.TypeControlPlane {
-		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
-		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
-			BeforeCreate: hooks,
-			BeforeUpdate: hooks,
-		}))
+		if a.opts.etcdHookEnabled {
+			h, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
+			if err != nil {
+				return nil, err
+			}
+			opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
+				BeforeCreate: []*pulumi.ResourceHook{h},
+				BeforeUpdate: []*pulumi.ResourceHook{h},
+			}))
+		}
 	}
 
 	args, err := talosctlUpgradeArgs(m)

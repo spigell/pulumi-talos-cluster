@@ -25,13 +25,12 @@ type ProxyMock struct {
 
 func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error) {
 	cmdStr := args.Args["command"].StringValue()
-	if m.t != nil {
-		m.t.Logf("running invoke command: %s (dir=%s)", truncate(cmdStr, logLimit()), args.Args["dir"])
-	}
-
+	m.t.Logf("running invoke command: %s (dir=%s)", truncate(cmdStr, logLimit()), args.Args["dir"])
 	interp := interpreterFromPV(args.Args["interpreter"])
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
+	start := time.Now()
 
 	cmd := exec.CommandContext(ctx, interp[0], append(interp[1:], cmdStr)...)
 	if args.Args["dir"].HasValue() {
@@ -42,7 +41,7 @@ func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
+	_ = cmd.Run()
 	exitCode := -1
 	if cmd.ProcessState != nil {
 		exitCode = cmd.ProcessState.ExitCode()
@@ -52,14 +51,7 @@ func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error)
 		m.lastStderr = stderr.String()
 		m.lastExit = exitCode
 	}
-	if err != nil {
-		return resource.PropertyMap{
-			"stdout":   resource.NewStringProperty(stdout.String()),
-			"stderr":   resource.NewStringProperty(stderr.String()),
-			"exitCode": resource.NewNumberProperty(float64(exitCode)),
-		}, err
-	}
-
+	m.t.Logf("invoke complete: exit=%d dur=%s stdout=%q stderr=%q", exitCode, time.Since(start), truncate(stdout.String(), logLimit()), truncate(stderr.String(), logLimit()))
 	return resource.PropertyMap{
 		"stdout":   resource.NewStringProperty(stdout.String()),
 		"stderr":   resource.NewStringProperty(stderr.String()),
@@ -69,10 +61,8 @@ func (m *ProxyMock) Call(args pulumi.MockCallArgs) (resource.PropertyMap, error)
 
 func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
 	cmdStr := args.Inputs["create"].StringValue()
+	m.t.Logf("running command: %s (dir=%s)", truncate(cmdStr, logLimit()), args.Inputs["dir"])
 	m.lastCreate = cmdStr
-	if m.t != nil {
-		m.t.Logf("running command: %s (dir=%s)", truncate(cmdStr, logLimit()), args.Inputs["dir"])
-	}
 	dir := ""
 	if args.Inputs["dir"].HasValue() {
 		dir = args.Inputs["dir"].StringValue()
@@ -87,6 +77,8 @@ func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
+	start := time.Now()
+
 	cmd := exec.CommandContext(ctx, interp[0], append(interp[1:], cmdStr)...)
 	if dir != "" {
 		cmd.Dir = dir
@@ -96,7 +88,11 @@ func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
+	_ = cmd.Run()
+	exit := -1
+	if cmd.ProcessState != nil {
+		exit = cmd.ProcessState.ExitCode()
+	}
 	if strings.Contains(cmdStr, "talosctl") {
 		m.lastStdout = stdout.String()
 		m.lastStderr = stderr.String()
@@ -106,19 +102,7 @@ func (m *ProxyMock) NewResource(args pulumi.MockResourceArgs) (string, resource.
 		}
 		m.lastExit = exitCode
 	}
-	if err != nil {
-		return args.Name + "_id", resource.PropertyMap{
-			"stdout": resource.NewStringProperty(stdout.String()),
-			"stderr": resource.NewStringProperty(stderr.String()),
-			"exitCode": func() resource.PropertyValue {
-				if cmd.ProcessState != nil {
-					return resource.NewNumberProperty(float64(cmd.ProcessState.ExitCode()))
-				}
-				return resource.NewNumberProperty(-1)
-			}(),
-		}, err
-	}
-
+	m.t.Logf("resource command complete: exit=%d dur=%s stdout=%q stderr=%q", exit, time.Since(start), truncate(stdout.String(), logLimit()), truncate(stderr.String(), logLimit()))
 	return args.Name + "_id", resource.PropertyMap{
 		"stdout": resource.NewStringProperty(stdout.String()),
 		"stderr": resource.NewStringProperty(stderr.String()),

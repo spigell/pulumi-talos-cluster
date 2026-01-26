@@ -8,7 +8,6 @@ import (
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
-	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
@@ -20,10 +19,14 @@ type Applier struct {
 	commnanInterpreter  pulumi.StringArray
 	skipInitNode        bool
 
-	etcdMembers   int
-	etcdReadyHook *pulumi.ResourceHook
+	etcdMembers int
+	opts        Options
 
 	InitNode *InitNode
+}
+
+type Options struct {
+	etcdHookEnabled bool
 }
 
 type InitNode struct {
@@ -43,14 +46,7 @@ func New(ctx *pulumi.Context, name string, client pulumi.StringMapInput, parent 
 			pulumi.String("/bin/bash"),
 			pulumi.String("-c"),
 		},
-	}
-
-	if os.Getenv("PULUMI_MOCK_RESOURCES") != "1" {
-		etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
-		if err != nil {
-			return a, err
-		}
-		a.etcdReadyHook = etcdReadyHook
+		opts: Options{etcdHookEnabled: true},
 	}
 
 	return a, nil
@@ -64,6 +60,12 @@ func (a *Applier) WithSkipedInitApply(skip bool) *Applier {
 
 func (a *Applier) WithEtcdMembersCount(count int) *Applier {
 	a.etcdMembers = count
+
+	return a
+}
+
+func (a *Applier) WithHooks(enabled bool) *Applier {
+	a.opts.etcdHookEnabled = enabled
 
 	return a
 }

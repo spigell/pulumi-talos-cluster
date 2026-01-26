@@ -2,7 +2,6 @@ package applier
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
@@ -102,9 +101,6 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 
 	machineConfigName := "machineconfig.yaml"
-
-	// Breakpoint to inspect talosctl client configuration during apply.
-	runtime.Breakpoint()
 
 	apply, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		AdditionalFiles: []talosctl.ExtraFile{

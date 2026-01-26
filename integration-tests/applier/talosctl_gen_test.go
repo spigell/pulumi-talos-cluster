@@ -11,11 +11,10 @@ import (
 )
 
 func TestGenerateSecretsWithRealTalosctl(t *testing.T) {
-	t.Setenv("PULUMI_MOCK_RESOURCES", "1")
-
-	mock := &ProxyMock{}
+	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		app, err := applier.New(ctx, "test-cluster", nil, nil)
+		app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+		app.WithHooks(false)
 		if err != nil {
 			return err
 		}
@@ -41,7 +40,8 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 
 	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		app, err := applier.New(ctx, "test-cluster", nil, nil)
+		app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+		app.WithHooks(false)
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,8 @@ func TestGenerateTalosconfigWithRealTalosctl(t *testing.T) {
 
 	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		app, err := applier.New(ctx, "test-cluster", nil, nil)
+		app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+		app.WithHooks(false)
 		if err != nil {
 			return err
 		}
@@ -191,7 +192,8 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := &ProxyMock{t: t}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-				app, err := applier.New(ctx, "test-cluster", nil, nil)
+				app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+				app.WithHooks(false)
 				if err != nil {
 					return err
 				}

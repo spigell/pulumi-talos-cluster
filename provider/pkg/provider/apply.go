@@ -70,6 +70,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			return creds.ToStringMapOutput(), err
 		}
 
+		app.WithHooks(false)
 		app.WithSkipedInitApply(v[1].(bool))
 		app.WithEtcdMembersCount(len(cp) + 1)
 

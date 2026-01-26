@@ -14,11 +14,21 @@ anchors:
         etcd:
           advertisedSubnets:
             - 10.10.10.0/24
+    cloudflared: &cloudflared |
+      apiVersion: v1alpha1
+      kind: ExtensionServiceConfig
+      name: cloudflared
+      environment:
+        - TUNNEL_TOKEN=CHANGE_ME_AGAIN
+        - TUNNEL_METRICS=localhost:2001
+        - TUNNEL_EDGE_IP_VERSION=auto
     controlplane: &controlplanePatches
       - *machineBase
       - *controlplaneCluster
+      - *cloudflared
     worker: &workerPatches
       - *machineBase
+      - *cloudflared
 
   machineDefaults: &machineDefaults
     platform: hcloud
