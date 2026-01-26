@@ -27,7 +27,7 @@
 ## Versions sync
 - Pulumi upgrades:
   1) Update Go modules: `go get github.com/pulumi/pulumi/sdk/v3@<version>` in `provider/`, `integration-tests/`, `sdk/`, and Go test programs (e.g., `integration-tests/testdata/programs/hcloud-go`, `hcloud-ha-go`), then `go mod tidy` in each. Also bump `github.com/pulumi/pulumi/pkg/v3@<version>` in those same modules to avoid mismatch errors.
-  2) Update Node dependencies: bump `@pulumi/pulumi` in `integration-tests/package.json` and JS test programs (e.g., `integration-tests/testdata/programs/hcloud-js/package.json`), then run `yarn install` to refresh locks.
+  2) Update Node dependencies: bump `@pulumi/pulumi` in `integration-tests/package.json` and JS test programs (e.g., `integration-tests/testdata/programs/hcloud-js/package.json`), then run `yarn install` to refresh locks. Also pin `@pulumi/pulumi` version in Node.js resolutions within the schema generator (`provider/cmd/pulumi-gen-talos-cluster/main.go`).
   3) Update Python requirements: set `pulumi==<version>` in `integration-tests/pyproject.toml` and Python test programs (e.g., `integration-tests/testdata/programs/hcloud-ha-py/requirements.txt`).
   4) Update `.pulumi.version` to the same version you just bumped.
   5) Tidy modules/checksums after bumps: `go mod tidy` in `provider/` and `integration-tests/`, then `go work sync` at repo root to refresh `go.sum`/`go.work.sum`. If stale Pulumi versions linger in `go.work.sum`, delete the file and run `go list -m all` (then `go work sync`) to regenerate it.
@@ -156,12 +156,13 @@ This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) 
 - **Timeouts:** Mandatory. Use reasonable limits (e.g., 300s for quick checks, 1800s for integration tests).
 
 **Allowed Commands:**
-`cat`, `find`, `go`, `grep`, `ls`, `make`, `pulumi`, `pwd`, `talosctl`, `touch`, `wc`.
+`cat`, `find`, `go`, `grep`, `ls`, `make`, `pulumi`, `pwd`, `talosctl`, `touch`, `wc`, `/project/deploy/workbench/pdebug.sh`, `dlv`
+.
 
 **Capabilities & Workflows:**
 
 1.  **Build & Test:**
-    - **Provider Build:** `["make", "build"]`
+    - **Provider Build:** `["make", "build_provider"]`
     - **Full SDK regen/install pipeline**: run `make generate_schema`, `make generate`, `make build`, then install the SDK as needed (e.g., `make install_nodejs_sdk`).
     - **Unit Tests:** `["make", "unit_tests"]`
     - **Integration Tests:** Run via make targets. Only scoped mode is allowed.
