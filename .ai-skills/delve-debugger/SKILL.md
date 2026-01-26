@@ -1,55 +1,67 @@
 ---
 name: delve-debugger
-description: Practical playbook for fully debugging the talos-cluster provider with Delve and pdebug, including a multi-agent workflow.
+description: Practical playbook for debugging the talos-cluster provider with Delve using the background terminal and pdebug to capture panics.
 ---
 
 ## Overview
-- Goal: attach to the remote Delve server, trigger `pdebug.sh <command>` to reproduce pulumi run, and collect backtraces/locals without letting the session drop.
-- Multi-agent flow: one worker in coordination and you (Orcestrator)
-  - Agent 1 (debugger): attach to Delve, run `rebuild`/`continue`, stay attached, capture panic data.
-  - Orcestrator: run `pdebug.sh pre` (or other pdebug command) via pulumi-talos-cluster-mcp with dir to trigger the crash while Agent 1 is attached.
+- Goal: attach to the remote Delve server, trigger `pdebug.sh <command>` to reproduce a Pulumi run, and collect backtraces/locals without dropping the session.
+- Use the background terminal for `dlv` attachment; orchestrator can trigger `pdebug.sh` via MCP from the target program directory.
 
 ## Environment
-- Use local `dlv` client; commands run from repo root. Use a temp init file for commands to avoid `--init` file-missing issues.
+- Use the local `dlv` client; run commands from repo root. Always create an init file under `/tmp` before `dlv connect` to avoid `--init` missing errors.
 - Delve server: `pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345`.
+- If prompted “Would you like to kill the headless instance?”, answer `n` to keep it running.
+- Breakpoints: do not use `break`; add `runtime.Breakpoint()` in code and rebuild if a breakpoint is required.
 
-## Limitations
-- DO NOT USE BACKGROUND TERMINAL
-- Before starting a session with rebuild, try rebuilding the provider binary manually (e.g., `make build_provider`) via mcp env and resolve any errors; only then attach and issue `rebuild`/`continue` in Delve.
-- If asked to keep the server running, answer “n” when Delve prompts “Would you like to kill the headless instance?”.
-- If Delve asks about killing the headless instance, answer `n` to keep it running.
-- **Breakpoints:** Do not use the `break` command. Insert `runtime.Breakpoint()` in your Go code and rebuild.
-
+## Quick Attach (background terminal)
+1) Prepare init file (rebuild + continue):
+```bash
+printf 'rebuild\ncontinue\n' > /tmp/dlv_cmds_full
+```
+2) Attach in a TTY background terminal:
+```bash
+dlv connect pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345 --init=/tmp/dlv_cmds_full
+```
+3) Stay attached; do not quit. If `Unknown process id` appears, recreate the init file and reconnect.
 
 ## Catching a Panic
-1) Agent 1: attach and leave Delve waiting (do **not** quit).
-```bash
-printf 'rebuild\ncontinue\n' > /tmp/dlv_cmds_agent1
-dlv connect <server> --init=/tmp/dlv_cmds_agent1
-```
-2) Orcestrator: run `/project/deploy/workbench/pdebug.sh pre` via pulumi-talos-cluster-mcp from the target program dir, e.g. `{dir: integration-tests/testdata/programs/<program>}`:
+1) Attach and leave Delve waiting (do **not** quit) using the quick-attach steps.
+2) From the target program directory, trigger the provider via MCP:
 ```bash
 /project/deploy/workbench/pdebug.sh pre
 ```
-3) When Delve stops on panic (Agent 1), collect:
+   Example directory: `integration-tests/testdata/programs/<program>`.
+3) When Delve stops on panic, collect:
 ```bash
 bt
 goroutines
-goroutine <id> bt   # pick the crashing goroutine id
-locals
-args
+goroutine <id> bt   # crashing goroutine
+goroutine <id> locals
+goroutine <id> args
 ```
-4) If needed, inspect variables (Agent 1):
+4) Optional inspections:
 ```bash
 print <expr>
 whatis <expr>
 ```
-5) To resume after inspection (Agent 1):
+5) Resume after inspection:
 ```bash
 continue
 ```
 
+## Debugging an Active State (background terminal)
+- If the process is already running and you need to inspect its current state:
+  1) Create an empty init file: `printf '' > /tmp/dlv_cmds_capture`.
+  2) Attach in a TTY background terminal:  
+     `dlv connect <server> --init=/tmp/dlv_cmds_capture`
+  3) Inspect the state without restarting:
+     - `threads` (or `goroutines`) to find the interesting goroutine.
+     - `bt` or `goroutine <id> bt` for stack.
+     - `goroutine <id> locals` / `args` or `print <expr>` for values.
+  4) Use `continue` only when you’re ready to let the process run again.
+  5) If the session drops (`Unknown process id`), recreate the init file and reconnect.
+
 ## Common Symptoms & Actions
-- **`plugin ... did not begin responding to RPC connections`**: Provider is not started. Ensure Agent 1 is attached and has issued `rebuild/continue`; rerun Agent 2.
-- **`EOF` / resource monitor shut down**: Provider crashed; reattach Agent 1 with rebuild and rerun Agent 2 to capture the panic backtrace.
-- **`--init` file missing**: Always create the temp file under `/tmp` before `dlv connect`.
+- `plugin ... did not begin responding to RPC connections`: ensure the `dlv` session issued `rebuild/continue`, then rerun `pdebug.sh`.
+- `EOF` / resource monitor shut down: reattach with the init file and rerun `pdebug.sh`.
+- `--init file missing`: create the file under `/tmp` before connecting.
