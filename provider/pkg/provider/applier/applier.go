@@ -21,6 +21,7 @@ type Applier struct {
 
 	etcdMembers int
 	opts        Options
+	hooks       map[string][]*pulumi.ResourceHook
 
 	InitNode *InitNode
 }
@@ -28,6 +29,8 @@ type Applier struct {
 type Options struct {
 	etcdHookEnabled bool
 }
+
+const hookStageUpgrade = "cli-upgrade"
 
 type InitNode struct {
 	IP   string
@@ -66,6 +69,9 @@ func (a *Applier) WithEtcdMembersCount(count int) *Applier {
 
 func (a *Applier) WithHooks(enabled bool) *Applier {
 	a.opts.etcdHookEnabled = enabled
+	if enabled && a.hooks == nil {
+		a.hooks = make(map[string][]*pulumi.ResourceHook)
+	}
 
 	return a
 }
@@ -89,20 +95,12 @@ func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, er
 
 	deps := []pulumi.Resource{applied}
 
-	// bootstrap, err := a.bootstrapWithTalosctl(m, deps)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	//
-	// deps = append(deps, bootstrap)
-	//
-	// cli, err := a.cliApply(m, tmachine.TypeInit, deps)
-	// if err != nil {
-	// 	return deps, err
-	// }
-	//
-	// return append(deps, cli...), nil
-	return deps, nil
+	cli, err := a.cliApply(m, tmachine.TypeInit, deps)
+	if err != nil {
+		return deps, err
+	}
+
+	return append(deps, cli...), nil
 }
 
 func (a *Applier) InitControlplane(m *types.MachineInfo, deps []pulumi.Resource) ([]pulumi.Resource, error) {

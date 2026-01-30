@@ -38,6 +38,11 @@ type Args struct {
 	Triggers         pulumi.Array
 	AdditionalFiles  []ExtraFile
 	TryInsecureFirst bool
+	// Logging controls what the Pulumi engine records from the command execution.
+	// Defaults:
+	//   - RunCommand: local.LoggingNone (keeps current behavior of streaming both stdout/stderr)
+	//   - RunGetCommand: local.LoggingStderr (previous default)
+	Logging local.Logging
 }
 
 // ExtraFile describes an additional file to place alongside talosctl.yaml.
@@ -74,7 +79,12 @@ func (t *Talosctl) RunCommand(
 	name string,
 	a *Args,
 	opts ...pulumi.ResourceOption,
-) (pulumi.Resource, error) {
+) (*local.Command, error) {
+	logging := a.Logging
+	if logging == "" {
+		logging = local.LoggingNone
+	}
+
 	createGated, env, err := t.prepareAndGate(ctx, a)
 	if err != nil {
 		return nil, err
@@ -86,6 +96,7 @@ func (t *Talosctl) RunCommand(
 		Interpreter: pulumi.ToStringArray(interpreter),
 		Environment: env,
 		Triggers:    a.Triggers,
+		Logging:     logging,
 	}, opts...)
 	if err != nil {
 		return nil, err
@@ -106,6 +117,11 @@ func (t *Talosctl) RunGetCommand(
 	a *Args,
 	deps []pulumi.Resource,
 ) (pulumi.StringOutput, error) {
+	logging := a.Logging
+	if logging == "" {
+		logging = local.LoggingStderr
+	}
+
 	createGated, env, err := t.prepareAndGate(ctx, a)
 	if err != nil {
 		// Return a zero output with error
@@ -121,7 +137,7 @@ func (t *Talosctl) RunGetCommand(
 		Command:     cmdWithCleanup,
 		Interpreter: pulumi.ToStringArray(interpreter),
 		// Only log stderr since stdout can keep a sensitive data.
-		Logging:     local.LoggingStderr,
+		Logging:     logging,
 		Environment: env,
 		Dir:         pulumi.String(a.Dir),
 	}, pulumi.DependsOn(deps))

@@ -54,7 +54,7 @@ func generateSchema() schema.PackageSpec {
 		Language: map[string]schema.RawMessage{
 			"csharp": rawMessage(map[string]any{
 				"packageReferences": map[string]string{
-					"Pulumi":         "3.*",
+					"Pulumi":         "3.98.0-alpha.cb0f35c",
 					"Pulumi.Command": "1.1.3",
 				},
 			}),

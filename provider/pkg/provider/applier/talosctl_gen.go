@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/crypto/x509"
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
@@ -22,7 +21,7 @@ var talosctlGenerateBaseArgs = strings.Join([]string{
 
 // GenerateSecrets runs "talosctl gen secrets" into a generated workDir and returns the command resource, file contents, and workDir used.
 func (a *Applier) generateSecrets() (pulumi.StringOutput, error) {
-	stageName := "gen-secrets"
+	stageName := "cli-gen-secrets"
 	t := talosctl.New()
 	home := generateWorkDirNameForTalosctl(a.name, stageName, "common")
 
@@ -31,17 +30,18 @@ func (a *Applier) generateSecrets() (pulumi.StringOutput, error) {
 		CommandArgs: pulumi.String("gen secrets --force -o -"),
 	}, []pulumi.ResourceOption{
 		a.parent,
+		pulumi.IgnoreChanges([]string{"create"}),
 	}...)
 	if err != nil {
 		return pulumi.StringOutput{}, err
 	}
 
-	return cmd.(*local.Command).Stdout, nil
+	return cmd.Stdout, nil
 }
 
 // GenerateConfig runs "talosctl gen config" into workDir/configs and returns the command resource.
 func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.Resource, error) {
-	stageName := "gen-machine-config"
+	stageName := "cli-gen-machine-config"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New()
 
@@ -90,11 +90,12 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 		),
 	}, []pulumi.ResourceOption{
 		a.parent,
+		pulumi.IgnoreChanges([]string{"create"}),
 	}...)
 }
 
 func (a *Applier) generateTalosconfig(c *types.Cluster, secrets pulumi.StringOutput) (pulumi.Resource, error) {
-	stageName := "gen-talosconfig"
+	stageName := "cli-gen-talosconfig"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, "")
 	t := talosctl.New()
 
@@ -111,7 +112,11 @@ func (a *Applier) generateTalosconfig(c *types.Cluster, secrets pulumi.StringOut
 			c.ClusterName,
 			c.ClusterEndpoint,
 		),
-	})
+		}, []pulumi.ResourceOption{
+			a.parent,
+			pulumi.IgnoreChanges([]string{"create"}),
+		}...)
+	
 }
 
 func mergePatchesYAML(patches []string) (string, error) {

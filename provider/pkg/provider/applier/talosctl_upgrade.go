@@ -27,14 +27,21 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 
 	if role == tmachine.TypeInit || role == tmachine.TypeControlPlane {
 		if a.opts.etcdHookEnabled {
-			h, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
-			if err != nil {
-				return nil, err
+			// Populate upgrade hooks lazily and reuse if already registered.
+			if _, ok := a.hooks[hookStageUpgrade]; !ok {
+				h, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
+				if err != nil {
+					return nil, err
+				}
+				a.hooks[hookStageUpgrade] = []*pulumi.ResourceHook{h}
 			}
-			opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
-				BeforeCreate: []*pulumi.ResourceHook{h},
-				BeforeUpdate: []*pulumi.ResourceHook{h},
-			}))
+
+			if hooksForStage, ok := a.hooks[hookStageUpgrade]; ok && len(hooksForStage) > 0 {
+				opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
+					BeforeCreate: hooksForStage,
+					BeforeUpdate: hooksForStage,
+				}))
+			}
 		}
 	}
 

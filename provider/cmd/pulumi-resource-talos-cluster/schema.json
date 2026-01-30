@@ -15,7 +15,7 @@
     "language": {
         "csharp": {
             "packageReferences": {
-                "Pulumi": "3.*",
+                "Pulumi": "3.98.0-alpha.cb0f35c",
                 "Pulumi.Command": "1.1.3"
             }
         },

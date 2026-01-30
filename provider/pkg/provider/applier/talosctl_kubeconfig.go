@@ -14,17 +14,16 @@ func (a *Applier) GetKubeconfig(deps []pulumi.Resource) pulumi.StringOutput {
 		WithNodeIP(a.InitNode.IP)
 	dir := generateWorkDirNameForTalosctl(a.name, "kubeconfig", "kubeconfig")
 
-	out, err := t.RunGetCommand(a.ctx, &talosctl.Args{
+	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, "kubeconfig", a.InitNode.Name), &talosctl.Args{
 		Dir:         dir,
 		CommandArgs: pulumi.String("kubeconfig -"),
 		RetryCount:  2,
-	}, deps)
+	}, pulumi.DependsOn(deps))
 	if err != nil {
-		// Return rejected output with error to propagate failure.
 		return pulumi.StringOutput{}.ApplyT(func(string) (string, error) {
 			return "", fmt.Errorf("run kubeconfig: %w", err)
 		}).(pulumi.StringOutput)
 	}
 
-	return out
+	return cmd.Stdout
 }

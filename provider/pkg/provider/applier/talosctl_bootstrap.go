@@ -9,7 +9,7 @@ import (
 )
 
 func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	stageName := "initial-apply-config"
+	stageName := "cli-initial-apply-config"
 	t := talosctl.New().
 		WithNodeIP(m.NodeIP).
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))

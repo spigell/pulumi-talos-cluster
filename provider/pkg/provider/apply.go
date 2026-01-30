@@ -70,7 +70,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			return creds.ToStringMapOutput(), err
 		}
 
-		app.WithHooks(false)
+		app.WithHooks(true)
 		app.WithSkipedInitApply(v[1].(bool))
 		app.WithEtcdMembersCount(len(cp) + 1)
 
@@ -140,10 +140,10 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 			return creds.ToStringMapOutput(), err
 		}
 
-		creds[types.TalosconfigKey] = app.Talosconfig(endpoints, nodes)
+		creds[types.TalosconfigKey] = pulumi.ToSecret(app.Talosconfig(endpoints, nodes)).(pulumi.StringOutput)
 		// We use only one endpoint for kubeconfig because talosctl doesn't support multiple endpoints for this command.
 		// It is safe because we can fetch kubeconfig from any node.
-		creds[types.KubeconfigKey] = app.GetKubeconfig(controlplanesReady)
+		creds[types.KubeconfigKey] = pulumi.ToSecret(app.GetKubeconfig(controlplanesReady)).(pulumi.StringOutput)
 
 		return creds.ToStringMapOutput(), nil
 	}).(pulumi.StringMapOutput)
