@@ -38,6 +38,7 @@ anchors:
   machineDefaults: &machineDefaults
     platform: hcloud
     variant: cloud
+    talosImage: factory.talos.dev/hcloud-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.12.0
     hcloud:
       serverType: cx23
       datacenter: fsn1-dc14
@@ -51,12 +52,12 @@ privateSubnetwork: 10.10.10.0/25
 skipInitApply: true
 machines:
   - <<: *machineDefaults
-    id: controlplane-1
+    id: hcloud-go-controlplane-1
     type: init
     privateIP: 10.10.10.5
     configPatches: *controlplanePatches
   - <<: *machineDefaults
-    id: worker-1
+    id: hcloud-go-worker-1
     type: worker
     privateIP: 10.10.10.3
     configPatches: *workerPatches

@@ -33,6 +33,7 @@ anchors:
   machineDefaults: &machineDefaults
     platform: hcloud
     variant: metal
+    talosImage: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.12.0
     apply-config-via-userdata: false
     hcloud:
       serverType: cx23
@@ -54,15 +55,50 @@ privateNetwork: 10.10.10.0/24
 privateSubnetwork: 10.10.10.0/25
 machines:
   - <<: *controlplaneDefaults
-    id: controlplane-1
+    id: hcloud-ha-go-controlplane-1
     type: init
     privateIP: 10.10.10.5
+    configPatches:
+      - *machineBase
+      - *controlplaneCluster
+      - *cloudflared
+      - |
+        apiVersion: v1alpha1
+        kind: HostnameConfig
+        hostname: hcloud-ha-go-controlplane-1
+        auto: off
   - <<: *controlplaneDefaults
-    id: controlplane-2
+    id: hcloud-ha-go-controlplane-2
     privateIP: 10.10.10.2
+    configPatches:
+      - *machineBase
+      - *controlplaneCluster
+      - *cloudflared
+      - |
+        apiVersion: v1alpha1
+        kind: HostnameConfig
+        hostname: hcloud-ha-go-controlplane-2
+        auto: off
   - <<: *controlplaneDefaults
-    id: controlplane-3
+    id: hcloud-ha-go-controlplane-3
     privateIP: 10.10.10.10
+    configPatches:
+      - *machineBase
+      - *controlplaneCluster
+      - *cloudflared
+      - |
+        apiVersion: v1alpha1
+        kind: HostnameConfig
+        hostname: hcloud-ha-go-controlplane-3
+        auto: off
   - <<: *workerDefaults
-    id: worker-1
+    id: hcloud-ha-go-worker-1
     privateIP: 10.10.10.3
+    configPatches:
+      - *machineBase
+      - *cloudflared
+      - |
+        apiVersion: v1alpha1
+        kind: HostnameConfig
+        hostname: hcloud-ha-go-worker-1
+        auto: off

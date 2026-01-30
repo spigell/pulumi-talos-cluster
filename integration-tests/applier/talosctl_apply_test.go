@@ -34,9 +34,6 @@ func TestApplyConfigUsesInsecureFallback(t *testing.T) {
 	assert.Contains(t, mock.lastCreate, ") || (")
 	assert.Contains(t, mock.lastCreate, "talosctl --help --insecure")
 	assert.Contains(t, mock.lastCreate, "talosctl --help --talosconfig talosctl.yaml")
-
-	t.Logf("lastCreate=%s", mock.lastCreate)
-	t.Logf("lastStdout=%q lastStderr=%q exit=%d", truncate(mock.lastStdout, 200), truncate(mock.lastStderr, 200), mock.lastExit)
 }
 
 const minimalTalosconfig = `
