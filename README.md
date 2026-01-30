@@ -10,20 +10,19 @@ This component can be used for bare-metal and cloud installations. Direct access
 
 Only Linux is supported as the runner operating system. The following tools must be available:
 
-- `bash`
+- `bash` (must be available at `/bin/bash`)
 - `printf`
-- `talosctl`
+- `talosctl` (version `v1.12.0` or compatible recommended to match the default Talos image version)
 
 ## Quick Start
 
-1. Install `bash`, `printf`, and `talosctl` on a Linux machine.
+1. Install `bash` (at `/bin/bash`), `printf`, and `talosctl` on a Linux machine.
 2. Clone this repository.
 3. Run an example program, such as those under `integration-tests/testdata`, using `pulumi up`. The provider plugin installs automatically.
 
 ## Motivation
 
-The official Terraform (and therefore Pulumi) provider for Talos has certain limitations, particularly around upgrading and configuring clusters, as highlighted in issues like [#195](https://github.com/siderolabs/terraform-provider-talos/issues/195). This component leverages the `pulumiverse/talos` and `pulumi/command` providers to fully manage Talos clusters, overcoming these limitations.
-
+The official Terraform (and therefore Pulumi) provider for Talos has certain limitations, particularly around upgrading and configuring clusters, as highlighted in issues like [#195](https://github.com/siderolabs/terraform-provider-talos/issues/195). This component directly orchestrates `talosctl` and utilizes the `pulumi/command` provider to fully manage Talos clusters, overcoming these limitations and providing a more native experience.
 
 ## Development
 ### Go
@@ -49,7 +48,7 @@ git commit -m 'release'
 
 ## Example
 Refer to the `integration-tests/testdata` directory for sample Pulumi programs using the `pulumi-talos-cluster` component.
- 
+
 ## Roadmap
 
 ### Current focus
