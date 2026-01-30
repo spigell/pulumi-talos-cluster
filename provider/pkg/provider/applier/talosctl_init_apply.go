@@ -8,6 +8,7 @@ import (
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
+// initApplyWithTalosctl runs the initial apply-config step using talosctl for a machine.
 func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	stageName := "cli-initial-apply-config"
 	t := talosctl.New().
@@ -34,27 +35,4 @@ func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Reso
 	}
 
 	return apply, nil
-}
-
-//nolint:unused // kept for future use and parity with previous flow
-func (a *Applier) bootstrapWithTalosctl(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	stageName := "bootstrap"
-	t := talosctl.New().
-		WithNodeIP(m.NodeIP).
-		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
-
-	bootstrap, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		CommandArgs: pulumi.String("bootstrap"),
-		Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
-		RetryCount:  2,
-	}, []pulumi.ResourceOption{
-		a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
-		pulumi.DependsOn(deps),
-	}...)
-	if err != nil {
-		return nil, err
-	}
-
-	return bootstrap, nil
 }

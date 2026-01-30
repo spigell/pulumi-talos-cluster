@@ -170,14 +170,6 @@ func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulu
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	return a.initApplyWithTalosctl(m, deps)
-	// apply, err := a.initApplyWithTalosctl(m, deps)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// deps = append(deps, apply)
-
-	// return a.reboot(m, deps)
 }
 
 func (a *Applier) GenerateSecrets() (pulumi.StringOutput, error) {
