@@ -26,8 +26,8 @@ func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Reso
 		TryInsecureFirst: true,
 	}, []pulumi.ResourceOption{
 		a.parent,
-		pulumi.IgnoreChanges([]string{"create"}),
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
+		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
+		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: timeoutShort, Update: timeoutShort}),
 		pulumi.DependsOn(deps),
 	}...)
 	if err != nil {

@@ -128,9 +128,9 @@ func (t *Talosctl) RunGetCommand(
 		return pulumi.StringOutput{}, err
 	}
 
-	// Compose main + cleanup so temp dirs are removed even on previews.
+	// Always remove the temp directory, even when the talosctl command fails.
 	cmdWithCleanup := createGated.ApplyT(func(args string) string {
-		return fmt.Sprintf("%s && rm -rf %s", args, a.Dir)
+		return fmt.Sprintf(`%s; rc=$?; rm -rf %q; exit $rc`, args, a.Dir)
 	}).(pulumi.StringOutput)
 
 	out := local.RunOutput(ctx, local.RunOutputArgs{

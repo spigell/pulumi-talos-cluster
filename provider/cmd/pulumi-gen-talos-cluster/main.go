@@ -6,6 +6,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
@@ -106,7 +107,15 @@ func mustWritePulumiSchema(pkgSpec schema.PackageSpec, outdir string) {
 }
 
 func mustWriteFile(rootDir, filename string, contents []byte) {
-	outPath := filepath.Join(rootDir, filename)
+	cleanRoot := filepath.Clean(rootDir)
+	outPath := filepath.Join(cleanRoot, filename)
+	relPath, err := filepath.Rel(cleanRoot, outPath)
+	if err != nil {
+		panic(err)
+	}
+	if relPath == ".." || filepath.IsAbs(relPath) || strings.HasPrefix(relPath, ".."+string(filepath.Separator)) {
+		panic(fmt.Errorf("invalid output path outside root: %s", outPath))
+	}
 	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
 		panic(err)
 	}

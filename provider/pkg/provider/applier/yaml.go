@@ -10,6 +10,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	yamlPathImage   = "image"
+	yamlPathCluster = "cluster"
+)
+
 type Guard func(root map[string]any) error
 
 type Merger struct {
@@ -135,15 +140,15 @@ func (m *Merger) Build() (string, error) {
 func GuardUnmodifyK8sImages(img *K8SImages) Guard {
 	return func(root map[string]any) error {
 		// machine.kubelet.image
-		setPath(root, []string{"machine", "kubelet", "image"}, img.Kubelet)
+		setPath(root, []string{"machine", "kubelet", yamlPathImage}, img.Kubelet)
 		// cluster.apiServer.image
-		setPath(root, []string{"cluster", "apiServer", "image"}, img.APIServer)
+		setPath(root, []string{yamlPathCluster, "apiServer", yamlPathImage}, img.APIServer)
 		// cluster.controllerManager.image
-		setPath(root, []string{"cluster", "controllerManager", "image"}, img.ControllerManager)
+		setPath(root, []string{yamlPathCluster, "controllerManager", yamlPathImage}, img.ControllerManager)
 		// cluster.scheduler.image
-		setPath(root, []string{"cluster", "scheduler", "image"}, img.Scheduler)
+		setPath(root, []string{yamlPathCluster, "scheduler", yamlPathImage}, img.Scheduler)
 		// cluster.proxy.image
-		setPath(root, []string{"cluster", "proxy", "image"}, img.KubeProxy)
+		setPath(root, []string{yamlPathCluster, "proxy", yamlPathImage}, img.KubeProxy)
 		return nil
 	}
 }
