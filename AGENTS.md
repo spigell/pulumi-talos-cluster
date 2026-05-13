@@ -60,7 +60,6 @@
   - The `cluster` validation logic only covers the basic and common cluster specification.
   - Default values and specific validation for `talos` and `cloud` configurations are handled within their respective packages.
 - **Python helper modules**: Shared Python helpers now live under `integration-tests/pkg/cluster/python` as packages (see `__init__.py`). New helper directories (e.g., `integration-tests/pkg/talos/python`) should also be proper packages (`__init__.py`) and added to the codebase; Pyright resolves them because `pyrightconfig.json` points `extraPaths` at `integration-tests/pkg`. Keep that root path in `extraPaths` so new packages continue to resolve.
-- **Talos provider pinning**: The schema generator pins `pulumiverse-talos` for Python to `==0.6.1` (aligned with Talos 1.11.5). When bumping Talos, change the version in `provider/cmd/pulumi-gen-talos-cluster/main.go` (language.python.requires), then regenerate schema/SDKs so `provider/cmd/pulumi-resource-talos-cluster/schema.json` and `sdk/python/pyproject.toml` pick up the new pin.
 
 ### Configuration File Validation (`cluster.yaml`)
 
@@ -94,56 +93,88 @@ This pattern ensures that any data used in the integration tests is guaranteed t
 - When debugging provider binaries, `make start_delve` launches `dlv` headless on port 2345 for remote attach. You can also connect directly with `PAGER=cat dlv connect pulumi-workbench-delve:2345`; prepare a dlv init script to automate any interactive commands.
 - Do not add `pulumi-talos-cluster-integration-tests-infra` to `package.json`; Pulumi installs projects in a temp directory with relative paths and the dependency fails to resolve there.
 
-## Provider Bootstrap Process
-The following diagram illustrates the sequential bootstrap process for the `Apply` resource when `skipInitApply` is false.
+## Cluster Creation
+The following diagram illustrates the complete cluster creation workflow, including configuration generation, bootstrap sequences, and finalization. Each step notes the underlying Pulumi resource name.
 
 ```mermaid
 flowchart TD
-    Start["Apply Resource Create/Update"] --> LeaderStart["Bootstrap Leader"]
+    %% Define Styles
+    classDef getResource fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
 
-    subgraph LeaderPhase["Leader Control Plane (init)"]
-        InitCP["Select First/Leader CP Node"]
-        ApplyLeader["talosctl apply-config --insecure (leader)"]
-        RebootLeader["Leader Installs & Reboots"]
+    Start["Start"] --> GenPhase["Generation Phase"]
 
-        LeaderStart --> InitCP --> ApplyLeader --> RebootLeader
+    subgraph Gen["1. Generation"]
+        GenSecrets["talosctl gen secrets (Resource: gen-secrets)"]
+        GenConfigs["talosctl gen config (Resource: gen-machine-config / gen-talosconfig)"]
+        GenSecrets --> GenConfigs
+    end
+    
+    GenPhase --> GenConfigs
+    GenConfigs --> LeaderPhase["Leader Bootstrap"]
+
+    subgraph Leader["2. Leader Bootstrap"]
+        LeaderNode["Select Leader Node"]
+        LeaderApply["talosctl apply-config --insecure --mode reboot (Resource: initial-apply-config) [TryInsecure]"]
+        
+        LeaderNode --> LeaderApply
     end
 
-    RebootLeader --> CheckSkip{"skipInitApply?"}
+    LeaderApply --> CPPhase["Control Planes Loop"]
+    LeaderApply --> WorkerPhase["Workers Loop"]
 
-    CheckSkip -- "False" --> BootstrapStart[Bootstrap Remaining Nodes]
-    CheckSkip -- "True" --> Done
-
-    subgraph BootstrapLoop["Bootstrap Loop (Sequential)"]
-        direction TB
-
-        subgraph CPPhase["1. Apply to Other Control Planes"]
-            IterateCP["For Each Remaining CP"]
-            ApplyConfigCP["talosctl apply-config --insecure"]
-            RebootCP["Node Installs & Reboots"]
-
-            IterateCP --> ApplyConfigCP --> RebootCP
-            RebootCP -- "Next" --> IterateCP
+    subgraph CPs["3. Remaining Control Planes"]
+        CPIter["For Each CP"]
+        CPSkip{"skipInitApply?"}
+        CPInit["talosctl apply-config --insecure --mode reboot (Resource: initial-apply-config) [TryInsecure]"]
+        
+        subgraph CPSecureFlow["Secure Apply Flow"]
+            CPUpgrade["talosctl upgrade --image ... (Resource: cli-upgrade)"]
+            CPGet["talosctl get machineconfig (Resource: cli-get-machine-config)"]
+            CPApply["talosctl apply-config (Resource: cli-apply-config)"]
+            CPUpgrade --> CPGet --> CPApply
         end
 
-        subgraph WorkerPhase["2. Apply to Workers"]
-            IterateWork["For Each Worker"]
-            ApplyConfigWork["talosctl apply-config --insecure"]
-            RebootWork["Node Installs & Reboots"]
-
-            IterateWork --> ApplyConfigWork --> RebootWork
-            RebootWork -- "Next" --> IterateWork
-        end
-
-        BootstrapStart --> IterateCP
-        RebootCP --> IterateWork
+        CPIter --> CPSkip
+        CPSkip -- "False" --> CPInit --> CPUpgrade
+        CPSkip -- "True" --> CPUpgrade
     end
 
-    IterateWork --> Kubeconfig["Retrieve Kubeconfig"]
-    Kubeconfig --> Done["Resource Ready"]
+    CPPhase --> CPIter
+    
+    subgraph Workers["4. Workers"]
+        WorkIter["For Each Worker"]
+        WorkSkip{"skipInitApply?"}
+        WorkInit["talosctl apply-config --insecure --mode reboot (Resource: initial-apply-config) [TryInsecure]"]
+        
+        subgraph WorkSecureFlow["Secure Apply Flow"]
+            WorkUpgrade["talosctl upgrade --image ... (Resource: cli-upgrade)"]
+            WorkGet["talosctl get machineconfig (Resource: cli-get-machine-config)"]
+            WorkApply["talosctl apply-config (Resource: cli-apply-config)"]
+            WorkUpgrade --> WorkGet --> WorkApply
+        end
 
-    classDef dangerous fill:#f96,stroke:#333,stroke-width:2px;
-    class RebootLeader,RebootCP,RebootWork dangerous;
+        WorkIter --> WorkSkip
+        WorkSkip -- "False" --> WorkInit --> WorkUpgrade
+        WorkSkip -- "True" --> WorkUpgrade
+    end
+
+    WorkerPhase --> WorkIter
+    
+    CPApply --> FinalPhase["Finalization"]
+    WorkApply --> FinalPhase
+
+    subgraph Final["5. Finalization"]
+        Upgrade["talosctl upgrade-k8s (Resource: cli-upgrade-k8s)"]
+        Kubeconfig["talosctl kubeconfig (Resource: kubeconfig)"]
+        
+        Upgrade --> Kubeconfig
+    end
+
+    FinalPhase --> Upgrade
+    Kubeconfig --> Done["Cluster Ready"]
+
+    %% Apply Styles
+    class CPGet,WorkGet,Kubeconfig getResource;
 ```
 
 ## MCP Shell Server & Tooling
