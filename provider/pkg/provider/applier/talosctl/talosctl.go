@@ -128,26 +128,21 @@ func (t *Talosctl) RunGetCommand(
 		return pulumi.StringOutput{}, err
 	}
 
-	name := fmt.Sprintf("talosctl-get:%s", filepath.Base(a.Dir))
-	main, err := local.NewCommand(ctx, name, &local.CommandArgs{
-		Create:      createGated,
-		Dir:         pulumi.String(a.Dir),
+	// Compose main + cleanup so temp dirs are removed even on previews.
+	cmdWithCleanup := createGated.ApplyT(func(args string) string {
+		return fmt.Sprintf("%s && rm -rf %s", args, a.Dir)
+	}).(pulumi.StringOutput)
+
+	out := local.RunOutput(ctx, local.RunOutputArgs{
+		Command:     cmdWithCleanup,
 		Interpreter: pulumi.ToStringArray(interpreter),
 		// Only log stderr since stdout can keep a sensitive data.
 		Logging:     logging,
 		Environment: env,
+		Dir:         pulumi.String(a.Dir),
 	}, pulumi.DependsOn(deps))
-	if err != nil {
-		return pulumi.StringOutput{}, err
-	}
 
-	// Hidden cleanup after the resource completes.
-	_ = local.RunOutput(ctx, local.RunOutputArgs{
-		Command:     pulumi.Sprintf(`rm -rf %q`, a.Dir),
-		Interpreter: pulumi.ToStringArray(interpreter),
-	}, pulumi.DependsOn([]pulumi.Resource{main}))
-
-	return main.Stdout, nil
+	return out.Stdout(), nil
 }
 
 func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated pulumi.StringOutput, env pulumi.StringMap, err error) {

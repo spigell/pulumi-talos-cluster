@@ -18,24 +18,24 @@ func BasicTypes() map[string]schema.ComplexTypeSpec {
 
 	types[BasicMachinesByTypePath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type: typeObject,
+			Type: "object",
 			Properties: map[string]schema.PropertySpec{
 				machine.TypeControlPlane.String(): {
 					TypeSpec: schema.TypeSpec{
-						Type:  typeArray,
-						Items: &schema.TypeSpec{Type: typeObject, Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
+						Type:  "array",
+						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
 					},
 				},
 				machine.TypeInit.String(): {
 					TypeSpec: schema.TypeSpec{
-						Type:  typeArray,
-						Items: &schema.TypeSpec{Type: typeObject, Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
+						Type:  "array",
+						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
 					},
 				},
 				machine.TypeWorker.String(): {
 					TypeSpec: schema.TypeSpec{
-						Type:  typeArray,
-						Items: &schema.TypeSpec{Type: typeObject, Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
+						Type:  "array",
+						Items: &schema.TypeSpec{Type: "object", Ref: fmt.Sprintf("#types/%s", ApplyTypesMachineInfoPath)},
 					},
 				},
 			},
@@ -47,23 +47,23 @@ func BasicTypes() map[string]schema.ComplexTypeSpec {
 
 	types[BasicClientConfifgurationPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type: typeObject,
+			Type: "object",
 			Properties: map[string]schema.PropertySpec{
 				provider.ClusterResourceOutputsClientConfigurationCAKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "The Certificate Authority (CA) certificate used to verify connections to the Talos API server.",
 				},
 				provider.ClusterResourceOutputsClientConfigurationClientKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "The private key for the client certificate, used for authenticating the client to the Talos API server.",
 				},
 				provider.ClusterResourceOutputsClientConfigurationClientCertificateKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "The client certificate used to authenticate to the Talos API server.",
 				},

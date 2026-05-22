@@ -33,7 +33,7 @@ func ApplyProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		ApplyTypesCredentialsKey: {
 			TypeSpec: schema.TypeSpec{
-				Type: typeObject,
+				Type: "object",
 				Ref:  fmt.Sprintf("#types/%s", ApplyTypesCredentialsPath),
 			},
 		},
@@ -44,7 +44,7 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		"applyMachines": {
 			TypeSpec: schema.TypeSpec{
-				Type: typeObject,
+				Type: "object",
 				Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
 			},
 			Description: "The machine configurations to apply.",
@@ -73,17 +73,17 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 
 	ty[ApplyTypesCredentialsPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type: typeObject,
+			Type: "object",
 			Properties: map[string]schema.PropertySpec{
 				types.KubeconfigKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "The Kubeconfig for cluster",
 				},
 				types.TalosconfigKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "The talosconfig with all nodes and controlplanes as endpoints",
 				},
@@ -101,33 +101,33 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 			Properties: map[string]schema.PropertySpec{
 				types.MachineIDKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "ID or name of the machine.",
 				},
 				types.NodeIPKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "The IP address of the node where configuration will be applied.",
 				},
 				types.ConfigurationKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "Configuration settings for machines to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
 				types.UserConfigPatchesKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "User-provided machine configuration to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
 				types.TalosImageKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: typeString,
+						Type: "string",
 					},
 					Description: "Talos OS image to install or upgrade on the node.",
 				},

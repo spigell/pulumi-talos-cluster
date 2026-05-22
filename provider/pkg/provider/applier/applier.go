@@ -87,15 +87,13 @@ func (a *Applier) Talosconfig(endpoints []string, nodes []string) pulumi.StringO
 }
 
 func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, error) {
-	// Intentionally skip the bootstrap/reboot phase for init nodes.
-	// The previous reboot-based bootstrap step was removed on purpose.
+	// The Init node is special. We need to init by ourselves.
 	applied, err := a.initApply(m, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	deps := make([]pulumi.Resource, 0, 2)
-	deps = append(deps, applied)
+	deps := []pulumi.Resource{applied}
 
 	cli, err := a.cliApply(m, tmachine.TypeInit, deps)
 	if err != nil {

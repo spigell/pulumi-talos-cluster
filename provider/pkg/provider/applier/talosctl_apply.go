@@ -114,7 +114,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		},
 	}, []pulumi.ResourceOption{
 		a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: timeoutShort, Update: timeoutShort}),
+		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
 		pulumi.DependsOn(deps),
 	}...)
 	if err != nil {
