@@ -10,10 +10,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testClusterName         = "test-cluster"
+	controlPlaneMachineType = "controlplane"
+	workerMachineType       = "worker"
+)
+
 func TestGenerateSecretsWithRealTalosctl(t *testing.T) {
 	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+		app, err := applier.New(ctx, testClusterName, pulumi.StringMap{}, nil)
 		app.WithHooks(false)
 		if err != nil {
 			return err
@@ -40,7 +46,7 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 
 	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+		app, err := applier.New(ctx, testClusterName, pulumi.StringMap{}, nil)
 		app.WithHooks(false)
 		if err != nil {
 			return err
@@ -50,14 +56,14 @@ func TestGenerateConfigWithRealTalosctl(t *testing.T) {
 		assert.NoError(t, err)
 
 		cluster := &types.Cluster{
-			ClusterName:          "test-cluster",
+			ClusterName:          testClusterName,
 			ClusterEndpoint:      pulumi.String("https://10.0.0.1:6443"),
 			KubernetesVersion:    pulumi.String("1.35.0"),
 			TalosVersionContract: pulumi.String("v1.12.0"),
 		}
 		machine := &types.ClusterMachine{
 			MachineID:     "cp-1",
-			MachineType:   "controlplane",
+			MachineType:   controlPlaneMachineType,
 			ConfigPatches: pulumi.StringArray{pulumi.String("")},
 			TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
 		}
@@ -89,7 +95,7 @@ func TestGenerateTalosconfigWithRealTalosctl(t *testing.T) {
 
 	mock := &ProxyMock{t: t}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-		app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+		app, err := applier.New(ctx, testClusterName, pulumi.StringMap{}, nil)
 		app.WithHooks(false)
 		if err != nil {
 			return err
@@ -99,13 +105,13 @@ func TestGenerateTalosconfigWithRealTalosctl(t *testing.T) {
 		assert.NoError(t, err)
 
 		cluster := &types.Cluster{
-			ClusterName:          "test-cluster",
+			ClusterName:          testClusterName,
 			ClusterEndpoint:      pulumi.String("https://10.0.0.1:6443"),
 			KubernetesVersion:    pulumi.String("1.35.0"),
 			TalosVersionContract: pulumi.String("v1.12.0"),
 			ClusterMachines: []*types.ClusterMachine{{
 				MachineID:     "cp-1",
-				MachineType:   "controlplane",
+				MachineType:   controlPlaneMachineType,
 				ConfigPatches: pulumi.StringArray{pulumi.String("")},
 				TalosImage:    pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.12.1"),
 			}},
@@ -153,12 +159,12 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 		patches      []string
 		expectSnips  []string
 	}{
-		{name: "controlplane", machineType: "controlplane", expectTypeIn: "type: controlplane"},
-		{name: "worker", machineType: "worker", expectTypeIn: "type: worker"},
+		{name: controlPlaneMachineType, machineType: controlPlaneMachineType, expectTypeIn: "type: controlplane"},
+		{name: workerMachineType, machineType: workerMachineType, expectTypeIn: "type: worker"},
 		{name: "init", machineType: "init", expectTypeIn: "type: init"},
 		{
 			name:         "controlplane-with-patch",
-			machineType:  "controlplane",
+			machineType:  controlPlaneMachineType,
 			expectTypeIn: "type: controlplane",
 			patches: []string{
 				// machineBase from hcloud-go cluster.yaml
@@ -182,7 +188,7 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 		},
 		{
 			name:         "worker-with-empty-patch",
-			machineType:  "worker",
+			machineType:  workerMachineType,
 			expectTypeIn: "type: worker",
 			patches:      []string{"", "machine:\n  type: worker"},
 		},
@@ -192,7 +198,7 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := &ProxyMock{t: t}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
-				app, err := applier.New(ctx, "test-cluster", pulumi.StringMap{}, nil)
+				app, err := applier.New(ctx, testClusterName, pulumi.StringMap{}, nil)
 				app.WithHooks(false)
 				if err != nil {
 					return err
@@ -202,7 +208,7 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 				assert.NoError(t, err)
 
 				cluster := &types.Cluster{
-					ClusterName:          "test-cluster",
+					ClusterName:          testClusterName,
 					ClusterEndpoint:      pulumi.String("https://10.0.0.1:6443"),
 					KubernetesVersion:    pulumi.String("1.35.0"),
 					TalosVersionContract: pulumi.String("v1.12.0"),
