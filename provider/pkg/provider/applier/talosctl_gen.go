@@ -30,7 +30,7 @@ func (a *Applier) generateSecrets() (pulumi.StringOutput, error) {
 		CommandArgs: pulumi.String("gen secrets --force -o -"),
 	}, []pulumi.ResourceOption{
 		a.parent,
-		pulumi.IgnoreChanges([]string{"create"}),
+		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
 	}...)
 	if err != nil {
 		return pulumi.StringOutput{}, err
@@ -90,7 +90,7 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 		),
 	}, []pulumi.ResourceOption{
 		a.parent,
-		pulumi.IgnoreChanges([]string{"create"}),
+		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
 	}...)
 }
 
@@ -99,7 +99,7 @@ func (a *Applier) generateTalosconfig(c *types.Cluster, secrets pulumi.StringOut
 	home := generateWorkDirNameForTalosctl(a.name, stageName, "")
 	t := talosctl.New()
 
-	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s", c.ClusterName, stageName), &talosctl.Args{
+	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s", a.name, stageName), &talosctl.Args{
 		Dir: home,
 		AdditionalFiles: []talosctl.ExtraFile{
 			{
@@ -112,11 +112,10 @@ func (a *Applier) generateTalosconfig(c *types.Cluster, secrets pulumi.StringOut
 			c.ClusterName,
 			c.ClusterEndpoint,
 		),
-		}, []pulumi.ResourceOption{
-			a.parent,
-			pulumi.IgnoreChanges([]string{"create"}),
-		}...)
-	
+	}, []pulumi.ResourceOption{
+		a.parent,
+		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
+	}...)
 }
 
 func mergePatchesYAML(patches []string) (string, error) {

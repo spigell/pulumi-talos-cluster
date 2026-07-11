@@ -111,11 +111,10 @@ func (t *Talosctl) RunCommand(
 	return main, nil
 }
 
-// RunGetCommand executes a talosctl command and returns its standard output.
+// RunGetCommand executes a talosctl command as an invoke and returns its standard output.
 func (t *Talosctl) RunGetCommand(
 	ctx *pulumi.Context,
 	a *Args,
-	deps []pulumi.Resource,
 ) (pulumi.StringOutput, error) {
 	logging := a.Logging
 	if logging == "" {
@@ -128,21 +127,24 @@ func (t *Talosctl) RunGetCommand(
 		return pulumi.StringOutput{}, err
 	}
 
-	// Compose main + cleanup so temp dirs are removed even on previews.
-	cmdWithCleanup := createGated.ApplyT(func(args string) string {
-		return fmt.Sprintf("%s && rm -rf %s", args, a.Dir)
+	command := createGated.ApplyT(func(cmd string) string {
+		if strings.TrimSpace(cmd) == "" {
+			return ""
+		}
+
+		return fmt.Sprintf("trap 'rm -rf %q' EXIT\n%s", a.Dir, cmd)
 	}).(pulumi.StringOutput)
 
-	out := local.RunOutput(ctx, local.RunOutputArgs{
-		Command:     cmdWithCleanup,
+	run := local.RunOutput(ctx, local.RunOutputArgs{
+		Command:     command,
+		Dir:         pulumi.String(a.Dir),
 		Interpreter: pulumi.ToStringArray(interpreter),
 		// Only log stderr since stdout can keep a sensitive data.
 		Logging:     logging,
 		Environment: env,
-		Dir:         pulumi.String(a.Dir),
-	}, pulumi.DependsOn(deps))
+	})
 
-	return out.Stdout(), nil
+	return run.Stdout(), nil
 }
 
 func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated pulumi.StringOutput, env pulumi.StringMap, err error) {

@@ -18,7 +18,7 @@ func (a *Applier) GetKubeconfig(deps []pulumi.Resource) pulumi.StringOutput {
 		Dir:         dir,
 		CommandArgs: pulumi.String("kubeconfig -"),
 		RetryCount:  2,
-	}, pulumi.DependsOn(deps))
+	}, a.parent, pulumi.DependsOn(deps))
 	if err != nil {
 		return pulumi.StringOutput{}.ApplyT(func(string) (string, error) {
 			return "", fmt.Errorf("run kubeconfig: %w", err)

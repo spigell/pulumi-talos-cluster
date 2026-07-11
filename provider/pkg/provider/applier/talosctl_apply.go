@@ -64,8 +64,9 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 			Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
 			CommandArgs: pulumi.String("get machineconfig v1alpha1 -oyaml"),
 			// No retry. Need to implement another way to retry for get functions.
-			RetryCount: 0,
-		}, deps)
+			RetryCount:  0,
+			PrepareDeps: deps,
+		})
 		if err != nil {
 			return pulumi.StringOutput{}, fmt.Errorf("failed to get current machine info: %w", err)
 		}
@@ -114,7 +115,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		},
 	}, []pulumi.ResourceOption{
 		a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "90s", Update: "90s"}),
+		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: timeoutShort, Update: timeoutShort}),
 		pulumi.DependsOn(deps),
 	}...)
 	if err != nil {
