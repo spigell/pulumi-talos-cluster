@@ -24,6 +24,7 @@ cloud.google.com/go/clouddms v1.7.4/go.mod h1:RdrVqoFG9RWI5AvZ81SxJ/xvxPdtcRhFot
 cloud.google.com/go/cloudtasks v1.12.6/go.mod h1:b7c7fe4+TJsFZfDyzO51F7cjq7HLUlRi/KZQLQjDsaY=
 cloud.google.com/go/compute v1.25.0 h1:H1/4SqSUhjPFE7L5ddzHOfY2bCAvjwNRZPNl6Ni5oYU=
 cloud.google.com/go/compute v1.25.0/go.mod h1:GR7F0ZPZH8EhChlMo9FkLd7eUTwEymjqQagxzilIxIE=
+cloud.google.com/go/compute v1.54.0 h1:4CKmnpO+40z44bKG5bdcKxQ7ocNpRtOc9SCLLUzze1w=
 cloud.google.com/go/contactcenterinsights v1.13.0/go.mod h1:ieq5d5EtHsu8vhe2y3amtZ+BE+AQwX5qAy7cpo0POsI=
 cloud.google.com/go/container v1.33.0/go.mod h1:u5QBBv/V9dVNK/NtTppCf6T4P8gzp+dQSwx2DqPnAKc=
 cloud.google.com/go/containeranalysis v0.11.4/go.mod h1:cVZT7rXYBS9NG1rhQbWL9pWbXCKHWJPYraE8/FTSYPE=
