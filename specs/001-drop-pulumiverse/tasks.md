@@ -25,4 +25,4 @@
 - [x] Add provider command-generation unit coverage.
 - [x] Run provider and integration linters.
 - [x] Run provider and integration unit tests.
-- [ ] Run the scoped `TestHcloudClusterGo` lifecycle test successfully in GitHub Actions.
+- [x] Run the scoped `TestHcloudClusterGo` lifecycle test successfully in GitHub Actions.
