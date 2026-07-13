@@ -35,6 +35,9 @@ func NewApply(ctx *pulumi.Context,
 	if args.SkipInitApply == nil {
 		args.SkipInitApply = pulumi.BoolPtr(false)
 	}
+	if args.ClientConfiguration != nil {
+		args.ClientConfiguration = pulumi.ToSecret(args.ClientConfiguration).(ClientConfigurationInput)
+	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Apply
 	err := ctx.RegisterRemoteComponentResource("talos-cluster:index:Apply", name, args, &resource, opts...)

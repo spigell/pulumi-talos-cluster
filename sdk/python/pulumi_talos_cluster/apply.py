@@ -23,9 +23,10 @@ class ApplyArgs:
     def __init__(__self__, *,
                  apply_machines: pulumi.Input['ApplyMachinesArgs'],
                  client_configuration: pulumi.Input['ClientConfigurationArgs'],
-                 skip_init_apply: Optional[pulumi.Input[_builtins.bool]] = None):
+                 skip_init_apply: pulumi.Input[Optional[_builtins.bool]] = None):
         """
         The set of arguments for constructing a Apply resource.
+
         :param pulumi.Input['ApplyMachinesArgs'] apply_machines: The machine configurations to apply.
         :param pulumi.Input['ClientConfigurationArgs'] client_configuration: Client configuration for bootstrapping and applying resources.
         :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
@@ -67,7 +68,7 @@ class ApplyArgs:
 
     @_builtins.property
     @pulumi.getter(name="skipInitApply")
-    def skip_init_apply(self) -> Optional[pulumi.Input[_builtins.bool]]:
+    def skip_init_apply(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
         skipInitApply indicates that machines will be managed or configured by external tools. 
         For example, it can serve as a source for userdata in cloud provider setups. 
@@ -78,7 +79,7 @@ class ApplyArgs:
         return pulumi.get(self, "skip_init_apply")
 
     @skip_init_apply.setter
-    def skip_init_apply(self, value: Optional[pulumi.Input[_builtins.bool]]):
+    def skip_init_apply(self, value: pulumi.Input[Optional[_builtins.bool]]):
         pulumi.set(self, "skip_init_apply", value)
 
 
@@ -88,12 +89,13 @@ class Apply(pulumi.ComponentResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 apply_machines: Optional[pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
-                 client_configuration: Optional[pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
-                 skip_init_apply: Optional[pulumi.Input[_builtins.bool]] = None,
+                 apply_machines: pulumi.Input[Optional[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
+                 client_configuration: pulumi.Input[Optional[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
+                 skip_init_apply: pulumi.Input[Optional[_builtins.bool]] = None,
                  __props__=None):
         """
         Apply the configuration to nodes.
+
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
@@ -114,6 +116,7 @@ class Apply(pulumi.ComponentResource):
         """
         Apply the configuration to nodes.
 
+
         :param str resource_name: The name of the resource.
         :param ApplyArgs args: The arguments to use to populate this resource's properties.
         :param pulumi.ResourceOptions opts: Options for the resource.
@@ -129,9 +132,9 @@ class Apply(pulumi.ComponentResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 apply_machines: Optional[pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
-                 client_configuration: Optional[pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
-                 skip_init_apply: Optional[pulumi.Input[_builtins.bool]] = None,
+                 apply_machines: pulumi.Input[Optional[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
+                 client_configuration: pulumi.Input[Optional[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
+                 skip_init_apply: pulumi.Input[Optional[_builtins.bool]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -148,7 +151,7 @@ class Apply(pulumi.ComponentResource):
             __props__.__dict__["apply_machines"] = apply_machines
             if client_configuration is None and not opts.urn:
                 raise TypeError("Missing required property 'client_configuration'")
-            __props__.__dict__["client_configuration"] = client_configuration
+            __props__.__dict__["client_configuration"] = None if client_configuration is None else pulumi.Output.secret(client_configuration)
             if skip_init_apply is None:
                 skip_init_apply = False
             __props__.__dict__["skip_init_apply"] = skip_init_apply

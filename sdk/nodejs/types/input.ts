@@ -9,24 +9,24 @@ import * as enums from "../types/enums";
 import * as utilities from "../utilities";
 
 export interface ApplyMachinesArgs {
-    controlplane?: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[]>;
+    controlplane?: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[] | undefined>;
     init: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[]>;
-    worker?: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[]>;
+    worker?: pulumi.Input<pulumi.Input<inputs.MachineInfoArgs>[] | undefined>;
 }
 
 export interface ClientConfigurationArgs {
     /**
      * The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
      */
-    caCertificate?: pulumi.Input<string>;
+    caCertificate?: pulumi.Input<string | undefined>;
     /**
      * The client certificate used to authenticate to the Talos API server.
      */
-    clientCertificate?: pulumi.Input<string>;
+    clientCertificate?: pulumi.Input<string | undefined>;
     /**
      * The private key for the client certificate, used for authenticating the client to the Talos API server.
      */
-    clientKey?: pulumi.Input<string>;
+    clientKey?: pulumi.Input<string | undefined>;
 }
 
 export interface ClusterMachinesArgs {
@@ -35,7 +35,7 @@ export interface ClusterMachinesArgs {
      * Must be a valid array of YAML strings. 
      * For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
      */
-    configPatches?: pulumi.Input<pulumi.Input<string>[]>;
+    configPatches?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
      * ID or name of the machine.
      */
@@ -51,9 +51,9 @@ export interface ClusterMachinesArgs {
     /**
      * Talos OS installation image. 
      * Used in the `install` configuration and set via CLI. 
-     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.12.0.
+     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
      */
-    talosImage?: pulumi.Input<string>;
+    talosImage?: pulumi.Input<string | undefined>;
 }
 /**
  * clusterMachinesArgsProvideDefaults sets the appropriate defaults for ClusterMachinesArgs
@@ -61,7 +61,7 @@ export interface ClusterMachinesArgs {
 export function clusterMachinesArgsProvideDefaults(val: ClusterMachinesArgs): ClusterMachinesArgs {
     return {
         ...val,
-        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.12.0",
+        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.13.6",
     };
 }
 
@@ -69,7 +69,7 @@ export interface MachineInfoArgs {
     /**
      * cluster endpoint applied to node
      */
-    clusterEndpoint?: pulumi.Input<string>;
+    clusterEndpoint?: pulumi.Input<string | undefined>;
     /**
      * Configuration settings for machines to apply. 
      * This can be retrieved from the cluster resource.
@@ -78,7 +78,7 @@ export interface MachineInfoArgs {
     /**
      * Kubernetes version to install or upgrade on the node.
      */
-    kubernetesVersion?: pulumi.Input<string>;
+    kubernetesVersion?: pulumi.Input<string | undefined>;
     /**
      * ID or name of the machine.
      */
@@ -90,10 +90,10 @@ export interface MachineInfoArgs {
     /**
      * Talos OS image to install or upgrade on the node.
      */
-    talosImage?: pulumi.Input<string>;
+    talosImage?: pulumi.Input<string | undefined>;
     /**
      * User-provided machine configuration to apply. 
      * This can be retrieved from the cluster resource.
      */
-    userConfigPatches?: pulumi.Input<string>;
+    userConfigPatches?: pulumi.Input<string | undefined>;
 }

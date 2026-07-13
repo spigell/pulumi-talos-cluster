@@ -26,22 +26,17 @@ __all__ = [
     'MachineInfoArgsDict',
 ]
 
-MYPY = False
-
-if not MYPY:
-    class ApplyMachinesArgsDict(TypedDict):
-        init: pulumi.Input[Sequence[pulumi.Input['MachineInfoArgsDict']]]
-        controlplane: NotRequired[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgsDict']]]]
-        worker: NotRequired[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgsDict']]]]
-elif False:
-    ApplyMachinesArgsDict: TypeAlias = Mapping[str, Any]
+class ApplyMachinesArgsDict(TypedDict):
+    init: pulumi.Input[Sequence[pulumi.Input['MachineInfoArgsDict']]]
+    controlplane: NotRequired[pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgsDict']]]]]
+    worker: NotRequired[pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgsDict']]]]]
 
 @pulumi.input_type
 class ApplyMachinesArgs:
     def __init__(__self__, *,
                  init: pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]],
-                 controlplane: Optional[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]]] = None,
-                 worker: Optional[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]]] = None):
+                 controlplane: pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgs']]]] = None,
+                 worker: pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgs']]]] = None):
         pulumi.set(__self__, "init", init)
         if controlplane is not None:
             pulumi.set(__self__, "controlplane", controlplane)
@@ -59,46 +54,43 @@ class ApplyMachinesArgs:
 
     @_builtins.property
     @pulumi.getter
-    def controlplane(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]]]:
+    def controlplane(self) -> pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgs']]]]:
         return pulumi.get(self, "controlplane")
 
     @controlplane.setter
-    def controlplane(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]]]):
+    def controlplane(self, value: pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgs']]]]):
         pulumi.set(self, "controlplane", value)
 
     @_builtins.property
     @pulumi.getter
-    def worker(self) -> Optional[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]]]:
+    def worker(self) -> pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgs']]]]:
         return pulumi.get(self, "worker")
 
     @worker.setter
-    def worker(self, value: Optional[pulumi.Input[Sequence[pulumi.Input['MachineInfoArgs']]]]):
+    def worker(self, value: pulumi.Input[Optional[Sequence[pulumi.Input['MachineInfoArgs']]]]):
         pulumi.set(self, "worker", value)
 
 
-if not MYPY:
-    class ClientConfigurationArgsDict(TypedDict):
-        ca_certificate: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
-        """
-        client_certificate: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        The client certificate used to authenticate to the Talos API server.
-        """
-        client_key: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        The private key for the client certificate, used for authenticating the client to the Talos API server.
-        """
-elif False:
-    ClientConfigurationArgsDict: TypeAlias = Mapping[str, Any]
+class ClientConfigurationArgsDict(TypedDict):
+    ca_certificate: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
+    """
+    client_certificate: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    The client certificate used to authenticate to the Talos API server.
+    """
+    client_key: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    The private key for the client certificate, used for authenticating the client to the Talos API server.
+    """
 
 @pulumi.input_type
 class ClientConfigurationArgs:
     def __init__(__self__, *,
-                 ca_certificate: Optional[pulumi.Input[_builtins.str]] = None,
-                 client_certificate: Optional[pulumi.Input[_builtins.str]] = None,
-                 client_key: Optional[pulumi.Input[_builtins.str]] = None):
+                 ca_certificate: pulumi.Input[Optional[_builtins.str]] = None,
+                 client_certificate: pulumi.Input[Optional[_builtins.str]] = None,
+                 client_key: pulumi.Input[Optional[_builtins.str]] = None):
         """
         :param pulumi.Input[_builtins.str] ca_certificate: The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
         :param pulumi.Input[_builtins.str] client_certificate: The client certificate used to authenticate to the Talos API server.
@@ -113,69 +105,66 @@ class ClientConfigurationArgs:
 
     @_builtins.property
     @pulumi.getter(name="caCertificate")
-    def ca_certificate(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def ca_certificate(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         The Certificate Authority (CA) certificate used to verify connections to the Talos API server.
         """
         return pulumi.get(self, "ca_certificate")
 
     @ca_certificate.setter
-    def ca_certificate(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def ca_certificate(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "ca_certificate", value)
 
     @_builtins.property
     @pulumi.getter(name="clientCertificate")
-    def client_certificate(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def client_certificate(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         The client certificate used to authenticate to the Talos API server.
         """
         return pulumi.get(self, "client_certificate")
 
     @client_certificate.setter
-    def client_certificate(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def client_certificate(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "client_certificate", value)
 
     @_builtins.property
     @pulumi.getter(name="clientKey")
-    def client_key(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def client_key(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         The private key for the client certificate, used for authenticating the client to the Talos API server.
         """
         return pulumi.get(self, "client_key")
 
     @client_key.setter
-    def client_key(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def client_key(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "client_key", value)
 
 
-if not MYPY:
-    class ClusterMachinesArgsDict(TypedDict):
-        machine_id: _builtins.str
-        """
-        ID or name of the machine.
-        """
-        machine_type: 'MachineTypes'
-        """
-        Type of the machine.
-        """
-        node_ip: pulumi.Input[_builtins.str]
-        """
-        The IP address of the node where configuration will be applied.
-        """
-        config_patches: NotRequired[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]
-        """
-        User-provided machine configuration to apply. 
-        Must be a valid array of YAML strings. 
-        For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
-        """
-        talos_image: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        Talos OS installation image. 
-        Used in the `install` configuration and set via CLI. 
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.12.0.
-        """
-elif False:
-    ClusterMachinesArgsDict: TypeAlias = Mapping[str, Any]
+class ClusterMachinesArgsDict(TypedDict):
+    machine_id: _builtins.str
+    """
+    ID or name of the machine.
+    """
+    machine_type: 'MachineTypes'
+    """
+    Type of the machine.
+    """
+    node_ip: pulumi.Input[_builtins.str]
+    """
+    The IP address of the node where configuration will be applied.
+    """
+    config_patches: NotRequired[pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]]
+    """
+    User-provided machine configuration to apply. 
+    Must be a valid array of YAML strings. 
+    For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
+    """
+    talos_image: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    Talos OS installation image. 
+    Used in the `install` configuration and set via CLI. 
+    The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
+    """
 
 @pulumi.input_type
 class ClusterMachinesArgs:
@@ -183,8 +172,8 @@ class ClusterMachinesArgs:
                  machine_id: _builtins.str,
                  machine_type: 'MachineTypes',
                  node_ip: pulumi.Input[_builtins.str],
-                 config_patches: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]] = None,
-                 talos_image: Optional[pulumi.Input[_builtins.str]] = None):
+                 config_patches: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
+                 talos_image: pulumi.Input[Optional[_builtins.str]] = None):
         """
         :param _builtins.str machine_id: ID or name of the machine.
         :param 'MachineTypes' machine_type: Type of the machine.
@@ -194,7 +183,7 @@ class ClusterMachinesArgs:
                For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         :param pulumi.Input[_builtins.str] talos_image: Talos OS installation image. 
                Used in the `install` configuration and set via CLI. 
-               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.12.0.
+               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
         """
         pulumi.set(__self__, "machine_id", machine_id)
         pulumi.set(__self__, "machine_type", machine_type)
@@ -202,7 +191,7 @@ class ClusterMachinesArgs:
         if config_patches is not None:
             pulumi.set(__self__, "config_patches", config_patches)
         if talos_image is None:
-            talos_image = 'ghcr.io/siderolabs/installer:v1.12.0'
+            talos_image = 'ghcr.io/siderolabs/installer:v1.13.6'
         if talos_image is not None:
             pulumi.set(__self__, "talos_image", talos_image)
 
@@ -244,7 +233,7 @@ class ClusterMachinesArgs:
 
     @_builtins.property
     @pulumi.getter(name="configPatches")
-    def config_patches(self) -> Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]:
+    def config_patches(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
         """
         User-provided machine configuration to apply. 
         Must be a valid array of YAML strings. 
@@ -253,58 +242,55 @@ class ClusterMachinesArgs:
         return pulumi.get(self, "config_patches")
 
     @config_patches.setter
-    def config_patches(self, value: Optional[pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]]):
+    def config_patches(self, value: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]):
         pulumi.set(self, "config_patches", value)
 
     @_builtins.property
     @pulumi.getter(name="talosImage")
-    def talos_image(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def talos_image(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         Talos OS installation image. 
         Used in the `install` configuration and set via CLI. 
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.12.0.
+        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
         """
         return pulumi.get(self, "talos_image")
 
     @talos_image.setter
-    def talos_image(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def talos_image(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "talos_image", value)
 
 
-if not MYPY:
-    class MachineInfoArgsDict(TypedDict):
-        configuration: pulumi.Input[_builtins.str]
-        """
-        Configuration settings for machines to apply. 
-        This can be retrieved from the cluster resource.
-        """
-        machine_id: pulumi.Input[_builtins.str]
-        """
-        ID or name of the machine.
-        """
-        node_ip: pulumi.Input[_builtins.str]
-        """
-        The IP address of the node where configuration will be applied.
-        """
-        cluster_endpoint: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        cluster endpoint applied to node
-        """
-        kubernetes_version: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        Kubernetes version to install or upgrade on the node.
-        """
-        talos_image: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        Talos OS image to install or upgrade on the node.
-        """
-        user_config_patches: NotRequired[pulumi.Input[_builtins.str]]
-        """
-        User-provided machine configuration to apply. 
-        This can be retrieved from the cluster resource.
-        """
-elif False:
-    MachineInfoArgsDict: TypeAlias = Mapping[str, Any]
+class MachineInfoArgsDict(TypedDict):
+    configuration: pulumi.Input[_builtins.str]
+    """
+    Configuration settings for machines to apply. 
+    This can be retrieved from the cluster resource.
+    """
+    machine_id: pulumi.Input[_builtins.str]
+    """
+    ID or name of the machine.
+    """
+    node_ip: pulumi.Input[_builtins.str]
+    """
+    The IP address of the node where configuration will be applied.
+    """
+    cluster_endpoint: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    cluster endpoint applied to node
+    """
+    kubernetes_version: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    Kubernetes version to install or upgrade on the node.
+    """
+    talos_image: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    Talos OS image to install or upgrade on the node.
+    """
+    user_config_patches: NotRequired[pulumi.Input[Optional[_builtins.str]]]
+    """
+    User-provided machine configuration to apply. 
+    This can be retrieved from the cluster resource.
+    """
 
 @pulumi.input_type
 class MachineInfoArgs:
@@ -312,10 +298,10 @@ class MachineInfoArgs:
                  configuration: pulumi.Input[_builtins.str],
                  machine_id: pulumi.Input[_builtins.str],
                  node_ip: pulumi.Input[_builtins.str],
-                 cluster_endpoint: Optional[pulumi.Input[_builtins.str]] = None,
-                 kubernetes_version: Optional[pulumi.Input[_builtins.str]] = None,
-                 talos_image: Optional[pulumi.Input[_builtins.str]] = None,
-                 user_config_patches: Optional[pulumi.Input[_builtins.str]] = None):
+                 cluster_endpoint: pulumi.Input[Optional[_builtins.str]] = None,
+                 kubernetes_version: pulumi.Input[Optional[_builtins.str]] = None,
+                 talos_image: pulumi.Input[Optional[_builtins.str]] = None,
+                 user_config_patches: pulumi.Input[Optional[_builtins.str]] = None):
         """
         :param pulumi.Input[_builtins.str] configuration: Configuration settings for machines to apply. 
                This can be retrieved from the cluster resource.
@@ -378,43 +364,43 @@ class MachineInfoArgs:
 
     @_builtins.property
     @pulumi.getter(name="clusterEndpoint")
-    def cluster_endpoint(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def cluster_endpoint(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         cluster endpoint applied to node
         """
         return pulumi.get(self, "cluster_endpoint")
 
     @cluster_endpoint.setter
-    def cluster_endpoint(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def cluster_endpoint(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "cluster_endpoint", value)
 
     @_builtins.property
     @pulumi.getter(name="kubernetesVersion")
-    def kubernetes_version(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def kubernetes_version(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         Kubernetes version to install or upgrade on the node.
         """
         return pulumi.get(self, "kubernetes_version")
 
     @kubernetes_version.setter
-    def kubernetes_version(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def kubernetes_version(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "kubernetes_version", value)
 
     @_builtins.property
     @pulumi.getter(name="talosImage")
-    def talos_image(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def talos_image(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         Talos OS image to install or upgrade on the node.
         """
         return pulumi.get(self, "talos_image")
 
     @talos_image.setter
-    def talos_image(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def talos_image(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "talos_image", value)
 
     @_builtins.property
     @pulumi.getter(name="userConfigPatches")
-    def user_config_patches(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def user_config_patches(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         User-provided machine configuration to apply. 
         This can be retrieved from the cluster resource.
@@ -422,7 +408,7 @@ class MachineInfoArgs:
         return pulumi.get(self, "user_config_patches")
 
     @user_config_patches.setter
-    def user_config_patches(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def user_config_patches(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "user_config_patches", value)
 
 

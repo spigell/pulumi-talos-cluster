@@ -45,7 +45,7 @@ func NewCluster(ctx *pulumi.Context,
 		args.KubernetesVersion = pulumi.StringPtr("v1.33.0")
 	}
 	if args.TalosVersionContract == nil {
-		args.TalosVersionContract = pulumi.StringPtr("v1.12.0")
+		args.TalosVersionContract = pulumi.StringPtr("v1.13.6")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Cluster
@@ -71,7 +71,7 @@ type clusterArgs struct {
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
-	// The default value is based on gendata.VersionTag, current: v1.12.0.
+	// The default value is based on gendata.VersionTag, current: v1.13.6.
 	TalosVersionContract *string `pulumi:"talosVersionContract"`
 }
 
@@ -91,7 +91,7 @@ type ClusterArgs struct {
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
-	// The default value is based on gendata.VersionTag, current: v1.12.0.
+	// The default value is based on gendata.VersionTag, current: v1.13.6.
 	TalosVersionContract pulumi.StringPtrInput
 }
 

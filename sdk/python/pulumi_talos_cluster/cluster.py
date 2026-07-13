@@ -25,10 +25,11 @@ class ClusterArgs:
                  cluster_endpoint: pulumi.Input[_builtins.str],
                  cluster_machines: pulumi.Input[Sequence[pulumi.Input['ClusterMachinesArgs']]],
                  cluster_name: _builtins.str,
-                 kubernetes_version: Optional[pulumi.Input[_builtins.str]] = None,
-                 talos_version_contract: Optional[pulumi.Input[_builtins.str]] = None):
+                 kubernetes_version: pulumi.Input[Optional[_builtins.str]] = None,
+                 talos_version_contract: pulumi.Input[Optional[_builtins.str]] = None):
         """
         The set of arguments for constructing a Cluster resource.
+
         :param pulumi.Input[_builtins.str] cluster_endpoint: Cluster endpoint, the Kubernetes API endpoint accessible by all nodes
         :param pulumi.Input[Sequence[pulumi.Input['ClusterMachinesArgs']]] cluster_machines: Configuration settings for machines
         :param _builtins.str cluster_name: Name of the cluster
@@ -39,7 +40,7 @@ class ClusterArgs:
                Used in NewSecrets() and GetConfigurationOutput() resources. 
                This property is immutable to prevent version conflicts across provider updates. 
                See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-               The default value is based on gendata.VersionTag, current: v1.12.0.
+               The default value is based on gendata.VersionTag, current: v1.13.6.
         """
         pulumi.set(__self__, "cluster_endpoint", cluster_endpoint)
         pulumi.set(__self__, "cluster_machines", cluster_machines)
@@ -49,7 +50,7 @@ class ClusterArgs:
         if kubernetes_version is not None:
             pulumi.set(__self__, "kubernetes_version", kubernetes_version)
         if talos_version_contract is None:
-            talos_version_contract = 'v1.12.0'
+            talos_version_contract = 'v1.13.6'
         if talos_version_contract is not None:
             pulumi.set(__self__, "talos_version_contract", talos_version_contract)
 
@@ -91,7 +92,7 @@ class ClusterArgs:
 
     @_builtins.property
     @pulumi.getter(name="kubernetesVersion")
-    def kubernetes_version(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def kubernetes_version(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         Kubernetes version to install. 
         Default is v1.33.0.
@@ -99,24 +100,24 @@ class ClusterArgs:
         return pulumi.get(self, "kubernetes_version")
 
     @kubernetes_version.setter
-    def kubernetes_version(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def kubernetes_version(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "kubernetes_version", value)
 
     @_builtins.property
     @pulumi.getter(name="talosVersionContract")
-    def talos_version_contract(self) -> Optional[pulumi.Input[_builtins.str]]:
+    def talos_version_contract(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
         Version of Talos features used for configuration generation. 
         Do not confuse this with the talosImage property. 
         Used in NewSecrets() and GetConfigurationOutput() resources. 
         This property is immutable to prevent version conflicts across provider updates. 
         See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-        The default value is based on gendata.VersionTag, current: v1.12.0.
+        The default value is based on gendata.VersionTag, current: v1.13.6.
         """
         return pulumi.get(self, "talos_version_contract")
 
     @talos_version_contract.setter
-    def talos_version_contract(self, value: Optional[pulumi.Input[_builtins.str]]):
+    def talos_version_contract(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "talos_version_contract", value)
 
 
@@ -126,16 +127,17 @@ class Cluster(pulumi.ComponentResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 cluster_endpoint: Optional[pulumi.Input[_builtins.str]] = None,
-                 cluster_machines: Optional[pulumi.Input[Sequence[pulumi.Input[Union['ClusterMachinesArgs', 'ClusterMachinesArgsDict']]]]] = None,
+                 cluster_endpoint: pulumi.Input[Optional[_builtins.str]] = None,
+                 cluster_machines: pulumi.Input[Optional[Sequence[pulumi.Input[Union['ClusterMachinesArgs', 'ClusterMachinesArgsDict']]]]] = None,
                  cluster_name: Optional[_builtins.str] = None,
-                 kubernetes_version: Optional[pulumi.Input[_builtins.str]] = None,
-                 talos_version_contract: Optional[pulumi.Input[_builtins.str]] = None,
+                 kubernetes_version: pulumi.Input[Optional[_builtins.str]] = None,
+                 talos_version_contract: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         """
         Initialize a new Talos cluster:
         - Creates secrets
         - Generates machine configurations for all nodes
+
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
@@ -149,7 +151,7 @@ class Cluster(pulumi.ComponentResource):
                Used in NewSecrets() and GetConfigurationOutput() resources. 
                This property is immutable to prevent version conflicts across provider updates. 
                See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-               The default value is based on gendata.VersionTag, current: v1.12.0.
+               The default value is based on gendata.VersionTag, current: v1.13.6.
         """
         ...
     @overload
@@ -161,6 +163,7 @@ class Cluster(pulumi.ComponentResource):
         Initialize a new Talos cluster:
         - Creates secrets
         - Generates machine configurations for all nodes
+
 
         :param str resource_name: The name of the resource.
         :param ClusterArgs args: The arguments to use to populate this resource's properties.
@@ -177,11 +180,11 @@ class Cluster(pulumi.ComponentResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 cluster_endpoint: Optional[pulumi.Input[_builtins.str]] = None,
-                 cluster_machines: Optional[pulumi.Input[Sequence[pulumi.Input[Union['ClusterMachinesArgs', 'ClusterMachinesArgsDict']]]]] = None,
+                 cluster_endpoint: pulumi.Input[Optional[_builtins.str]] = None,
+                 cluster_machines: pulumi.Input[Optional[Sequence[pulumi.Input[Union['ClusterMachinesArgs', 'ClusterMachinesArgsDict']]]]] = None,
                  cluster_name: Optional[_builtins.str] = None,
-                 kubernetes_version: Optional[pulumi.Input[_builtins.str]] = None,
-                 talos_version_contract: Optional[pulumi.Input[_builtins.str]] = None,
+                 kubernetes_version: pulumi.Input[Optional[_builtins.str]] = None,
+                 talos_version_contract: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -206,7 +209,7 @@ class Cluster(pulumi.ComponentResource):
                 kubernetes_version = 'v1.33.0'
             __props__.__dict__["kubernetes_version"] = kubernetes_version
             if talos_version_contract is None:
-                talos_version_contract = 'v1.12.0'
+                talos_version_contract = 'v1.13.6'
             __props__.__dict__["talos_version_contract"] = talos_version_contract
             __props__.__dict__["client_configuration"] = None
             __props__.__dict__["generated_configurations"] = None
