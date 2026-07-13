@@ -54,7 +54,7 @@ locals {
 source "hcloud" "talos" {
   rescue       = "linux64"
   image        = "debian-11"
-  server_type  = local.arch == "arm" ? "cax11" : "cx23"
+  server_type  = local.arch == "arm" ? "cax21" : "cx23"
   location     = local.arch == "arm" ? "nbg1" : "fsn1"
   ssh_username = "root"
 
