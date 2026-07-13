@@ -78,7 +78,9 @@ func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
 
 	img := cfg.MachineConfig.Install().Image()
 
-	base := fmt.Sprintf("upgrade --debug --image %s", img)
+	// --drain defaults to true since talosctl v1.13 and requires a kubeconfig
+	// from the target node, which workers cannot serve during provisioning.
+	base := fmt.Sprintf("upgrade --debug --drain=false --image %s", img)
 
 	return base, nil
 }

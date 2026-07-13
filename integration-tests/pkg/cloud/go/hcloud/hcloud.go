@@ -148,7 +148,10 @@ func (h *Hetzner) Up() (*cloud.Deployed, error) {
 		if err != nil {
 			return nil, fmt.Errorf("find image with selector %q: %w", s.imageSelector, err)
 		}
-		s.args.Image = pulumi.Sprintf("%d", image.Id)
+		if image.Id == nil {
+			return nil, fmt.Errorf("image with selector %q has no ID", s.imageSelector)
+		}
+		s.args.Image = pulumi.Sprintf("%d", *image.Id)
 		// Define the server
 		server, err := hcloud.NewServer(h.ctx, s.id, s.args,
 			pulumi.DependsOn(deps),
@@ -181,26 +184,26 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 		talosVersion = versionFromImage(machine.TalosImage)
 	}
 
+	// Primary IPs accept exactly one of location, datacenter, or assignee_id;
+	// datacenter is deprecated, so only location is set.
 	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),
-		Datacenter:   pulumi.String(datacenter),
 		Location:     pulumi.String(location),
 		Type:         pulumi.String("ipv4"),
 		AssigneeType: pulumi.String("server"),
 		AutoDelete:   pulumi.Bool(false),
-	}, pulumi.IgnoreChanges([]string{"datacenter"}))
+	}, pulumi.IgnoreChanges([]string{"location"}))
 	if err != nil {
 		return nil, fmt.Errorf("allocate ipv4 for machine %q: %w", machine.ID, err)
 	}
 
 	ipv6, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv6", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv6", clu.Name, machine.ID),
-		Datacenter:   pulumi.String(datacenter),
 		Location:     pulumi.String(location),
 		Type:         pulumi.String("ipv6"),
 		AssigneeType: pulumi.String("server"),
 		AutoDelete:   pulumi.Bool(false),
-	}, pulumi.IgnoreChanges([]string{"datacenter"}))
+	}, pulumi.IgnoreChanges([]string{"location"}))
 	if err != nil {
 		return nil, fmt.Errorf("allocate ipv6 for machine %q: %w", machine.ID, err)
 	}
