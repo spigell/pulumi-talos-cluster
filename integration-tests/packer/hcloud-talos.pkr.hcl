@@ -55,7 +55,7 @@ source "hcloud" "talos" {
   rescue       = "linux64"
   image        = "debian-11"
   server_type  = local.arch == "arm" ? "cax21" : "cx23"
-  location     = local.arch == "arm" ? "nbg1" : "fsn1"
+  location     = local.arch == "arm" ? "hel1" : "fsn1"
   ssh_username = "root"
 
   snapshot_name   = "Talos Linux ${var.talos_version} ${local.variant} ${local.arch} (schemaID: ${var.talos_schematic_id})"
