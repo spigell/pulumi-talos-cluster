@@ -685,10 +685,10 @@
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
 
-"@pulumi/hcloud@1.24.0":
-  version "1.24.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/hcloud/-/hcloud-1.24.0.tgz#76ac90a9e57080a4298c99dba8fc48da719a0343"
-  integrity sha512-eivvHYTtyhiIjOb3+2WrrqOrxlOyZl4gFSW8Kb72KKWnFlEv5wN7iUKGDH+KZ4rr7myVPV0yBN2LrBBZNfShUQ==
+"@pulumi/hcloud@1.39.0":
+  version "1.39.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/hcloud/-/hcloud-1.39.0.tgz#caeca5c204e66e2a43df043d32eedd374f7e0874"
+  integrity sha512-rrjOZ1bPliOpsuoGBrd6b9GOeM+CoNSLTJrd061JzwAREdztVP6vy8UEROQj7zIUypEI0+eCqXAA1bxYIQSwkQ==
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
 
