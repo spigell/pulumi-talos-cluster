@@ -14,7 +14,7 @@
           "additionalProperties": false,
           "properties": {
             "serverType": { "type": "string", "default": "cx21" },
-            "datacenter": { "type": "string", "default": "nbg1-dc3" }
+            "location": { "type": "string", "default": "nbg1" }
           }
         }
       }
@@ -53,7 +53,7 @@
             "required": ["serverType"],
             "properties": {
               "serverType": { "type": "string", "default": "cx21" },
-              "datacenter": { "type": "string", "default": "nbg1-dc3" }
+              "location": { "type": "string", "default": "nbg1" }
             }
           }
         }

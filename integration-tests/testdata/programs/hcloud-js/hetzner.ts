@@ -68,11 +68,7 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
       ],
     };
 
-    // Hetzner rejects the datacenter attribute since July 2026; place servers
-    // by location, derived from a configured datacenter (e.g. nbg1-dc3).
-    serverArgs.location = machine.hcloud.datacenter
-      ? machine.hcloud.datacenter.split("-")[0]
-      : "nbg1";
+    serverArgs.location = machine.hcloud.location ?? "nbg1";
 
     // Define the server
     const server = new hcloud.Server(

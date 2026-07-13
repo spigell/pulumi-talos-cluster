@@ -17,7 +17,7 @@ machines:
     apply-config-via-userdata: true
     hcloud:
       serverType: cx11
-      datacenter: fsn1
+      location: fsn1
   - id: controlplane-0
     type: controlplane
     platform: hcloud

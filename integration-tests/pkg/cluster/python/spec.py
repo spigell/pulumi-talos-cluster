@@ -9,7 +9,7 @@ from .validation import validate_cluster
 @dataclass
 class HcloudMachine:
     serverType: str
-    datacenter: Optional[str] = None
+    location: Optional[str] = None
 
 
 @dataclass

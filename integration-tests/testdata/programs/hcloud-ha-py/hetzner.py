@@ -86,10 +86,7 @@ def hetzner(cluster: Any) -> List[Dict[str, pulumi.Output]]:
             ],
         }
 
-        if machine.hcloud.datacenter:
-            server_args["datacenter"] = machine.hcloud.datacenter
-        else:
-            server_args["location"] = "nbg1"
+        server_args["location"] = machine.hcloud.location or "nbg1"
 
         server = Server(
             resource_name=machine.id,

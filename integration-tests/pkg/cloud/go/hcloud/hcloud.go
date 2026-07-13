@@ -176,16 +176,13 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 		machine.Hcloud = &cluster.HcloudMachine{}
 	}
 
-	datacenter := machine.Hcloud.Datacenter
-	location := strings.SplitN(datacenter, "-", 2)[0]
+	location := machine.Hcloud.Location
 
 	talosVersion := machine.TalosInitialVersion
 	if talosVersion == "" {
 		talosVersion = versionFromImage(machine.TalosImage)
 	}
 
-	// Primary IPs accept exactly one of location, datacenter, or assignee_id;
-	// datacenter is deprecated, so only location is set.
 	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),
 		Location:     pulumi.String(location),
@@ -228,7 +225,7 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 				sshKey.ID(),
 			},
 			ServerType: pulumi.String(machine.Hcloud.ServerType),
-			Datacenter: pulumi.String(datacenter),
+			Location:   pulumi.String(location),
 			PublicNets: hcloud.ServerPublicNetArray{
 				&hcloud.ServerPublicNetArgs{
 					//nolint: gocritic // this is the only way to convert string to int
