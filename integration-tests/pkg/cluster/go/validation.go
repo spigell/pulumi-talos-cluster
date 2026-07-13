@@ -1,15 +1,14 @@
 package cluster
 
 import (
+	"bytes"
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
+	clusterschema "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	"gopkg.in/yaml.v3"
 )
 
@@ -106,23 +105,9 @@ var (
 
 func loadSchema() (*jsonschema.Schema, error) {
 	schemaOnce.Do(func() {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			schemaErr = fmt.Errorf("cannot resolve schema path")
-			return
-		}
-		schemaPath := filepath.Join(filepath.Dir(file), "..", "schema.json")
-
-		f, err := os.Open(schemaPath)
-		if err != nil {
-			schemaErr = fmt.Errorf("load schema: %w", err)
-			return
-		}
-		defer f.Close()
-
 		compiler := jsonschema.NewCompiler()
 		compiler.Draft = jsonschema.Draft7
-		if err := compiler.AddResource("schema.json", f); err != nil {
+		if err := compiler.AddResource("schema.json", bytes.NewReader(clusterschema.JSON)); err != nil {
 			schemaErr = fmt.Errorf("load schema: %w", err)
 			return
 		}

@@ -3,10 +3,9 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
 	"sync"
+
+	schema "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 )
 
 var (
@@ -17,19 +16,7 @@ var (
 
 func loadRawSchema() (map[string]any, error) {
 	rawSchemaOnce.Do(func() {
-		_, file, _, ok := runtime.Caller(0)
-		if !ok {
-			rawSchemaErr = fmt.Errorf("cannot resolve schema path")
-			return
-		}
-		schemaPath := filepath.Join(filepath.Dir(file), "..", "schema.json")
-
-		data, err := os.ReadFile(schemaPath)
-		if err != nil {
-			rawSchemaErr = fmt.Errorf("load schema: %w", err)
-			return
-		}
-		if err := json.Unmarshal(data, &rawSchema); err != nil {
+		if err := json.Unmarshal(schema.JSON, &rawSchema); err != nil {
 			rawSchemaErr = fmt.Errorf("parse schema: %w", err)
 			return
 		}
