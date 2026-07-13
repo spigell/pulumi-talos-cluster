@@ -29,10 +29,10 @@ class ApplyArgs:
 
         :param pulumi.Input['ApplyMachinesArgs'] apply_machines: The machine configurations to apply.
         :param pulumi.Input['ClientConfigurationArgs'] client_configuration: Client configuration for bootstrapping and applying resources.
-        :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
-               For example, it can serve as a source for userdata in cloud provider setups. 
-               This option helps accelerate node provisioning. 
-               Note: init node is always applied. 
+        :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools.
+               For example, it can serve as a source for userdata in cloud provider setups.
+               This option helps accelerate node provisioning.
+               Note: init node is always applied.
                Default is false.
         """
         pulumi.set(__self__, "apply_machines", apply_machines)
@@ -70,10 +70,10 @@ class ApplyArgs:
     @pulumi.getter(name="skipInitApply")
     def skip_init_apply(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
-        skipInitApply indicates that machines will be managed or configured by external tools. 
-        For example, it can serve as a source for userdata in cloud provider setups. 
-        This option helps accelerate node provisioning. 
-        Note: init node is always applied. 
+        skipInitApply indicates that machines will be managed or configured by external tools.
+        For example, it can serve as a source for userdata in cloud provider setups.
+        This option helps accelerate node provisioning.
+        Note: init node is always applied.
         Default is false.
         """
         return pulumi.get(self, "skip_init_apply")
@@ -96,15 +96,14 @@ class Apply(pulumi.ComponentResource):
         """
         Apply the configuration to nodes.
 
-
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']] apply_machines: The machine configurations to apply.
         :param pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']] client_configuration: Client configuration for bootstrapping and applying resources.
-        :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools. 
-               For example, it can serve as a source for userdata in cloud provider setups. 
-               This option helps accelerate node provisioning. 
-               Note: init node is always applied. 
+        :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools.
+               For example, it can serve as a source for userdata in cloud provider setups.
+               This option helps accelerate node provisioning.
+               Note: init node is always applied.
                Default is false.
         """
         ...
@@ -115,7 +114,6 @@ class Apply(pulumi.ComponentResource):
                  opts: Optional[pulumi.ResourceOptions] = None):
         """
         Apply the configuration to nodes.
-
 
         :param str resource_name: The name of the resource.
         :param ApplyArgs args: The arguments to use to populate this resource's properties.

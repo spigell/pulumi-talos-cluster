@@ -101,16 +101,16 @@ export interface ClusterArgs {
      */
     clusterName: string;
     /**
-     * Kubernetes version to install. 
+     * Kubernetes version to install.
      * Default is v1.33.0.
      */
     kubernetesVersion?: pulumi.Input<string | undefined>;
     /**
-     * Version of Talos features used for configuration generation. 
-     * Do not confuse this with the talosImage property. 
-     * Used in NewSecrets() and GetConfigurationOutput() resources. 
-     * This property is immutable to prevent version conflicts across provider updates. 
-     * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
+     * Version of Talos features used for configuration generation.
+     * Do not confuse this with the talosImage property.
+     * Used in NewSecrets() and GetConfigurationOutput() resources.
+     * This property is immutable to prevent version conflicts across provider updates.
+     * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
      * The default value is based on gendata.VersionTag, current: v1.13.6.
      */
     talosVersionContract?: pulumi.Input<string | undefined>;

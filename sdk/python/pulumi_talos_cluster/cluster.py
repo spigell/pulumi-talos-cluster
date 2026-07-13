@@ -33,13 +33,13 @@ class ClusterArgs:
         :param pulumi.Input[_builtins.str] cluster_endpoint: Cluster endpoint, the Kubernetes API endpoint accessible by all nodes
         :param pulumi.Input[Sequence[pulumi.Input['ClusterMachinesArgs']]] cluster_machines: Configuration settings for machines
         :param _builtins.str cluster_name: Name of the cluster
-        :param pulumi.Input[_builtins.str] kubernetes_version: Kubernetes version to install. 
+        :param pulumi.Input[_builtins.str] kubernetes_version: Kubernetes version to install.
                Default is v1.33.0.
-        :param pulumi.Input[_builtins.str] talos_version_contract: Version of Talos features used for configuration generation. 
-               Do not confuse this with the talosImage property. 
-               Used in NewSecrets() and GetConfigurationOutput() resources. 
-               This property is immutable to prevent version conflicts across provider updates. 
-               See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
+        :param pulumi.Input[_builtins.str] talos_version_contract: Version of Talos features used for configuration generation.
+               Do not confuse this with the talosImage property.
+               Used in NewSecrets() and GetConfigurationOutput() resources.
+               This property is immutable to prevent version conflicts across provider updates.
+               See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
                The default value is based on gendata.VersionTag, current: v1.13.6.
         """
         pulumi.set(__self__, "cluster_endpoint", cluster_endpoint)
@@ -94,7 +94,7 @@ class ClusterArgs:
     @pulumi.getter(name="kubernetesVersion")
     def kubernetes_version(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Kubernetes version to install. 
+        Kubernetes version to install.
         Default is v1.33.0.
         """
         return pulumi.get(self, "kubernetes_version")
@@ -107,11 +107,11 @@ class ClusterArgs:
     @pulumi.getter(name="talosVersionContract")
     def talos_version_contract(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Version of Talos features used for configuration generation. 
-        Do not confuse this with the talosImage property. 
-        Used in NewSecrets() and GetConfigurationOutput() resources. 
-        This property is immutable to prevent version conflicts across provider updates. 
-        See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
+        Version of Talos features used for configuration generation.
+        Do not confuse this with the talosImage property.
+        Used in NewSecrets() and GetConfigurationOutput() resources.
+        This property is immutable to prevent version conflicts across provider updates.
+        See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
         The default value is based on gendata.VersionTag, current: v1.13.6.
         """
         return pulumi.get(self, "talos_version_contract")
@@ -138,19 +138,18 @@ class Cluster(pulumi.ComponentResource):
         - Creates secrets
         - Generates machine configurations for all nodes
 
-
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[_builtins.str] cluster_endpoint: Cluster endpoint, the Kubernetes API endpoint accessible by all nodes
         :param pulumi.Input[Sequence[pulumi.Input[Union['ClusterMachinesArgs', 'ClusterMachinesArgsDict']]]] cluster_machines: Configuration settings for machines
         :param _builtins.str cluster_name: Name of the cluster
-        :param pulumi.Input[_builtins.str] kubernetes_version: Kubernetes version to install. 
+        :param pulumi.Input[_builtins.str] kubernetes_version: Kubernetes version to install.
                Default is v1.33.0.
-        :param pulumi.Input[_builtins.str] talos_version_contract: Version of Talos features used for configuration generation. 
-               Do not confuse this with the talosImage property. 
-               Used in NewSecrets() and GetConfigurationOutput() resources. 
-               This property is immutable to prevent version conflicts across provider updates. 
-               See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
+        :param pulumi.Input[_builtins.str] talos_version_contract: Version of Talos features used for configuration generation.
+               Do not confuse this with the talosImage property.
+               Used in NewSecrets() and GetConfigurationOutput() resources.
+               This property is immutable to prevent version conflicts across provider updates.
+               See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
                The default value is based on gendata.VersionTag, current: v1.13.6.
         """
         ...
@@ -163,7 +162,6 @@ class Cluster(pulumi.ComponentResource):
         Initialize a new Talos cluster:
         - Creates secrets
         - Generates machine configurations for all nodes
-
 
         :param str resource_name: The name of the resource.
         :param ClusterArgs args: The arguments to use to populate this resource's properties.

@@ -182,14 +182,14 @@ class MachineInfo(dict):
                  talos_image: Optional[_builtins.str] = None,
                  user_config_patches: Optional[_builtins.str] = None):
         """
-        :param _builtins.str configuration: Configuration settings for machines to apply. 
+        :param _builtins.str configuration: Configuration settings for machines to apply.
                This can be retrieved from the cluster resource.
         :param _builtins.str machine_id: ID or name of the machine.
         :param _builtins.str node_ip: The IP address of the node where configuration will be applied.
         :param _builtins.str cluster_endpoint: cluster endpoint applied to node
         :param _builtins.str kubernetes_version: Kubernetes version to install or upgrade on the node.
         :param _builtins.str talos_image: Talos OS image to install or upgrade on the node.
-        :param _builtins.str user_config_patches: User-provided machine configuration to apply. 
+        :param _builtins.str user_config_patches: User-provided machine configuration to apply.
                This can be retrieved from the cluster resource.
         """
         pulumi.set(__self__, "configuration", configuration)
@@ -208,7 +208,7 @@ class MachineInfo(dict):
     @pulumi.getter
     def configuration(self) -> _builtins.str:
         """
-        Configuration settings for machines to apply. 
+        Configuration settings for machines to apply.
         This can be retrieved from the cluster resource.
         """
         return pulumi.get(self, "configuration")
@@ -257,7 +257,7 @@ class MachineInfo(dict):
     @pulumi.getter(name="userConfigPatches")
     def user_config_patches(self) -> Optional[_builtins.str]:
         """
-        User-provided machine configuration to apply. 
+        User-provided machine configuration to apply.
         This can be retrieved from the cluster resource.
         """
         return pulumi.get(self, "user_config_patches")
