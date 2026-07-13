@@ -61,7 +61,7 @@ func generateSchema() schema.PackageSpec {
 			}),
 			"python": rawMessage(map[string]any{
 				"requires": map[string]string{
-					"pulumi":         ">=3.210.0,<4.0.0",
+					"pulumi":         ">=3.251.0,<4.0.0",
 					"pulumi-command": "==1.1.3",
 				},
 				"usesIOClasses":                true,
@@ -77,11 +77,11 @@ func generateSchema() schema.PackageSpec {
 					"@types/node": "^20.0.0",
 				},
 				"dependencies": map[string]any{
-					"@pulumi/pulumi":  "3.210.0",
+					"@pulumi/pulumi":  "3.251.0",
 					"@pulumi/command": "v1.1.3",
 				},
 				"resolutions": map[string]any{
-					"@pulumi/pulumi": "3.210.0",
+					"@pulumi/pulumi": "3.251.0",
 				},
 			}),
 			"go": rawMessage(map[string]any{

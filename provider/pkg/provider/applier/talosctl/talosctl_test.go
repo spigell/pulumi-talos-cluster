@@ -15,10 +15,6 @@ func TestTalosctlDefaultsUseLocalBinary(t *testing.T) {
 	if talos.BasicCommand != talosctlBinary {
 		t.Fatalf("expected basic command to equal binary %q, got %q", talosctlBinary, talos.BasicCommand)
 	}
-
-	if strings.Contains(talos.BasicCommand, "pulumiverse") {
-		t.Fatalf("unexpected pulumiverse reference in basic command: %q", talos.BasicCommand)
-	}
 }
 
 func TestTalosctlWithNodeIPExtendsCommand(t *testing.T) {

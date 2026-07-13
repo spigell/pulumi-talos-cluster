@@ -25,9 +25,9 @@
 ## Alignment guidance (talosctl vs Terraform provider)
 
 - First apply often needs `--insecure` until talosconfig/CA align; expect to use insecure mode initially when hitting fresh nodes.
-- Generate secrets/config to stdout (avoid intermediate files) and stash via `pulumi.Stash` instead of writing to disk.
+- Generate secrets/configuration through command resources, use restricted temporary files only when required by `talosctl`, and mark sensitive outputs as Pulumi secrets.
 - Follow Terraform provider semantics for secrets generation (no custom doc/example flow): mirror `talos_machine_secrets` + `machine_configuration_apply` calls rather than ad-hoc gen/apply sequences.
-- Stash usage reference: see `specs/001-drop-pulumiverse/research_stash.md` for how to persist generated `talosconfig`/kubeconfig/secrets in stack state (helps avoid regeneration and aligns with FR-007 idempotency).
+- State behavior: command outputs are tracked by Pulumi and sensitive component outputs are secret. Operators must review replacements because there is no separate persistence resource.
 
 ### Pulumiverse resources currently in use (to replace with talosctl flow)
 

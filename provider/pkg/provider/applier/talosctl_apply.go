@@ -53,11 +53,9 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		ip := args[1].(string)
 		machineConfig := args[2].(string)
 
-		nodeCfg := a.TalosconfigForNode(ip)
-
 		t2 := talosctl.New().
 			WithNodeIP(ip).
-			WithTalosConfig(nodeCfg)
+			WithTalosConfig(a.TalosconfigForNode(ip))
 		stageName := "cli-get-machine-config"
 
 		current, err := t2.RunGetCommand(a.ctx, &talosctl.Args{

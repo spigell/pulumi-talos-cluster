@@ -174,6 +174,7 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 	}
 
 	datacenter := machine.Hcloud.Datacenter
+	location := strings.SplitN(datacenter, "-", 2)[0]
 
 	talosVersion := machine.TalosInitialVersion
 	if talosVersion == "" {
@@ -183,6 +184,7 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),
 		Datacenter:   pulumi.String(datacenter),
+		Location:     pulumi.String(location),
 		Type:         pulumi.String("ipv4"),
 		AssigneeType: pulumi.String("server"),
 		AutoDelete:   pulumi.Bool(false),
@@ -194,6 +196,7 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 	ipv6, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv6", machine.ID), &hcloud.PrimaryIpArgs{
 		Name:         pulumi.Sprintf("%s-%s-ipv6", clu.Name, machine.ID),
 		Datacenter:   pulumi.String(datacenter),
+		Location:     pulumi.String(location),
 		Type:         pulumi.String("ipv6"),
 		AssigneeType: pulumi.String("server"),
 		AutoDelete:   pulumi.Bool(false),

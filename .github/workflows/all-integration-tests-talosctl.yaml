@@ -1,7 +1,7 @@
 name: Run integration tests for talosctl invoke
 
 env:
-  TALOSCTL_VERSION: v1.12.0
+  TALOSCTL_VERSION: v1.13.6
 
 on:
   push:

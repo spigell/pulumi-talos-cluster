@@ -40,7 +40,9 @@ framework_lint_ts:
 
 framework_lint_go:
 	golangci-lint run ./pkg/...
-	golangci-lint run ./pkg/testdata/programs/...
+	for prog in testdata/programs/hcloud-go testdata/programs/hcloud-ha-go; do \
+		(cd $$prog && golangci-lint run ./...) || exit 1; \
+	done
 
 framework_lint_py:
 	poetry install

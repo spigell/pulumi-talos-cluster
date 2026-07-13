@@ -36,6 +36,10 @@ func ApplyProperties() map[string]schema.PropertySpec {
 				Type: typeObject,
 				Ref:  fmt.Sprintf("#types/%s", ApplyTypesCredentialsPath),
 			},
+			// Secret is not set on component outputs: dotnet codegen emits
+			// AdditionalSecretOutputs into ComponentResourceOptions, which the
+			// Pulumi .NET SDK does not support. Secrecy is enforced at runtime
+			// via pulumi.ToSecret in the provider.
 		},
 	}
 }
@@ -60,8 +64,15 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 				"Default is false.",
 			Default: false,
 		},
-		provider.ClusterResourceOutputsClientConfiguration: ClusterProperties()[provider.ClusterResourceOutputsClientConfiguration],
+		provider.ClusterResourceOutputsClientConfiguration: secretProperty(ClusterProperties()[provider.ClusterResourceOutputsClientConfiguration]),
 	}
+}
+
+// secretProperty marks a property spec as secret. Secret is safe on inputs;
+// component outputs must stay non-secret in the schema (see ApplyProperties).
+func secretProperty(spec schema.PropertySpec) schema.PropertySpec {
+	spec.Secret = true
+	return spec
 }
 
 func ApplyRequiredInputProperties() []string {
@@ -80,12 +91,14 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 						Type: typeString,
 					},
 					Description: "The Kubeconfig for cluster",
+					Secret:      true,
 				},
 				types.TalosconfigKey: {
 					TypeSpec: schema.TypeSpec{
 						Type: typeString,
 					},
 					Description: "The talosconfig with all nodes and controlplanes as endpoints",
+					Secret:      true,
 				},
 			},
 			Required: []string{

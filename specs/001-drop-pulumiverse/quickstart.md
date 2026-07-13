@@ -1,8 +1,11 @@
-# Quickstart: talosctl-only migration
+# Quickstart: talosctl-only operation
 
-1) Install supported `talosctl` for your runner architecture, place it on PATH, and verify with `talosctl version` (use the documented matrix as guidance; provider does not enforce).
-2) Back up state: `pulumi stack export > backup.json` (store securely and confirm file integrity).
-3) Scan for pulumiverse usage (state, provider config) and remediate per migration guide before proceeding.
-4) Apply the talosctl-only stack changes (secrets/config generation via Stash, command provider apply/bootstrap).
-5) Validate lifecycle: create/update/delete and kubeconfig retrieval complete without pulumiverse downloads; inspect command logs for clear success signals.
-6) On failure, restore with `pulumi stack import < backup.json`, address root cause (version/arch mismatch, in-progress ops), and retry.
+1. Install `talosctl v1.12.0` or a compatible release for the runner architecture and verify `talosctl version --client`.
+2. Back up an existing stack with `pulumi stack export --file pulumi-state-before-talosctl.json`.
+3. Follow `contracts/migration-guide.md` for an existing Pulumiverse-backed stack. Stop if the preview proposes unexpected node replacement or deletion.
+4. Install the provider and SDK, then run `pulumi preview --diff`.
+5. Apply with `pulumi up` after reviewing the command-resource changes.
+6. Verify that credential and configuration outputs are secret, retrieve the talosconfig explicitly for validation, and run `talosctl health`.
+7. Run a second preview and confirm that it has no unexpected configuration or secret replacement.
+
+The component uses the Pulumi command provider and external `talosctl`. It does not use Pulumiverse Talos resources or bundle a `talosctl` binary.

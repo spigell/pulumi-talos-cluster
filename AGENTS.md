@@ -36,14 +36,16 @@
   1) pulumi/command should be pinned across schema generation and provider usage; regenerate SDKs via the standard schema/generate/build pipeline when upgrading.
 - Talos SDK:
   1) Bump `github.com/siderolabs/talos/pkg/machinery` to the target Talos release in `provider/` and tidy.
-  2) Packer: when upgrading Talos, bump versions in `integration-tests/packer/hcloud-talos.pkr.hcl`.
+  2) Update `TALOSCTL_VERSION` in both `.github/workflows/all-integration-tests-talosctl.yaml` and `.github/workflows/reuse-run-integration-tests.yaml`.
+  3) Packer: when upgrading Talos, bump versions in `integration-tests/packer/hcloud-talos.pkr.hcl`.
+  4) When upgrading Pulumi, update `.pulumi.version` as well as the Go, Node.js, and Python dependencies listed above so local and GitHub runners use the same CLI version.
 
 ## Testing Guidelines
 - **Framework**: The testing framework uses Go's standard `testing` package with `stretchr/testify` helpers. The integration tests, located in `integration-tests/`, are written in Go and orchestrate deployments of Pulumi programs written in various languages (Go, Python, Node.js).
 - **Unit Tests**:
   - Run with: `make unit_tests`
   - These are standard Go tests located in the `provider/` directory. They focus on testing individual components of the provider and exclude generated code.
-- **Remote runner**: Integration tests can be executed via the remote `pulumi-talos-cluster-mcp` server using the `shell_execute` tool; provide `command`, `timeout`, and `directory` fields.
+- **Remote runner**: Integration tests can be executed via the remote `pulumi-talos-cluster-mcp` server using the `shell_exec` tool; it takes a single `command` string and runs it from the repository root.
 - **Integration Tests**:
   - Run all: `make -C integration-tests integration_tests`
   - These are end-to-end tests that deploy real infrastructure. They can be time-consuming (default timeout is 25m).
@@ -179,12 +181,14 @@ flowchart TD
 
 ## MCP Shell Server & Tooling
 
-This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) with the `shell_execute` tool for performing safe, remote operations within the workspace.
+This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) with the `shell_exec` tool for performing safe, remote operations within the workspace. The server is configured in `.mcp.json` at the repository root.
 
 **Configuration:**
-- **Tool:** `shell_execute`
-- **Default Directory:** `/spigell-reforge-ai/workspace-pulumi/pulumi-talos-cluster` (Always use absolute paths)
-- **Timeouts:** Mandatory. Use reasonable limits (e.g., 300s for quick checks, 1800s for integration tests).
+- **Tool:** `shell_exec` (session tool name: `mcp__pulumi-talos-cluster-mcp__shell_exec`)
+- **Input:** a single `command` string (shell command line; `&&`, pipes, and `VAR=value` prefixes are allowed). There are no `timeout` or `directory` parameters.
+- **Working Directory:** commands run from the repository root on the remote runner (`/project/workspace-pulumi/pulumi-talos-cluster`); use repo-relative paths.
+- **Timeouts:** enforced server-side; split long pipelines into separate calls.
+- **Output:** structured JSON with `stdout`, `stderr`, `exit_code`, `status`, and `execution_time`.
 
 **Allowed Commands:**
 `cat`, `find`, `go`, `grep`, `ls`, `make`, `pulumi`, `pwd`, `talosctl`, `touch`, `wc`, `/spigell-reforge-ai/deploy/workbench/pdebug.sh`, `dlv`
@@ -207,5 +211,5 @@ This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) 
 3.  **Debugging (Delve):**
     - A headless Delve server runs at `pulumi-talos-cluster-runner-delve.pulumi-talos-cluster-workbench:2345`.
     - Connect using a local `dlv` client from the repo root.
-    - *Note:* The `dlv` command is run locally (not via `shell_execute`), but interacts with the provider process managed within this environment.
+    - *Note:* The `dlv` command is run locally (not via `shell_exec`), but interacts with the provider process managed within this environment.
     - Always use the skill delve-debuger which holds context about the operations.

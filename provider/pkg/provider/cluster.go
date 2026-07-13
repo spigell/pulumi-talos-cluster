@@ -76,6 +76,7 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	if err != nil {
 		return nil, errors.Wrap(err, "generating secrets")
 	}
+	secrets = pulumi.ToSecret(secrets).(pulumi.StringOutput)
 
 	workers := make(pulumi.Array, 0)
 	controlplanes := make(pulumi.Array, 0)
@@ -154,7 +155,7 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		return nil, errors.Wrap(err, "generating talosconfig")
 	}
 
-	c.ClientConfiguration = talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (map[string]string, error) {
+	c.ClientConfiguration = pulumi.ToSecret(talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (map[string]string, error) {
 		ca, key, cert, err := applier.ExtractTalosconfigCreds(raw, args.ClusterName)
 		if err != nil {
 			return nil, err
@@ -165,15 +166,14 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 			ClusterResourceOutputsClientConfigurationClientKey:            key,
 			ClusterResourceOutputsClientConfigurationClientCertificateKey: cert,
 		}, nil
-	}).(pulumi.StringMapOutput)
-	c.Talosconfig = talosconfig
+	})).(pulumi.StringMapOutput)
+	c.Talosconfig = pulumi.ToSecret(talosconfig).(pulumi.StringOutput)
 
 	if err := ctx.RegisterResourceOutputs(c, pulumi.Map{
 		ClusterResourceOutputsClientConfiguration:     c.ClientConfiguration,
 		ClusterResourceOutputsMachines:                c.Machines,
 		ClusterResourceOutputsGeneratedConfigurations: generated,
 		ClusterResourceOutputsTalosconfig:             c.Talosconfig,
-		// "secretsStash": secretsStash.Output,
 	}); err != nil {
 		return nil, err
 	}

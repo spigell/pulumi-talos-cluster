@@ -118,6 +118,10 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 	return ty
 }
 
+// ClusterProperties returns the Cluster component outputs. Secret is not set
+// here: dotnet codegen emits AdditionalSecretOutputs into
+// ComponentResourceOptions, which the Pulumi .NET SDK does not support.
+// Secrecy is enforced at runtime via pulumi.ToSecret in the provider.
 func ClusterProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		provider.ClusterResourceOutputsClientConfiguration: {

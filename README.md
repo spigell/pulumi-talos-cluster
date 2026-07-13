@@ -20,6 +20,30 @@ Only Linux is supported as the runner operating system. The following tools must
 2. Clone this repository.
 3. Run an example program, such as those under `integration-tests/testdata`, using `pulumi up`. The provider plugin installs automatically.
 
+Existing stacks that use the Pulumiverse Talos provider must follow the [migration guide](specs/001-drop-pulumiverse/contracts/migration-guide.md) before applying this version.
+
+Generated machine configurations, client credentials, talosconfig, and kubeconfig are Pulumi secret outputs. Use `pulumi stack output --show-secrets <name>` only in a controlled environment.
+
+## Cluster Lifecycle
+
+```mermaid
+flowchart TD
+    Start[Cluster inputs] --> Secrets[talosctl gen secrets]
+    Secrets --> MachineConfig[talosctl gen config: machine configs]
+    Secrets --> Talosconfig[talosctl gen config: talosconfig]
+    MachineConfig --> InitialApply{skip initial apply?}
+    InitialApply -- no --> Insecure[talosctl apply-config --insecure]
+    InitialApply -- yes --> Secure
+    Insecure --> Secure[talosctl apply-config with talosconfig]
+    Talosconfig --> Secure
+    Secure --> Bootstrap[talosctl bootstrap]
+    Bootstrap --> Upgrade[talosctl upgrade-k8s]
+    Upgrade --> Kubeconfig[talosctl kubeconfig]
+    Kubeconfig --> Ready[Cluster ready]
+```
+
+The Pulumi command provider executes each CLI operation. Temporary credentials are written with restrictive permissions, sensitive stdout is suppressed, and working directories are removed after execution.
+
 ## Motivation
 
 The official Terraform (and therefore Pulumi) provider for Talos has certain limitations, particularly around upgrading and configuring clusters, as highlighted in issues like [#195](https://github.com/siderolabs/terraform-provider-talos/issues/195). This component directly orchestrates `talosctl` and utilizes the `pulumi/command` provider to fully manage Talos clusters, overcoming these limitations and providing a more native experience.
@@ -61,4 +85,3 @@ Refer to the `integration-tests/testdata` directory for sample Pulumi programs u
 - [ ] **Tests and Continuous Integration**: Implement tests and CI/CD pipelines to ensure code quality and stability.
 - [ ] **Multi-language Examples**: Provide usage examples in four languages (TypeScript, Python, Go, and .NET).
 - [ ] **Comprehensive Documentation**: Enhance documentation with detailed setup, customization, and troubleshooting guides.
-- [ ] **`talosctl` Installation**: Automate the installation and configuration of `talosctl`.

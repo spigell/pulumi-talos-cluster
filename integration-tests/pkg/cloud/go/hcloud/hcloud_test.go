@@ -144,6 +144,7 @@ func assertServerMatchesMachine(
 	require.NotNil(t, m)
 
 	expectedDC := m.Hcloud.Datacenter
+	//nolint: staticcheck // servers are still placed via the deprecated datacenter attribute
 	if dc, ok := server.args.Datacenter.(pulumi.String); ok {
 		assert.Equal(t, expectedDC, string(dc))
 	}

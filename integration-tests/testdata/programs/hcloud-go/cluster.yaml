@@ -38,7 +38,7 @@ anchors:
   machineDefaults: &machineDefaults
     platform: hcloud
     variant: cloud
-    talosImage: factory.talos.dev/hcloud-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.12.0
+    talosImage: factory.talos.dev/hcloud-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.13.6
     hcloud:
       serverType: cx23
       datacenter: fsn1-dc14

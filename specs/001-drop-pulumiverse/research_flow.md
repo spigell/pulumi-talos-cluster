@@ -1,55 +1,25 @@
-# Research: Proposed Flow (talosctl + pulumi.Stash)
+# Research: talosctl command flow
 
-**Context**: Replacing `pulumiverse` provider resources with `talosctl` CLI calls, utilizing `pulumi.Stash` to persist critical state (secrets, configs) to ensure idempotency and safety.
+## Decision
 
-## 1. Secrets Generation (State Root)
-**Goal**: Replace `machine.NewSecrets`.
-*   **Current**: Generates a bundle of secrets (PKI, tokens) managed by Pulumi state.
-*   **Proposed**:
-    *   Define a `pulumi.Stash` resource named `ClusterSecrets`.
-    *   **Generation**: Execute `talosctl gen secrets -o json` *only* if the stash is empty.
-    *   **Persistence**: Save the JSON output into the stash.
-    *   **Why**: Ensures secrets are generated once and reused. Using `Stash` keeps them encrypted in the stack state.
+Replace Pulumiverse Talos resources with operator-supplied `talosctl` commands managed by the Pulumi command provider. Generated secrets and configurations are command outputs tracked by Pulumi and marked secret at the component boundary.
 
-## 2. Configuration Generation
-**Goal**: Replace `machine.GetConfigurationOutput`, `client.GetConfigurationOutput`, and `pulumi_cluster.NewKubeconfig`.
-*   **Current**: Generates machine configs (controlplane/worker), `talosconfig`, and `kubeconfig` based on inputs and secrets.
-*   **Proposed**:
-    *   Define a `pulumi.Stash` resource named `ClusterConfigurations`.
-    *   **Input**: Takes the output of `ClusterSecrets` (the stashed secrets) and cluster specification (name, endpoint).
-    *   **Generation**: Execute `talosctl gen config --with-secrets <secrets> ... -o json` (or equivalent flags to output all components).
-    *   **Persistence**: Save the resulting JSON structure (containing machine configs, client config) into the stash.
-    *   **Why**: `talosctl gen config` is deterministic *if* provided with the same secrets. Stashing the output avoids re-running the binary for every read and provides a stable source for the "Apply" step.
+## Resource mapping
 
-## 3. Config Application
-**Goal**: Replace `machine.NewConfigurationApply`.
-*   **Current**: Applies specific configurations to nodes.
-*   **Proposed**:
-    *   Use `command.local.Command` (or equivalent execution resource).
-    *   **Input**: `ClusterConfigurations` stash output + Node IP.
-    *   **Action**: 
-        *   Extract the specific machine type config (CP/Worker) from the stash.
-        *   Run `talosctl apply-config --insecure --nodes <NodeIP> --config-patch <content>` (or pipe content).
-    *   **Lifecycle**: Triggers on changes to the Stashed configuration or Node IP.
+| Previous operation | talosctl operation | Pulumi behavior |
+| --- | --- | --- |
+| Generate machine secrets | `talosctl gen secrets` | Command output is secret and feeds configuration generation. |
+| Generate machine configuration | `talosctl gen config --with-secrets` | One command resource per machine; output changes follow its inputs. |
+| Generate client configuration | `talosctl gen config --output-types talosconfig` | Raw talosconfig and parsed client credentials are secret outputs. |
+| Apply initial configuration | `talosctl apply-config --insecure` | Runs only when initial application is required. |
+| Apply authenticated configuration | `talosctl apply-config --talosconfig ...` | Uses generated client credentials and bounded retries. |
+| Bootstrap etcd | `talosctl bootstrap` | Runs against the selected init node after configuration. |
+| Retrieve kubeconfig | `talosctl kubeconfig -` | Kubeconfig is returned as a secret output. |
 
-## 4. Bootstrap
-**Goal**: Replace `machine.NewBootstrap`.
-*   **Current**: Bootstraps the etcd cluster on the initial control plane node.
-*   **Proposed**:
-    *   Use `command.local.Command`.
-    *   **Input**: `ClusterConfigurations` (for `talosconfig`), Init Node IP.
-    *   **Action**: Run `talosctl bootstrap --nodes <InitNodeIP> --talosconfig <path_to_temp_talosconfig>`.
-    *   **Lifecycle**: Create-only resource. Needs to handle "already bootstrapped" errors gracefully or check cluster health first.
+## Operational constraints
 
-## 5. Exports & Outputs
-*   **Proposed**:
-    *   `kubeconfig` and `talosconfig` are parsed directly from the `ClusterConfigurations` stash and exported as Stack Outputs, mimicking the previous provider's behavior.
-
-## Summary of Changes
-| Pulumiverse Resource | New Flow Component | State Mechanism |
-| :--- | :--- | :--- |
-| `machine.NewSecrets` | `talosctl gen secrets` | `pulumi.Stash` (Encrypted) |
-| `machine.GetConfigurationOutput` | `talosctl gen config` | `pulumi.Stash` |
-| `client.GetConfigurationOutput` | Derived from Config Stash | N/A (Derived) |
-| `machine.NewConfigurationApply` | `talosctl apply-config` | `command.local.Command` |
-| `machine.NewBootstrap` | `talosctl bootstrap` | `command.local.Command` |
+- `talosctl` must be installed on `PATH` on the machine running the provider.
+- Temporary files are written with restrictive permissions and removed after commands finish.
+- Command stdout containing secrets is not logged.
+- Changes to cluster inputs can replace command resources and regenerate their outputs. Operators must export state before upgrading an existing stack and review the preview for replacements.
+- Migration from Pulumiverse resources is an operator-controlled state transition; the component does not attempt automatic state conversion.

@@ -35,7 +35,7 @@
 
 - [x] CHK013 Are version/arch mismatches, mixed-arch runners, and missing talosctl binaries explicitly handled with operator guidance? [Edge Case, Spec Edge Cases, Plan Constraints]
 - [x] CHK014 Are handling instructions provided for residual pulumiverse resources in state to prevent accidental deletes? [Edge Case, Spec §FR-004]
-- [x] CHK015 Is secret/config persistence (avoid regeneration) addressed with Stash or equivalent persistence guidance during manual steps? [Edge Case, Spec §FR-007]
+- [x] CHK015 Is secret/config state behavior and replacement risk addressed during manual steps? [Edge Case, Spec §FR-007]
 
 ## Non-Functional Requirements
 
