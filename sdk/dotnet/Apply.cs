@@ -53,11 +53,21 @@ namespace Pulumi.TalosCluster
         [Input("applyMachines", required: true)]
         public Input<Inputs.ApplyMachinesArgs> ApplyMachines { get; set; } = null!;
 
+        [Input("clientConfiguration", required: true)]
+        private Input<Inputs.ClientConfigurationArgs>? _clientConfiguration;
+
         /// <summary>
         /// Client configuration for bootstrapping and applying resources.
         /// </summary>
-        [Input("clientConfiguration", required: true)]
-        public Input<Inputs.ClientConfigurationArgs> ClientConfiguration { get; set; } = null!;
+        public Input<Inputs.ClientConfigurationArgs>? ClientConfiguration
+        {
+            get => _clientConfiguration;
+            set
+            {
+                var emptySecret = Output.CreateSecret(0);
+                _clientConfiguration = Output.Tuple<Input<Inputs.ClientConfigurationArgs>?, int>(value, emptySecret).Apply(t => t.Item1);
+            }
+        }
 
         /// <summary>
         /// skipInitApply indicates that machines will be managed or configured by external tools. 

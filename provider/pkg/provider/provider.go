@@ -2,10 +2,10 @@ package provider
 
 import (
 	"github.com/pkg/errors"
-	"github.com/pulumi/pulumi/pkg/v3/resource/provider"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/cmdutil"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	pp "github.com/pulumi/pulumi/sdk/v3/go/pulumi/provider"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 
 // Serve launches the gRPC server for the resource provider.
 func Serve(version string, schema []byte) {
-	if err := provider.ComponentMain(ProviderName, version, schema, Construct); err != nil {
+	if err := pp.ComponentMain(ProviderName, version, schema, Construct); err != nil {
 		cmdutil.ExitError(err.Error())
 	}
 }
@@ -26,7 +26,7 @@ func Construct(ctx *pulumi.Context, typ, name string, inputs pp.ConstructInputs,
 ) (*pp.ConstructResult, error) {
 	switch typ {
 	case ClusterType():
-		return cluster(ctx, &Cluster{}, name, &ClusterArgs{}, inputs, opts)
+		return cluster(ctx, &Cluster{}, name, &types.Cluster{}, inputs, opts)
 	case ApplyType():
 		return apply(ctx, &Apply{}, name, &ApplyArgs{}, inputs, opts)
 	default:

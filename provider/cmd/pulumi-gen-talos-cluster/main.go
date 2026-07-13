@@ -6,6 +6,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/pkg/v3/codegen/schema"
@@ -54,15 +55,14 @@ func generateSchema() schema.PackageSpec {
 		Language: map[string]schema.RawMessage{
 			"csharp": rawMessage(map[string]any{
 				"packageReferences": map[string]string{
-					"Pulumi":         "3.*",
+					"Pulumi":         "3.98.0-alpha.cb0f35c",
 					"Pulumi.Command": "1.1.3",
 				},
 			}),
 			"python": rawMessage(map[string]any{
 				"requires": map[string]string{
-					"pulumi":            ">=3.210.0,<4.0.0",
-					"pulumiverse-talos": "==0.6.1",
-					"pulumi-command":    "==1.1.3",
+					"pulumi":         ">=3.251.0,<4.0.0",
+					"pulumi-command": "==1.1.3",
 				},
 				"usesIOClasses":                true,
 				"liftSingleValueMethodReturns": true,
@@ -77,9 +77,11 @@ func generateSchema() schema.PackageSpec {
 					"@types/node": "^20.0.0",
 				},
 				"dependencies": map[string]any{
-					"@pulumi/pulumi":     "3.210.0",
-					"@pulumi/command":    "v1.1.3",
-					"@pulumiverse/talos": "v0.6.1", // aligned with Talos 1.12.0
+					"@pulumi/pulumi":  "3.251.0",
+					"@pulumi/command": "v1.1.3",
+				},
+				"resolutions": map[string]any{
+					"@pulumi/pulumi": "3.251.0",
 				},
 			}),
 			"go": rawMessage(map[string]any{
@@ -105,7 +107,15 @@ func mustWritePulumiSchema(pkgSpec schema.PackageSpec, outdir string) {
 }
 
 func mustWriteFile(rootDir, filename string, contents []byte) {
-	outPath := filepath.Join(rootDir, filename)
+	cleanRoot := filepath.Clean(rootDir)
+	outPath := filepath.Join(cleanRoot, filename)
+	relPath, err := filepath.Rel(cleanRoot, outPath)
+	if err != nil {
+		panic(err)
+	}
+	if relPath == ".." || filepath.IsAbs(relPath) || strings.HasPrefix(relPath, ".."+string(filepath.Separator)) {
+		panic(fmt.Errorf("invalid output path outside root: %s", outPath))
+	}
 	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
 		panic(err)
 	}

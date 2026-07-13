@@ -40,7 +40,7 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 
 	ty[ClusterTypesMachinesTypesPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type:        "string",
+			Type:        typeString,
 			Description: "Allowed machine types",
 			Plain: []string{
 				machine.TypeControlPlane.String(),
@@ -63,11 +63,11 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 
 	ty[ClusterTypesMachinesPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type: "object",
+			Type: typeObject,
 			Properties: map[string]schema.PropertySpec{
 				types.MachineIDKey: {
 					TypeSpec: schema.TypeSpec{
-						Type:  "string",
+						Type:  typeString,
 						Plain: true,
 					},
 					Description: "ID or name of the machine.",
@@ -82,13 +82,13 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 				},
 				types.NodeIPKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "The IP address of the node where configuration will be applied.",
 				},
 				types.TalosImageKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: fmt.Sprintf("Talos OS installation image. \n"+
 						"Used in the `install` configuration and set via CLI. \n"+
@@ -97,9 +97,9 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 				},
 				"configPatches": {
 					TypeSpec: schema.TypeSpec{
-						Type: "array",
+						Type: typeArray,
 						Items: &schema.TypeSpec{
-							Type: "string",
+							Type: typeString,
 						},
 					},
 					Description: "User-provided machine configuration to apply. \n" +
@@ -118,24 +118,34 @@ func ClusterTypes() map[string]schema.ComplexTypeSpec {
 	return ty
 }
 
+// ClusterProperties returns the Cluster component outputs. Secret is not set
+// here: dotnet codegen emits AdditionalSecretOutputs into
+// ComponentResourceOptions, which the Pulumi .NET SDK does not support.
+// Secrecy is enforced at runtime via pulumi.ToSecret in the provider.
 func ClusterProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		provider.ClusterResourceOutputsClientConfiguration: {
 			TypeSpec: schema.TypeSpec{
-				Type: "object",
+				Type: typeObject,
 				Ref:  fmt.Sprintf("#types/%s", BasicClientConfifgurationPath),
 			},
 			Description: "Client configuration for bootstrapping and applying resources.",
 		},
+		provider.ClusterResourceOutputsTalosconfig: {
+			TypeSpec: schema.TypeSpec{
+				Type: typeString,
+			},
+			Description: "Raw talosconfig including endpoints for all nodes and control planes.",
+		},
 		provider.ClusterResourceOutputsGeneratedConfigurations: {
 			TypeSpec: schema.TypeSpec{
-				Type: "object",
+				Type: typeObject,
 			},
 			Description: "Generated machine configuration YAML keyed by machine ID.",
 		},
 		provider.ClusterResourceOutputsMachines: {
 			TypeSpec: schema.TypeSpec{
-				Type: "object",
+				Type: typeObject,
 				Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
 			},
 			Description: "Machine information grouped by machine type.",
@@ -148,6 +158,7 @@ func ClusterRequiredProperties() []string {
 		provider.ClusterResourceOutputsMachines,
 		provider.ClusterResourceOutputsGeneratedConfigurations,
 		provider.ClusterResourceOutputsClientConfiguration,
+		provider.ClusterResourceOutputsTalosconfig,
 	}
 }
 
@@ -155,20 +166,20 @@ func ClusterInputProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		types.ClusterEnpointKey: {
 			TypeSpec: schema.TypeSpec{
-				Type: "string",
+				Type: typeString,
 			},
 			Description: "Cluster endpoint, the Kubernetes API endpoint accessible by all nodes",
 		},
 		ClusterTypesClusterNameKey: {
 			TypeSpec: schema.TypeSpec{
-				Type:  "string",
+				Type:  typeString,
 				Plain: true,
 			},
 			Description: "Name of the cluster",
 		},
 		types.KubernetesVersionKey: {
 			TypeSpec: schema.TypeSpec{
-				Type: "string",
+				Type: typeString,
 			},
 			Description: fmt.Sprintf("Kubernetes version to install. \n"+
 				"Default is %s.", provider.DefaultK8SVersion),
@@ -176,7 +187,7 @@ func ClusterInputProperties() map[string]schema.PropertySpec {
 		},
 		ClusterTypesTalosVersionContractKey: {
 			TypeSpec: schema.TypeSpec{
-				Type: "string",
+				Type: typeString,
 			},
 			Description: fmt.Sprintf("Version of Talos features used for configuration generation. \n"+
 				"Do not confuse this with the talosImage property. \n"+
@@ -188,9 +199,9 @@ func ClusterInputProperties() map[string]schema.PropertySpec {
 		},
 		ClusterTypesMachinesKey: {
 			TypeSpec: schema.TypeSpec{
-				Type: "array",
+				Type: typeArray,
 				Items: &schema.TypeSpec{
-					Type: "object",
+					Type: typeObject,
 					Ref:  fmt.Sprintf("#types/%s", ClusterTypesMachinesPath),
 				},
 			},

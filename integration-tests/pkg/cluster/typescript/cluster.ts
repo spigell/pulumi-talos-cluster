@@ -2,7 +2,7 @@ import type * as pulumi from "@pulumi/pulumi";
 
 export type HcloudMachine = {
   serverType: string;
-  datacenter?: string;
+  location?: string;
 };
 
 export type Machine = {

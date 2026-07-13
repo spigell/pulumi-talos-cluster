@@ -17,7 +17,7 @@ func TestSchemaDefaults(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, val)
 
-	val, err = schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default")
+	val, err = schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "location", "default")
 	require.NoError(t, err)
 	require.NotNil(t, val)
 
@@ -40,7 +40,7 @@ func TestDefaultsAreApplied(t *testing.T) {
 	require.NoError(t, err)
 	serverType, err := schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "serverType", "default")
 	require.NoError(t, err)
-	datacenter, err := schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default")
+	location, err := schemaDefault("properties", "machineDefaults", "properties", "hcloud", "properties", "location", "default")
 	require.NoError(t, err)
 	talosImage, err := schemaDefault("properties", "machines", "items", "properties", "talosImage", "default")
 	require.NoError(t, err)
@@ -54,6 +54,6 @@ func TestDefaultsAreApplied(t *testing.T) {
 	machine := machines[0].(map[string]any)
 	hcloud := machine["hcloud"].(map[string]any)
 	require.Equal(t, serverType, hcloud["serverType"])
-	require.Equal(t, datacenter, hcloud["datacenter"])
+	require.Equal(t, location, hcloud["location"])
 	require.Equal(t, talosImage, machine["talosImage"])
 }

@@ -40,7 +40,9 @@ framework_lint_ts:
 
 framework_lint_go:
 	golangci-lint run ./pkg/...
-	golangci-lint run ./pkg/testdata/programs/...
+	for prog in testdata/programs/hcloud-go testdata/programs/hcloud-ha-go; do \
+		(cd $$prog && golangci-lint run ./...) || exit 1; \
+	done
 
 framework_lint_py:
 	poetry install
@@ -52,6 +54,7 @@ framework_unit_tests_go:
 framework_unit_tests_py:
 	poetry install
 	poetry run pytest pkg
+
 
 install_nodejs_integration_tests_infra:
 	yarn install
@@ -65,6 +68,9 @@ install_python_integration_tests_infra:
 	poetry run pip install -e ../sdk/python
 
 integration_tests: integration_tests_go integration_tests_nodejs integration_tests_python
+
+integration_tests_talosctl:
+	TALOSCTL_TEST_LOG_LIMIT=500 go test -v ./applier
 
 integration_tests_go: clean
 	$(MAKE) -C .. build_provider_tests gen_go_sdk

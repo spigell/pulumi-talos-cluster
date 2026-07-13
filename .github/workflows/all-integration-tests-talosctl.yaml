@@ -1,0 +1,42 @@
+name: Run integration tests for talosctl invoke
+
+env:
+  TALOSCTL_VERSION: v1.13.6
+
+on:
+  push:
+
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    name: Run tests
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Get actions
+        run: |
+          git clone "$GITHUB_SERVER_URL/spigell/my-shared-workflows" ./.github/actions_ext
+
+      - name: Setup Pulumi Go env
+        uses: ./.github/actions_ext/.github/actions/setup-pulumi-env
+        with:
+          runtime: ${{ inputs.runtime }}
+          working-directory: 'integration-tests'
+
+      - name: Install talosctl
+        uses: jaxxstorm/action-install-gh-release@v1.10.0
+        with:
+          repo: siderolabs/talos
+          rename-to: talosctl
+          chmod: 0755
+          extension-matching: disable
+          tag: ${{ env.TALOSCTL_VERSION }}
+
+      - name: Run the test
+        run: make integration_tests_talosctl
+        working-directory: integration-tests
+

@@ -45,7 +45,7 @@ export class Apply extends pulumi.ComponentResource {
                 throw new Error("Missing required property 'clientConfiguration'");
             }
             resourceInputs["applyMachines"] = args?.applyMachines;
-            resourceInputs["clientConfiguration"] = args?.clientConfiguration;
+            resourceInputs["clientConfiguration"] = args?.clientConfiguration ? pulumi.secret(args.clientConfiguration) : undefined;
             resourceInputs["skipInitApply"] = (args?.skipInitApply) ?? false;
             resourceInputs["credentials"] = undefined /*out*/;
         } else {
@@ -75,5 +75,5 @@ export interface ApplyArgs {
      * Note: init node is always applied. 
      * Default is false.
      */
-    skipInitApply?: pulumi.Input<boolean>;
+    skipInitApply?: pulumi.Input<boolean | undefined>;
 }

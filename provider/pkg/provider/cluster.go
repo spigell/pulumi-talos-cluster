@@ -1,17 +1,16 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/provider"
-	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
-	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/siderolabs/talos/pkg/machinery/gendata"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -29,36 +28,31 @@ const (
 	ClusterResourceOutputsClientConfigurationCAKey                = "caCertificate"
 	ClusterResourceOutputsClientConfigurationClientKey            = "clientKey"
 	ClusterResourceOutputsClientConfigurationClientCertificateKey = "clientCertificate"
+	ClusterResourceOutputsTalosconfig                             = "talosconfig"
 )
 
 type Cluster struct {
 	pulumi.ResourceState
-	ClusterArgs
+	types.Cluster
 
-	ClientConfiguration     pulumi.StringMap `pulumi:"clientConfiguration"`
-	GeneratedConfigurations pulumi.StringMap `pulumi:"generatedConfigurations"`
-	Machines                pulumi.ArrayMap  `pulumi:"machines"`
+	ClientConfiguration     pulumi.StringMapOutput `pulumi:"clientConfiguration"`
+	GeneratedConfigurations pulumi.StringMap       `pulumi:"generatedConfigurations"`
+	Machines                pulumi.ArrayMap        `pulumi:"machines"`
+	Talosconfig             pulumi.StringOutput    `pulumi:"talosconfig"`
 }
 
 func ClusterType() string {
 	return ProviderName + ":index:Cluster"
 }
 
-type ClusterArgs struct {
-	ClusterName          string             `pulumi:"clusterName"`
-	TalosVersionContract pulumi.StringInput `pulumi:"talosVersionContract"`
-	ClusterEndpoint      pulumi.StringInput `pulumi:"clusterEndpoint"`
-	KubernetesVersion    pulumi.StringInput `pulumi:"kubernetesVersion"`
-
-	ClusterMachines []*types.ClusterMachine `pulumi:"clusterMachines"`
-}
+// type ClusterArgs types.Cluster
 
 func GenerateDefaultInstallerImage() string {
 	return fmt.Sprintf("%s/%s/installer:%s", gendata.ImagesRegistry, gendata.ImagesUsername, gendata.VersionTag)
 }
 
 func cluster(ctx *pulumi.Context, c *Cluster, name string,
-	args *ClusterArgs, inputs provider.ConstructInputs, opts ...pulumi.ResourceOption,
+	args *types.Cluster, inputs provider.ConstructInputs, opts ...pulumi.ResourceOption,
 ) (*provider.ConstructResult, error) {
 	// Blit the inputs onto the arguments struct.
 	if err := inputs.CopyTo(args); err != nil {
@@ -69,13 +63,20 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	if err := ctx.RegisterComponentResource(ClusterType(), name, c, opts...); err != nil {
 		return nil, err
 	}
-
-	secrets, err := machine.NewSecrets(ctx, fmt.Sprintf("%s:secrets", name), &machine.SecretsArgs{
-		TalosVersion: args.TalosVersionContract,
-	}, pulumi.Parent(c), pulumi.IgnoreChanges([]string{"talosVersion"}))
+	app, err := applier.New(ctx, name,
+		pulumi.StringMap{},
+		pulumi.Parent(c),
+	)
 	if err != nil {
 		return nil, err
 	}
+
+	// Generate secrets via talosctl.
+	secrets, err := app.GenerateSecrets()
+	if err != nil {
+		return nil, errors.Wrap(err, "generating secrets")
+	}
+	secrets = pulumi.ToSecret(secrets).(pulumi.StringOutput)
 
 	workers := make(pulumi.Array, 0)
 	controlplanes := make(pulumi.Array, 0)
@@ -84,12 +85,6 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 
 	for _, m := range args.ClusterMachines {
 		// The provider doesn't know anything about init node type.
-		// It should be the controlplane for it.
-		machineType := m.MachineType
-		if m.MachineType == tmachine.TypeInit.String() {
-			machineType = tmachine.TypeControlPlane.String()
-		}
-
 		if m.ConfigPatches == nil {
 			m.ConfigPatches = pulumi.StringArray{pulumi.String("")}
 		}
@@ -99,41 +94,52 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 			m.TalosImage = pulumi.String(GenerateDefaultInstallerImage())
 		}
 
-		configuration := machine.GetConfigurationOutput(ctx, machine.GetConfigurationOutputArgs{
-			ClusterName:       pulumi.String(args.ClusterName),
-			MachineType:       pulumi.String(machineType),
-			ClusterEndpoint:   args.ClusterEndpoint,
-			KubernetesVersion: args.KubernetesVersion,
-			TalosVersion:      compareContractVersionWithNotify(ctx, secrets.TalosVersion, args.TalosVersionContract.ToStringOutput()),
-			ConfigPatches: pulumi.All(
-				m.ConfigPatches, // StringArrayInput  -> []string in ApplyT
-				configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()), // StringInput -> string in ApplyT
-			).ApplyT(func(args []any) []string {
-				base := args[0].([]string) // from m.ConfigPatches
-				extra := args[1].(string)  // from configureTalosInstall(...)
-				// append safely (copy if you care about not aliasing base)
-				out := make([]string, 0, len(base)+1)
-				out = append(out, base...)
-				out = append(out, extra)
-				return out
-			}).(pulumi.StringArrayOutput),
+		// cfg := talosctl.New().CatFile(ctx, filepath.Join(workDir, "configs"), cfgFile, []pulumi.Resource{configCmd})
+		// 		-               configuration := machine.GetConfigurationOutput(ctx, machine.GetConfigurationOutputArgs{
+		// -                       ClusterName:       pulumi.String(args.ClusterName),
+		// -                       MachineType:       pulumi.String(machineType),
+		// -                       ClusterEndpoint:   args.ClusterEndpoint,
+		// -                       KubernetesVersion: args.KubernetesVersion,
+		// -                       TalosVersion:      compareContractVersionWithNotify(ctx, secrets.TalosVersion, args.TalosVersionContract.ToStringOutput()),
+		// -                       ConfigPatches: pulumi.All(
+		// -                               m.ConfigPatches, // StringArrayInput  -> []string in ApplyT
+		// -                               configureTalosInstall(m.TalosImage.ToStringPtrOutput().Elem()), // StringInput -> string in ApplyT
+		// -                       ).ApplyT(func(args []any) []string {
+		// -                               base := args[0].([]string) // from m.ConfigPatches
+		// -                               extra := args[1].(string)  // from configureTalosInstall(...)
+		// -                               // append safely (copy if you care about not aliasing base)
+		// -                               out := make([]string, 0, len(base)+1)
+		// -                               out = append(out, base...)
+		// -                               out = append(out, extra)
+		// -                               return out
+		// -                       }).(pulumi.StringArrayOutput),
+		// -
+		// -                       MachineSecrets: secrets.ToSecretsOutput().MachineSecrets(),
+		// -               }, nil)
+		// -
+		// -               generated[m.MachineID] = configuration.MachineConfiguration()
 
-			MachineSecrets: secrets.ToSecretsOutput().MachineSecrets(),
-		}, nil)
+		// Generate configs via talosctl using the generated secrets.
+		configuration, err := app.GenerateMachineConfig(args, m, secrets)
+		if err != nil {
+			return nil, errors.Wrap(err, "generating configs")
+		}
 
-		generated[m.MachineID] = configuration.MachineConfiguration()
+		generated[m.MachineID] = configuration
+
+		mInfo := m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration)
 
 		switch m.MachineType {
 		case tmachine.TypeControlPlane.String():
-			controlplanes = append(controlplanes, m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration()))
+			controlplanes = append(controlplanes, mInfo)
 		case tmachine.TypeWorker.String():
-			workers = append(workers, m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration()))
+			workers = append(workers, mInfo)
 		case tmachine.TypeInit.String():
 			if len(c.Machines) == 1 {
 				return nil, fmt.Errorf("only one init node should present. Please use 'controlplane' type for %s", m.MachineID)
 			}
 
-			c.Machines[tmachine.TypeInit.String()] = pulumi.Array{m.ToMachineInfoMap(args.ClusterEndpoint, args.KubernetesVersion, configuration.MachineConfiguration())}
+			c.Machines[tmachine.TypeInit.String()] = pulumi.Array{mInfo}
 		default:
 			return nil, fmt.Errorf("unknown machine type %s", m.MachineType)
 		}
@@ -144,51 +150,33 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 
 	c.GeneratedConfigurations = generated
 
-	c.ClientConfiguration = pulumi.StringMap{
-		ClusterResourceOutputsClientConfigurationCAKey:                secrets.ClientConfiguration.CaCertificate(),
-		ClusterResourceOutputsClientConfigurationClientKey:            secrets.ClientConfiguration.ClientKey(),
-		ClusterResourceOutputsClientConfigurationClientCertificateKey: secrets.ClientConfiguration.ClientCertificate(),
+	talosconfig, err := app.GenerateTalosconfig(args, secrets)
+	if err != nil {
+		return nil, errors.Wrap(err, "generating talosconfig")
 	}
 
+	c.ClientConfiguration = pulumi.ToSecret(talosconfig.ApplyTWithContext(ctx.Context(), func(_ context.Context, raw string) (map[string]string, error) {
+		ca, key, cert, err := applier.ExtractTalosconfigCreds(raw, args.ClusterName)
+		if err != nil {
+			return nil, err
+		}
+
+		return map[string]string{
+			ClusterResourceOutputsClientConfigurationCAKey:                ca,
+			ClusterResourceOutputsClientConfigurationClientKey:            key,
+			ClusterResourceOutputsClientConfigurationClientCertificateKey: cert,
+		}, nil
+	})).(pulumi.StringMapOutput)
+	c.Talosconfig = pulumi.ToSecret(talosconfig).(pulumi.StringOutput)
+
 	if err := ctx.RegisterResourceOutputs(c, pulumi.Map{
-		ClusterResourceOutputsClientConfiguration:     secrets.ClientConfiguration,
+		ClusterResourceOutputsClientConfiguration:     c.ClientConfiguration,
 		ClusterResourceOutputsMachines:                c.Machines,
 		ClusterResourceOutputsGeneratedConfigurations: generated,
+		ClusterResourceOutputsTalosconfig:             c.Talosconfig,
 	}); err != nil {
 		return nil, err
 	}
 
 	return provider.NewConstructResult(c)
-}
-
-func configureTalosInstall(image pulumi.StringOutput) pulumi.StringOutput {
-	return pulumi.All(image).ApplyT(func(args []any) (string, error) {
-		image := args[0].(string)
-
-		talosImagePatch := v1alpha1.Config{
-			MachineConfig: &v1alpha1.MachineConfig{
-				MachineInstall: &v1alpha1.InstallConfig{
-					InstallImage: image,
-				},
-			},
-		}
-		encoded, err := yaml.Marshal(talosImagePatch)
-		if err != nil {
-			return "", err
-		}
-		return string(encoded), nil
-	}).(pulumi.StringOutput)
-}
-
-func compareContractVersionWithNotify(ctx *pulumi.Context, init pulumi.StringOutput, got pulumi.StringOutput) pulumi.StringOutput {
-	return pulumi.All(got, init).ApplyT(func(v []any) string {
-		got := v[0].(string)
-		init := v[1].(string)
-		if got != init {
-			ctx.Log.Warn(fmt.Sprintf("got contract version: %s, but use init value: %s. talosVersionContract can't be changed after creation of cluster",
-				got, init,
-			), nil)
-		}
-		return init
-	}).(pulumi.StringOutput)
 }

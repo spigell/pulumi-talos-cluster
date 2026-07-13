@@ -21,7 +21,7 @@ def test_schema_defaults_present() -> None:
     )
     assert (
         get_default(
-            ["properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default"]
+            ["properties", "machineDefaults", "properties", "hcloud", "properties", "location", "default"]
         )
         is not None
     )
@@ -44,9 +44,9 @@ def test_defaults_are_applied() -> None:
         )
     )
     assert (
-        machine["hcloud"]["datacenter"]
+        machine["hcloud"]["location"]
         == get_default(
-            ["properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default"]
+            ["properties", "machineDefaults", "properties", "hcloud", "properties", "location", "default"]
         )
     )
     assert (

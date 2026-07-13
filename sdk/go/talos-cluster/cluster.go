@@ -24,6 +24,8 @@ type Cluster struct {
 	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
 	// Machine information grouped by machine type.
 	Machines ApplyMachinesOutput `pulumi:"machines"`
+	// Raw talosconfig including endpoints for all nodes and control planes.
+	Talosconfig pulumi.StringOutput `pulumi:"talosconfig"`
 }
 
 // NewCluster registers a new resource with the given unique name, arguments, and options.
@@ -43,7 +45,7 @@ func NewCluster(ctx *pulumi.Context,
 		args.KubernetesVersion = pulumi.StringPtr("v1.33.0")
 	}
 	if args.TalosVersionContract == nil {
-		args.TalosVersionContract = pulumi.StringPtr("v1.12.0")
+		args.TalosVersionContract = pulumi.StringPtr("v1.13.6")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Cluster
@@ -69,7 +71,7 @@ type clusterArgs struct {
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
-	// The default value is based on gendata.VersionTag, current: v1.12.0.
+	// The default value is based on gendata.VersionTag, current: v1.13.6.
 	TalosVersionContract *string `pulumi:"talosVersionContract"`
 }
 
@@ -89,7 +91,7 @@ type ClusterArgs struct {
 	// Used in NewSecrets() and GetConfigurationOutput() resources.
 	// This property is immutable to prevent version conflicts across provider updates.
 	// See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168
-	// The default value is based on gendata.VersionTag, current: v1.12.0.
+	// The default value is based on gendata.VersionTag, current: v1.13.6.
 	TalosVersionContract pulumi.StringPtrInput
 }
 
@@ -193,6 +195,11 @@ func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
 // Machine information grouped by machine type.
 func (o ClusterOutput) Machines() ApplyMachinesOutput {
 	return o.ApplyT(func(v *Cluster) ApplyMachinesOutput { return v.Machines }).(ApplyMachinesOutput)
+}
+
+// Raw talosconfig including endpoints for all nodes and control planes.
+func (o ClusterOutput) Talosconfig() pulumi.StringOutput {
+	return o.ApplyT(func(v *Cluster) pulumi.StringOutput { return v.Talosconfig }).(pulumi.StringOutput)
 }
 
 type ClusterArrayOutput struct{ *pulumi.OutputState }

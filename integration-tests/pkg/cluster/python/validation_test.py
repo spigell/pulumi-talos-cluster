@@ -63,11 +63,11 @@ def test_defaults_are_applied() -> None:
     server_type = get_default(
         ["properties", "machineDefaults", "properties", "hcloud", "properties", "serverType", "default"]
     )
-    datacenter = get_default(
-        ["properties", "machineDefaults", "properties", "hcloud", "properties", "datacenter", "default"]
+    location = get_default(
+        ["properties", "machineDefaults", "properties", "hcloud", "properties", "location", "default"]
     )
 
     assert data["kubernetesVersion"] == kubernetes_version
     assert machine["talosImage"] == talos_image
     assert machine["hcloud"]["serverType"] == server_type
-    assert machine["hcloud"]["datacenter"] == datacenter
+    assert machine["hcloud"]["location"] == location

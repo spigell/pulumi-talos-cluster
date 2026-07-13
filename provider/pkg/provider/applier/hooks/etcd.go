@@ -119,8 +119,9 @@ func makeTalosRunner(cli *talosctl.Talosctl, workDir string, logger pulumi.Log) 
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
-		// build "talosctl --talosconfig ... -n <ip> -e <ip> ..."
+		// build "talosctl --talosconfig <workDir>/talosctl.yaml -n <ip> -e <ip> ..."
 		full := strings.Fields(cli.BasicCommand)[1:]
+		full = append([]string{"--talosconfig", fmt.Sprintf("%s/%s", workDir, "talosctl.yaml")}, full...)
 		full = append(full, args...)
 		logger.Debug(fmt.Sprintf("exec: %s %s", cli.Binary, strings.Join(full, " ")), nil)
 

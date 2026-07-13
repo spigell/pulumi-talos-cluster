@@ -4,16 +4,21 @@ privateNetwork: 10.10.0.0/16
 privateSubnetwork: 10.10.10.0/25
 usePrivateNetwork: true
 machines:
-  - id: controlplane-1
+  - id: hcloud-js-controlplane-1
     type: init
     platform: hcloud
     variant: metal
+    talosImage: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.13.6
     privateIP: 10.10.10.2
     hcloud:
-      serverType: cax21
+      # cax21 (arm) is temporarily unavailable: Hetzner has no arm placement
+      # capacity in fsn1/nbg1/hel1; switch back once capacity returns.
+      serverType: cx23
     configPatches:
       - |
         debug: true
-        machine:
-          network:
-            hostname: master-1
+      - |
+        apiVersion: v1alpha1
+        kind: HostnameConfig
+        hostname: hcloud-js-controlplane-1
+        auto: off

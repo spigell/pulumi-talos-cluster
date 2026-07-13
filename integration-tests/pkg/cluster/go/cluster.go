@@ -24,5 +24,5 @@ type Machine struct {
 
 type HcloudMachine struct {
 	ServerType string `yaml:"serverType"`
-	Datacenter string `yaml:"datacenter"`
+	Location   string `yaml:"location"`
 }

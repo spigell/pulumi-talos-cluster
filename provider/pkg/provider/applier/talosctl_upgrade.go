@@ -6,6 +6,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
+	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"gopkg.in/yaml.v3"
@@ -24,12 +25,22 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 		etcdMemberTarget = 1
 	}
 
-	if role == tmachine.TypeInit || role == tmachine.TypeControlPlane {
-		hooks := []*pulumi.ResourceHook{a.etcdReadyHook}
-		opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
-			BeforeCreate: hooks,
-			BeforeUpdate: hooks,
-		}))
+	if (role == tmachine.TypeInit || role == tmachine.TypeControlPlane) && a.opts.etcdHookEnabled {
+		// Populate upgrade hooks lazily and reuse if already registered.
+		if _, ok := a.hooks[hookStageUpgrade]; !ok {
+			h, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
+			if err != nil {
+				return nil, err
+			}
+			a.hooks[hookStageUpgrade] = []*pulumi.ResourceHook{h}
+		}
+
+		if hooksForStage, ok := a.hooks[hookStageUpgrade]; ok && len(hooksForStage) > 0 {
+			opts = append(opts, pulumi.ResourceHooks(&pulumi.ResourceHookBinding{
+				BeforeCreate: hooksForStage,
+				BeforeUpdate: hooksForStage,
+			}))
+		}
 	}
 
 	args, err := talosctlUpgradeArgs(m)
@@ -39,10 +50,11 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 
 	stageName := "cli-upgrade"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
-	t := talosctl.New().WithNodeIP(m.NodeIP)
+	t := talosctl.New().
+		WithNodeIP(m.NodeIP).
+		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		TalosConfig: a.basicClient().TalosConfig(),
 		PrepareDeps: deps,
 		Dir:         home,
 		CommandArgs: pulumi.String(args),
@@ -66,7 +78,9 @@ func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
 
 	img := cfg.MachineConfig.Install().Image()
 
-	base := fmt.Sprintf("upgrade --debug --image %s", img)
+	// --drain defaults to true since talosctl v1.13 and requires a kubeconfig
+	// from the target node, which workers cannot serve during provisioning.
+	base := fmt.Sprintf("upgrade --debug --drain=false --image %s", img)
 
 	return base, nil
 }

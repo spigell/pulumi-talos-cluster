@@ -68,11 +68,7 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
       ],
     };
 
-    if (machine.hcloud.datacenter) {
-      serverArgs.datacenter = machine.hcloud.datacenter;
-    } else {
-      serverArgs.location = "nbg1";
-    }
+    serverArgs.location = machine.hcloud.location ?? "nbg1";
 
     // Define the server
     const server = new hcloud.Server(

@@ -10,7 +10,7 @@ packer {
 
 variable "talos_version" {
   type    = string
-  default = "v1.12.0"
+  default = "v1.13.6"
 }
 
 variable "talos_schematic_id" {
@@ -54,8 +54,8 @@ locals {
 source "hcloud" "talos" {
   rescue       = "linux64"
   image        = "debian-11"
-  server_type  = local.arch == "arm" ? "cax11" : "cx22"
-  location     = "fsn1"
+  server_type  = local.arch == "arm" ? "cax21" : "cx23"
+  location     = local.arch == "arm" ? "hel1" : "fsn1"
   ssh_username = "root"
 
   snapshot_name   = "Talos Linux ${var.talos_version} ${local.variant} ${local.arch} (schemaID: ${var.talos_schematic_id})"

@@ -26,7 +26,7 @@ function loadSchemaDefaults() {
     kubernetesVersion: props.kubernetesVersion?.default,
     talosImage: machineProps.talosImage?.default,
     hcloudServerType: machineDefaults.serverType?.default,
-    hcloudDatacenter: machineDefaults.datacenter?.default,
+    hcloudLocation: machineDefaults.location?.default,
   };
 }
 
@@ -43,7 +43,7 @@ describe("defaults", () => {
     expect(defaults.kubernetesVersion).toBeDefined();
     expect(defaults.talosImage).toBeDefined();
     expect(defaults.hcloudServerType).toBeDefined();
-    expect(defaults.hcloudDatacenter).toBeDefined();
+    expect(defaults.hcloudLocation).toBeDefined();
   });
 
   test("applies schema defaults when optional fields are omitted", () => {
@@ -61,7 +61,7 @@ describe("defaults", () => {
       talosImage: defaults.talosImage,
       hcloud: {
         serverType: defaults.hcloudServerType,
-        datacenter: defaults.hcloudDatacenter,
+        location: defaults.hcloudLocation,
       },
     });
   });

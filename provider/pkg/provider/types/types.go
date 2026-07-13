@@ -21,12 +21,27 @@ const (
 	TalosconfigKey       = "talosconfig"
 )
 
+type Cluster struct {
+	ClusterName          string             `pulumi:"clusterName"`
+	TalosVersionContract pulumi.StringInput `pulumi:"talosVersionContract"`
+	ClusterEndpoint      pulumi.StringInput `pulumi:"clusterEndpoint"`
+	KubernetesVersion    pulumi.StringInput `pulumi:"kubernetesVersion"`
+
+	ClusterMachines []*ClusterMachine `pulumi:"clusterMachines"`
+}
+
 type ClusterMachine struct {
 	MachineID     string                  `pulumi:"machineId"`
 	MachineType   string                  `pulumi:"machineType"`
 	NodeIP        pulumi.StringPtrInput   `pulumi:"nodeIp"`
 	TalosImage    pulumi.StringPtrInput   `pulumi:"talosImage"`
 	ConfigPatches pulumi.StringArrayInput `pulumi:"configPatches"`
+}
+
+type ClientConfigurationArgs struct {
+	CaCertificate     pulumi.StringInput `pulumi:"caCertificate"`
+	ClientKey         pulumi.StringInput `pulumi:"clientKey"`
+	ClientCertificate pulumi.StringInput `pulumi:"clientCertificate"`
 }
 
 func (m *ClusterMachine) ToMachineInfoMap(clusterEndpoint pulumi.StringInput, k8sVer pulumi.StringInput, config pulumi.StringOutput) *pulumi.Map {

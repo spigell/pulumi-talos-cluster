@@ -5,53 +5,52 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/client"
-	"github.com/pulumiverse/pulumi-talos/sdk/go/talos/machine"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
-	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 )
 
 type Applier struct {
 	ctx                 *pulumi.Context
 	name                string
-	clientConfiguration *machine.ClientConfigurationArgs
+	clientConfiguration pulumi.StringMapOutput
 	parent              pulumi.ResourceOption
 	commnanInterpreter  pulumi.StringArray
 	skipInitNode        bool
 
-	etcdMembers   int
-	etcdReadyHook *pulumi.ResourceHook
+	etcdMembers int
+	opts        Options
+	hooks       map[string][]*pulumi.ResourceHook
 
 	InitNode *InitNode
 }
+
+type Options struct {
+	etcdHookEnabled bool
+}
+
+const hookStageUpgrade = "cli-upgrade"
 
 type InitNode struct {
 	IP   string
 	Name string
 }
 
-func New(ctx *pulumi.Context, name string, client *machine.ClientConfigurationArgs, parent pulumi.ResourceOption) (*Applier, error) {
+func New(ctx *pulumi.Context, name string, client pulumi.StringMapInput, parent pulumi.ResourceOption) (*Applier, error) {
 	a := &Applier{
 		name:                name,
 		ctx:                 ctx,
 		parent:              parent,
-		clientConfiguration: client,
+		clientConfiguration: client.ToStringMapOutput(),
 		// 1 is default value, because we have at least one init node.
 		etcdMembers: 1,
 		commnanInterpreter: pulumi.StringArray{
 			pulumi.String("/bin/bash"),
 			pulumi.String("-c"),
 		},
+		opts: Options{etcdHookEnabled: true},
 	}
-
-	etcdReadyHook, err := a.ctx.RegisterResourceHook("health-check", hooks.EtcdReadyHook(a.ctx.Log), nil)
-	if err != nil {
-		return a, err
-	}
-
-	a.etcdReadyHook = etcdReadyHook
 
 	return a, nil
 }
@@ -68,40 +67,35 @@ func (a *Applier) WithEtcdMembersCount(count int) *Applier {
 	return a
 }
 
-func (a *Applier) NewTalosconfig(endpoints []string, nodes []string) client.GetConfigurationResultOutput {
-	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
-		ClusterName: pulumi.String(a.name),
-		Endpoints:   pulumi.ToStringArray(endpoints),
-		Nodes:       pulumi.ToStringArray(nodes),
-		ClientConfiguration: &client.GetConfigurationClientConfigurationArgs{
-			CaCertificate:     a.clientConfiguration.CaCertificate,
-			ClientKey:         a.clientConfiguration.ClientKey,
-			ClientCertificate: a.clientConfiguration.ClientCertificate,
-		},
-	})
+func (a *Applier) WithHooks(enabled bool) *Applier {
+	a.opts.etcdHookEnabled = enabled
+	if enabled && a.hooks == nil {
+		a.hooks = make(map[string][]*pulumi.ResourceHook)
+	}
+
+	return a
+}
+
+// TalosconfigForNode generates a talosconfig for a single node (IP used for endpoint and node).
+func (a *Applier) TalosconfigForNode(ip string) pulumi.StringOutput {
+	return a.buildTalosConfig([]string{ip}, []string{ip})
+}
+
+// Talosconfig generates a talosconfig for a set of endpoints and nodes.
+func (a *Applier) Talosconfig(endpoints []string, nodes []string) pulumi.StringOutput {
+	return a.buildTalosConfig(endpoints, nodes)
 }
 
 func (a *Applier) BootstrapInitNode(m *types.MachineInfo) ([]pulumi.Resource, error) {
-	// The Init node is special. We need to init by ourselves.
+	// Intentionally skip the bootstrap/reboot phase for init nodes.
+	// The previous reboot-based bootstrap step was removed on purpose.
 	applied, err := a.initApply(m, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	deps := []pulumi.Resource{applied}
-
-	bootstrap, err := machine.NewBootstrap(a.ctx, fmt.Sprintf("%s:bootstrap:%s", a.name, m.MachineID), &machine.BootstrapArgs{
-		ClientConfiguration: a.clientConfiguration,
-		Node:                pulumi.String(m.NodeIP),
-	}, a.parent,
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m", Update: "1m"}),
-		pulumi.DependsOn(deps),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	deps = append(deps, bootstrap)
+	deps := make([]pulumi.Resource, 0, 2)
+	deps = append(deps, applied)
 
 	cli, err := a.cliApply(m, tmachine.TypeInit, deps)
 	if err != nil {
@@ -177,47 +171,29 @@ func (a *Applier) cliApply(m *types.MachineInfo, role tmachine.Type, deps []pulu
 }
 
 func (a *Applier) initApply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	apply, err := machine.NewConfigurationApply(a.ctx, fmt.Sprintf("%s:initial-apply:%s", a.name, m.MachineID), &machine.ConfigurationApplyArgs{
-		Node:                      pulumi.String(m.NodeIP),
-		MachineConfigurationInput: pulumi.String(m.Configuration),
-		// Staged is not supported in maintenance.
-		// NoReboot can lead to failures.
-		ApplyMode: pulumi.String("reboot"),
-		OnDestroy: &machine.ConfigurationApplyOnDestroyArgs{
-			Graceful: pulumi.Bool(true),
-			Reboot:   pulumi.Bool(false),
-			Reset:    pulumi.Bool(false),
-		},
-		Timeouts: &machine.TimeoutArgs{
-			Create: pulumi.String("1m"),
-			Update: pulumi.String("1m"),
-		},
-		ClientConfiguration: a.clientConfiguration,
-	}, a.parent,
-		// Ignore changes to machineConfigurationInput to prevent unnecessary updates since there will be an additional apply via cli.
-		// Generated configuration has a contract with immutable talos version and sometimes new options can be skipped.
-		pulumi.IgnoreChanges([]string{"machineConfigurationInput", "applyMode"}),
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "1m", Update: "1m"}),
-		pulumi.DependsOn(deps),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	deps = append(deps, apply)
-
-	return a.reboot(m, deps)
+	return a.initApplyWithTalosctl(m, deps)
 }
 
-func (a *Applier) basicClient() client.GetConfigurationResultOutput {
-	return client.GetConfigurationOutput(a.ctx, client.GetConfigurationOutputArgs{
-		ClusterName: pulumi.String(a.name),
-		ClientConfiguration: &client.GetConfigurationClientConfigurationArgs{
-			CaCertificate:     a.clientConfiguration.CaCertificate,
-			ClientKey:         a.clientConfiguration.ClientKey,
-			ClientCertificate: a.clientConfiguration.ClientCertificate,
-		},
-	})
+func (a *Applier) GenerateSecrets() (pulumi.StringOutput, error) {
+	return a.generateSecrets()
+}
+
+func (a *Applier) GenerateMachineConfig(c *types.Cluster, m *types.ClusterMachine, secrets pulumi.StringOutput) (pulumi.StringOutput, error) {
+	configuration, err := a.generateMachineConfig(c, m, secrets)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+
+	return configuration.(*local.Command).Stdout, nil
+}
+
+func (a *Applier) GenerateTalosconfig(c *types.Cluster, secrets pulumi.StringOutput) (pulumi.StringOutput, error) {
+	talosconfig, err := a.generateTalosconfig(c, secrets)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+
+	return talosconfig.(*local.Command).Stdout, nil
 }
 
 func generateWorkDirNameForTalosctl(stack, step, machineID string) string {

@@ -39,6 +39,10 @@ export class Cluster extends pulumi.ComponentResource {
      * Machine information grouped by machine type.
      */
     declare public /*out*/ readonly machines: pulumi.Output<outputs.ApplyMachines>;
+    /**
+     * Raw talosconfig including endpoints for all nodes and control planes.
+     */
+    declare public /*out*/ readonly talosconfig: pulumi.Output<string>;
 
     /**
      * Create a Cluster resource with the given unique name, arguments, and options.
@@ -64,14 +68,16 @@ export class Cluster extends pulumi.ComponentResource {
             resourceInputs["clusterMachines"] = args?.clusterMachines;
             resourceInputs["clusterName"] = args?.clusterName;
             resourceInputs["kubernetesVersion"] = (args?.kubernetesVersion) ?? "v1.33.0";
-            resourceInputs["talosVersionContract"] = (args?.talosVersionContract) ?? "v1.12.0";
+            resourceInputs["talosVersionContract"] = (args?.talosVersionContract) ?? "v1.13.6";
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
+            resourceInputs["talosconfig"] = undefined /*out*/;
         } else {
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
+            resourceInputs["talosconfig"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Cluster.__pulumiType, name, resourceInputs, opts, true /*remote*/);
@@ -98,14 +104,14 @@ export interface ClusterArgs {
      * Kubernetes version to install. 
      * Default is v1.33.0.
      */
-    kubernetesVersion?: pulumi.Input<string>;
+    kubernetesVersion?: pulumi.Input<string | undefined>;
     /**
      * Version of Talos features used for configuration generation. 
      * Do not confuse this with the talosImage property. 
      * Used in NewSecrets() and GetConfigurationOutput() resources. 
      * This property is immutable to prevent version conflicts across provider updates. 
      * See issue: https://github.com/siderolabs/terraform-provider-talos/issues/168 
-     * The default value is based on gendata.VersionTag, current: v1.12.0.
+     * The default value is based on gendata.VersionTag, current: v1.13.6.
      */
-    talosVersionContract?: pulumi.Input<string>;
+    talosVersionContract?: pulumi.Input<string | undefined>;
 }

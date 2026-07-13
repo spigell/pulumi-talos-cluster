@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pulumi-talos-cluster-mcp": {
+      "type": "http",
+      "url": "http://pulumi-talos-cluster-runner.pulumi-talos-cluster-workbench:80/mcp/"
+    }
+  }
+}

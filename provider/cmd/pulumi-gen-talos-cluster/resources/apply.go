@@ -33,9 +33,13 @@ func ApplyProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		ApplyTypesCredentialsKey: {
 			TypeSpec: schema.TypeSpec{
-				Type: "object",
+				Type: typeObject,
 				Ref:  fmt.Sprintf("#types/%s", ApplyTypesCredentialsPath),
 			},
+			// Secret is not set on component outputs: dotnet codegen emits
+			// AdditionalSecretOutputs into ComponentResourceOptions, which the
+			// Pulumi .NET SDK does not support. Secrecy is enforced at runtime
+			// via pulumi.ToSecret in the provider.
 		},
 	}
 }
@@ -44,7 +48,7 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 	return map[string]schema.PropertySpec{
 		"applyMachines": {
 			TypeSpec: schema.TypeSpec{
-				Type: "object",
+				Type: typeObject,
 				Ref:  fmt.Sprintf("#types/%s", BasicMachinesByTypePath),
 			},
 			Description: "The machine configurations to apply.",
@@ -60,8 +64,15 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 				"Default is false.",
 			Default: false,
 		},
-		provider.ClusterResourceOutputsClientConfiguration: ClusterProperties()[provider.ClusterResourceOutputsClientConfiguration],
+		provider.ClusterResourceOutputsClientConfiguration: secretProperty(ClusterProperties()[provider.ClusterResourceOutputsClientConfiguration]),
 	}
+}
+
+// secretProperty marks a property spec as secret. Secret is safe on inputs;
+// component outputs must stay non-secret in the schema (see ApplyProperties).
+func secretProperty(spec schema.PropertySpec) schema.PropertySpec {
+	spec.Secret = true
+	return spec
 }
 
 func ApplyRequiredInputProperties() []string {
@@ -73,19 +84,21 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 
 	ty[ApplyTypesCredentialsPath] = schema.ComplexTypeSpec{
 		ObjectTypeSpec: schema.ObjectTypeSpec{
-			Type: "object",
+			Type: typeObject,
 			Properties: map[string]schema.PropertySpec{
 				types.KubeconfigKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "The Kubeconfig for cluster",
+					Secret:      true,
 				},
 				types.TalosconfigKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "The talosconfig with all nodes and controlplanes as endpoints",
+					Secret:      true,
 				},
 			},
 			Required: []string{
@@ -101,33 +114,33 @@ func ApplyTypes() map[string]schema.ComplexTypeSpec {
 			Properties: map[string]schema.PropertySpec{
 				types.MachineIDKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "ID or name of the machine.",
 				},
 				types.NodeIPKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "The IP address of the node where configuration will be applied.",
 				},
 				types.ConfigurationKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "Configuration settings for machines to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
 				types.UserConfigPatchesKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "User-provided machine configuration to apply. \n" +
 						"This can be retrieved from the cluster resource.",
 				},
 				types.TalosImageKey: {
 					TypeSpec: schema.TypeSpec{
-						Type: "string",
+						Type: typeString,
 					},
 					Description: "Talos OS image to install or upgrade on the node.",
 				},

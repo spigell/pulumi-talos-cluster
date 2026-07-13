@@ -12,7 +12,7 @@ Add tightly scoped defaults:
 *   `kubernetesVersion`: `"v1.33.0"`
 *   `machines[].talosImage`: `"ghcr.io/siderolabs/talos:v1.11.5"`
 *   `machineDefaults.hcloud.serverType`: `"cx21"`
-*   `machineDefaults.hcloud.datacenter`: `"nbg1-dc3"`
+*   `machineDefaults.hcloud.location`: `"nbg1"`
 
 ```json
 {
@@ -26,7 +26,7 @@ Add tightly scoped defaults:
           "type": "object",
           "properties": {
             "serverType": { "type": "string", "default": "cx21" },
-            "datacenter": { "type": "string", "default": "nbg1-dc3" }
+            "location": { "type": "string", "default": "nbg1" }
           }
         }
       }
