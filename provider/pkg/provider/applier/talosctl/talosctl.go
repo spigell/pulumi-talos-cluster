@@ -36,6 +36,7 @@ type Args struct {
 	RetryCount       int
 	Environment      pulumi.StringMap
 	Triggers         pulumi.Array
+	UpdateOnChange   bool
 	AdditionalFiles  []ExtraFile
 	TryInsecureFirst bool
 	// Logging controls what the Pulumi engine records from the command execution.
@@ -90,14 +91,19 @@ func (t *Talosctl) RunCommand(
 		return nil, err
 	}
 
-	main, err := local.NewCommand(ctx, name, &local.CommandArgs{
+	commandArgs := &local.CommandArgs{
 		Create:      createGated,
 		Dir:         pulumi.String(a.Dir),
 		Interpreter: pulumi.ToStringArray(interpreter),
 		Environment: env,
 		Triggers:    a.Triggers,
 		Logging:     logging,
-	}, opts...)
+	}
+	if a.UpdateOnChange {
+		commandArgs.Update = createGated.ToStringPtrOutput()
+	}
+
+	main, err := local.NewCommand(ctx, name, commandArgs, opts...)
 	if err != nil {
 		return nil, err
 	}

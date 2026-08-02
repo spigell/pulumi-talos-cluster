@@ -2,14 +2,13 @@ package applier
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
-	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
-	"gopkg.in/yaml.v3"
 )
 
 func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulumi.Resource) (pulumi.Resource, error) {
@@ -69,14 +68,10 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 }
 
 func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
-	machineConfig := m.Configuration
-
-	var cfg v1alpha1.Config
-	if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {
-		return "", fmt.Errorf("failed to unmarshal machine config: %w", err)
+	img := strings.TrimSpace(m.TalosImage)
+	if img == "" {
+		return "", fmt.Errorf("talos image is required for machine %s", m.MachineID)
 	}
-
-	img := cfg.MachineConfig.Install().Image()
 
 	// --drain defaults to true since talosctl v1.13 and requires a kubeconfig
 	// from the target node, which workers cannot serve during provisioning.

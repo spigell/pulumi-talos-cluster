@@ -47,11 +47,12 @@ func NewK8SImages(config *v1alpha1.Config) *K8SImages {
 // that Kubernetes image versions in the configuration align with the currently running
 // versions to prevent accidental downgrades (Talos does not support downgrades via specifying images in the config).
 func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	machineFile := pulumi.All(m.UserConfigPatches, m.NodeIP, m.Configuration).ApplyT(func(args []any) (pulumi.StringOutput, error) {
+	machineFile := pulumi.All(m.UserConfigPatches, m.NodeIP, m.Configuration, m.TalosImage).ApplyT(func(args []any) (pulumi.StringOutput, error) {
 		// Extract current images to use instead of any potential downgraded images
 		userPatches := args[0].(string)
 		ip := args[1].(string)
 		machineConfig := args[2].(string)
+		talosImage := args[3].(string)
 
 		t2 := talosctl.New().
 			WithNodeIP(ip).
@@ -84,7 +85,8 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 
 			// Merge the base machine configuration with user-provided patches.
 			// This combines the configs into a single YAML representation.
-			merged, err := MergeYAML(machineConfig, userPatches).WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
+			installImagePatch := fmt.Sprintf("machine:\n  install:\n    image: %s\n", talosImage)
+			merged, err := MergeYAML(machineConfig, installImagePatch+"\n---\n"+userPatches).WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
 			if err != nil {
 				return "", fmt.Errorf("failed merge yaml strings: %w", err)
 			}
@@ -110,6 +112,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		Triggers: pulumi.Array{
 			pulumi.String(m.UserConfigPatches),
 			pulumi.String(m.ClusterEnpoint),
+			pulumi.String(m.TalosImage),
 		},
 	}, []pulumi.ResourceOption{
 		a.parent,

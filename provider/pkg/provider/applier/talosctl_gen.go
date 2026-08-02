@@ -88,6 +88,7 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 			outType,
 			patchFlag,
 		),
+		UpdateOnChange: true,
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
