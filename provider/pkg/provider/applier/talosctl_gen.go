@@ -11,6 +11,7 @@ import (
 	clientconfig "github.com/siderolabs/talos/pkg/machinery/client/config"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
+	"gopkg.in/yaml.v3"
 )
 
 var talosctlGenerateBaseArgs = strings.Join([]string{
@@ -52,18 +53,28 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 		outType = "controlplane"
 	}
 
-	patches := m.ConfigPatches.ToStringArrayOutput().ApplyTWithContext(a.ctx.Context(), func(_ context.Context, p []string) (string, error) {
+	patches := m.ConfigPatches.ToStringArrayOutput().ApplyTWithContext(a.ctx.Context(), func(_ context.Context, p []string) (map[string]string, error) {
 		if genType == "init" {
 			p = append([]string{"machine:\n  type: init"}, p...)
 		}
 		return mergePatchesYAML(p)
-	}).(pulumi.StringOutput)
+	}).(pulumi.StringMapOutput)
 
-	patchFlag := patches.ApplyT(func(p string) string {
-		if strings.TrimSpace(p) != "" {
-			return " --config-patch @patches.yaml"
+	machinePatches := patches.MapIndex(pulumi.String("machine"))
+	extensionPatches := patches.MapIndex(pulumi.String("extensions"))
+
+	patchFlag := pulumi.All(machinePatches, extensionPatches).ApplyT(func(args []any) string {
+		var flags []string
+		if strings.TrimSpace(args[0].(string)) != "" {
+			flags = append(flags, "--config-patch @patches.yaml")
 		}
-		return ""
+		if strings.TrimSpace(args[1].(string)) != "" {
+			flags = append(flags, "--config-patch @extension-patches.yaml")
+		}
+		if len(flags) == 0 {
+			return ""
+		}
+		return " " + strings.Join(flags, " ")
 	}).(pulumi.StringOutput)
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
@@ -75,7 +86,11 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 			},
 			{
 				Name:    "patches.yaml",
-				Content: patches,
+				Content: machinePatches,
+			},
+			{
+				Name:    "extension-patches.yaml",
+				Content: extensionPatches,
 			},
 		},
 		CommandArgs: pulumi.Sprintf("%s %s %s --install-image %s --kubernetes-version %s --talos-version %s --output-types %s --with-secrets secrets.yaml%s --output -",
@@ -88,6 +103,7 @@ func (a *Applier) generateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 			outType,
 			patchFlag,
 		),
+		UpdateOnChange: true,
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
@@ -118,26 +134,86 @@ func (a *Applier) generateTalosconfig(c *types.Cluster, secrets pulumi.StringOut
 	}...)
 }
 
-func mergePatchesYAML(patches []string) (string, error) {
+func mergePatchesYAML(patches []string) (map[string]string, error) {
 	merged := ""
+	var extensions []string
+
 	for i, patch := range patches {
-		if strings.TrimSpace(patch) == "" {
-			continue
-		}
+		for _, doc := range splitYaml2All(patch) {
+			doc = strings.TrimSpace(doc)
+			if doc == "" {
+				continue
+			}
 
-		if merged == "" {
-			merged = patch
-			continue
-		}
+			m2, err := patchDocumentMap(doc)
+			if err != nil {
+				return nil, fmt.Errorf("patch %d: %w", i+1, err)
+			}
 
-		out, err := MergeYAML(merged, patch).Build()
-		if err != nil {
-			return "", fmt.Errorf("merge patch %d: %w", i+1, err)
+			_, hasAPIV := m2["apiVersion"]
+			_, hasKind := m2["kind"]
+			switch {
+			case hasAPIV && hasKind:
+				extensions = append(extensions, doc)
+				continue
+			case hasAPIV != hasKind:
+				missing := "kind"
+				if hasKind {
+					missing = "apiVersion"
+				}
+				return nil, fmt.Errorf("patch %d has incomplete extension document: missing %s", i+1, missing)
+			}
+
+			if merged == "" {
+				merged = doc
+				continue
+			}
+
+			out, err := MergeYAML(merged, doc).Build()
+			if err != nil {
+				return nil, fmt.Errorf("merge patch %d: %w", i+1, err)
+			}
+			merged = out
 		}
-		merged = out
 	}
 
-	return merged, nil
+	return map[string]string{
+		"machine":    merged,
+		"extensions": joinYAMLDocuments(extensions),
+	}, nil
+}
+
+func patchDocumentMap(doc string) (map[string]any, error) {
+	var raw any
+	if err := yaml.Unmarshal([]byte(doc), &raw); err != nil {
+		return nil, fmt.Errorf("parse: %w", err)
+	}
+
+	m, ok := normalize(raw).(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("top-level is not a mapping")
+	}
+
+	return m, nil
+}
+
+func joinYAMLDocuments(docs []string) string {
+	if len(docs) == 0 {
+		return ""
+	}
+
+	var sb strings.Builder
+	for i, doc := range docs {
+		if i > 0 {
+			sb.WriteString("---\n")
+		}
+		sb.WriteString(strings.TrimSpace(doc))
+		if !strings.HasSuffix(doc, "\n") {
+			sb.WriteString("\n")
+		}
+	}
+
+	return strings.TrimRight(sb.String(), "\n")
 }
 
 func ExtractTalosconfigCreds(raw, clusterName string) (ca, key, cert string, err error) {
@@ -175,15 +251,18 @@ func ExtractTalosconfigCreds(raw, clusterName string) (ca, key, cert string, err
 	return caVal, keyVal, certVal, nil
 }
 
-func (a *Applier) buildTalosConfig(endpoints []string, nodes []string) pulumi.StringOutput {
-	return a.clientConfiguration.ApplyT(func(rawCfg map[string]string) (string, error) {
+func (a *Applier) buildTalosConfig(endpoints pulumi.StringArrayInput, nodes pulumi.StringArrayInput) pulumi.StringOutput {
+	return pulumi.All(a.clientConfiguration, endpoints, nodes).ApplyT(func(values []any) (string, error) {
+		rawCfg := values[0].(map[string]string)
+		resolvedEndpoints := values[1].([]string)
+		resolvedNodes := values[2].([]string)
 		ca := decodeMaybeBase64(rawCfg["caCertificate"])
 		key := decodeMaybeBase64(rawCfg["clientKey"])
 		cert := decodeMaybeBase64(rawCfg["clientCertificate"])
 
 		cfg := clientconfig.NewConfig(
 			a.name,
-			endpoints,
+			resolvedEndpoints,
 			[]byte(ca),
 			&x509.PEMEncodedCertificateAndKey{
 				Crt: []byte(cert),
@@ -192,7 +271,7 @@ func (a *Applier) buildTalosConfig(endpoints []string, nodes []string) pulumi.St
 		)
 
 		if ctx, ok := cfg.Contexts[a.name]; ok {
-			ctx.Nodes = nodes
+			ctx.Nodes = resolvedNodes
 		}
 
 		out, err := cfg.Bytes()

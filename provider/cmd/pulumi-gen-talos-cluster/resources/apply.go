@@ -53,6 +53,13 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 			},
 			Description: "The machine configurations to apply.",
 		},
+		provider.ClusterResourceOutputsMachineTopology: {
+			TypeSpec: schema.TypeSpec{
+				Type: typeObject,
+				Ref:  fmt.Sprintf("#types/%s", BasicMachineTopologyPath),
+			},
+			Description: "Plain machine IDs grouped by type. Use the machineTopology output from Cluster.",
+		},
 		"skipInitApply": {
 			TypeSpec: schema.TypeSpec{
 				Type: "boolean",
@@ -76,7 +83,11 @@ func secretProperty(spec schema.PropertySpec) schema.PropertySpec {
 }
 
 func ApplyRequiredInputProperties() []string {
-	return []string{"applyMachines", provider.ClusterResourceOutputsClientConfiguration}
+	return []string{
+		"applyMachines",
+		provider.ClusterResourceOutputsMachineTopology,
+		provider.ClusterResourceOutputsClientConfiguration,
+	}
 }
 
 func ApplyTypes() map[string]schema.ComplexTypeSpec {

@@ -33,7 +33,7 @@ type Options struct {
 const hookStageUpgrade = "cli-upgrade"
 
 type InitNode struct {
-	IP   string
+	IP   pulumi.StringInput
 	Name string
 }
 
@@ -77,12 +77,13 @@ func (a *Applier) WithHooks(enabled bool) *Applier {
 }
 
 // TalosconfigForNode generates a talosconfig for a single node (IP used for endpoint and node).
-func (a *Applier) TalosconfigForNode(ip string) pulumi.StringOutput {
-	return a.buildTalosConfig([]string{ip}, []string{ip})
+func (a *Applier) TalosconfigForNode(ip pulumi.StringInput) pulumi.StringOutput {
+	nodes := pulumi.StringArray{ip}
+	return a.buildTalosConfig(nodes, nodes)
 }
 
 // Talosconfig generates a talosconfig for a set of endpoints and nodes.
-func (a *Applier) Talosconfig(endpoints []string, nodes []string) pulumi.StringOutput {
+func (a *Applier) Talosconfig(endpoints pulumi.StringArrayInput, nodes pulumi.StringArrayInput) pulumi.StringOutput {
 	return a.buildTalosConfig(endpoints, nodes)
 }
 

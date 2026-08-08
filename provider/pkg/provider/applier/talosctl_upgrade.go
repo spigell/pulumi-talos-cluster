@@ -2,14 +2,13 @@ package applier
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
-	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/hooks"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
-	"gopkg.in/yaml.v3"
 )
 
 func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulumi.Resource) (pulumi.Resource, error) {
@@ -43,40 +42,34 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 		}
 	}
 
-	args, err := talosctlUpgradeArgs(m)
-	if err != nil {
-		return nil, err
-	}
-
 	stageName := "cli-upgrade"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().
-		WithNodeIP(m.NodeIP).
+		WithNodeIPInput(m.NodeIP).
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
+	upgradeArgs := m.TalosImage.ToStringOutput().ApplyT(func(image string) (string, error) {
+		return talosctlUpgradeArgs(image, m.MachineID)
+	}).(pulumi.StringOutput)
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		PrepareDeps: deps,
 		Dir:         home,
-		CommandArgs: pulumi.String(args),
+		CommandArgs: upgradeArgs,
 		RetryCount:  10,
 		Environment: pulumi.StringMap{
-			"NODE_IP":            pulumi.String(m.NodeIP),
+			"NODE_IP":            m.NodeIP,
 			"TALOSCTL_HOME":      pulumi.String(home),
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 		},
-		Triggers: pulumi.Array{pulumi.String(m.TalosImage)},
+		UpdateOnChange: true,
 	}, opts...)
 }
 
-func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
-	machineConfig := m.Configuration
-
-	var cfg v1alpha1.Config
-	if err := yaml.Unmarshal([]byte(machineConfig), &cfg); err != nil {
-		return "", fmt.Errorf("failed to unmarshal machine config: %w", err)
+func talosctlUpgradeArgs(image, machineID string) (string, error) {
+	img := strings.TrimSpace(image)
+	if img == "" {
+		return "", fmt.Errorf("talos image is required for machine %s", machineID)
 	}
-
-	img := cfg.MachineConfig.Install().Image()
 
 	// --drain defaults to true since talosctl v1.13 and requires a kubeconfig
 	// from the target node, which workers cannot serve during provisioning.

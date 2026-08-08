@@ -31,8 +31,8 @@ export interface ClientConfigurationArgs {
 
 export interface ClusterMachinesArgs {
     /**
-     * User-provided machine configuration to apply.
-     * Must be a valid array of YAML strings.
+     * User-provided machine configuration to apply. 
+     * Must be a valid array of YAML strings. 
      * For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
      */
     configPatches?: pulumi.Input<pulumi.Input<string>[] | undefined>;
@@ -49,8 +49,8 @@ export interface ClusterMachinesArgs {
      */
     nodeIp: pulumi.Input<string>;
     /**
-     * Talos OS installation image.
-     * Used in the `install` configuration and set via CLI.
+     * Talos OS installation image. 
+     * Used in the `install` configuration and set via CLI. 
      * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
      */
     talosImage?: pulumi.Input<string | undefined>;
@@ -71,7 +71,7 @@ export interface MachineInfoArgs {
      */
     clusterEndpoint?: pulumi.Input<string | undefined>;
     /**
-     * Configuration settings for machines to apply.
+     * Configuration settings for machines to apply. 
      * This can be retrieved from the cluster resource.
      */
     configuration: pulumi.Input<string>;
@@ -92,8 +92,14 @@ export interface MachineInfoArgs {
      */
     talosImage?: pulumi.Input<string | undefined>;
     /**
-     * User-provided machine configuration to apply.
+     * User-provided machine configuration to apply. 
      * This can be retrieved from the cluster resource.
      */
     userConfigPatches?: pulumi.Input<string | undefined>;
+}
+
+export interface MachineTopologyArgs {
+    controlplane: pulumi.Input<pulumi.Input<string>[]>;
+    init: pulumi.Input<pulumi.Input<string>[]>;
+    worker: pulumi.Input<pulumi.Input<string>[]>;
 }
