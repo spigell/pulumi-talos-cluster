@@ -1,6 +1,7 @@
 package talosctl
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"path/filepath"
@@ -98,6 +99,9 @@ func (t *Talosctl) RunCommand(
 	if err != nil {
 		return nil, err
 	}
+	if a.UpdateOnChange {
+		env = environmentWithAdditionalFilesHash(env, a.AdditionalFiles)
+	}
 
 	commandArgs := &local.CommandArgs{
 		Create:      createGated,
@@ -123,6 +127,33 @@ func (t *Talosctl) RunCommand(
 	}, pulumi.DependsOn([]pulumi.Resource{main}))
 
 	return main, nil
+}
+
+func environmentWithAdditionalFilesHash(env pulumi.StringMap, files []ExtraFile) pulumi.StringMap {
+	if len(files) == 0 {
+		return env
+	}
+
+	inputs := make([]any, len(files))
+	for i, f := range files {
+		inputs[i] = f.Content
+	}
+
+	filesHash := pulumi.Unsecret(pulumi.All(inputs...).ApplyT(func(resolved []any) string {
+		h := sha256.New()
+		for i, f := range files {
+			h.Write([]byte(f.Name))
+			h.Write([]byte{0})
+			h.Write([]byte(resolved[i].(string)))
+			h.Write([]byte{0})
+		}
+
+		return fmt.Sprintf("%x", h.Sum(nil))
+	}).(pulumi.StringOutput)).(pulumi.StringOutput)
+
+	env["PULUMI_TALOS_ADDITIONAL_FILES_SHA256"] = filesHash
+
+	return env
 }
 
 // RunGetCommand executes a talosctl command as an invoke and returns its standard output.
