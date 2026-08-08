@@ -60,23 +60,23 @@ func (m *ClusterMachine) ToMachineInfoMap(clusterEndpoint pulumi.StringInput, k8
 }
 
 type MachineInfo struct {
-	MachineID         string `pulumi:"machineId"`
-	NodeIP            string `pulumi:"nodeIp"`
-	ClusterEnpoint    string `pulumi:"clusterEndpoint"`
-	UserConfigPatches string `pulumi:"userConfigPatches"`
-	TalosImage        string `pulumi:"talosImage"`
-	KubernetesVersion string `pulumi:"kubernetesVersion"`
-	Configuration     string `pulumi:"configuration"`
+	MachineID         string             `pulumi:"machineId"`
+	NodeIP            pulumi.StringInput `pulumi:"nodeIp"`
+	ClusterEnpoint    pulumi.StringInput `pulumi:"clusterEndpoint"`
+	UserConfigPatches pulumi.StringInput `pulumi:"userConfigPatches"`
+	TalosImage        pulumi.StringInput `pulumi:"talosImage"`
+	KubernetesVersion pulumi.StringInput `pulumi:"kubernetesVersion"`
+	Configuration     pulumi.StringInput `pulumi:"configuration"`
 }
 
 func ParseMachineInfo(m map[string]any) *MachineInfo {
 	return &MachineInfo{
 		MachineID:         m[MachineIDKey].(string),
-		NodeIP:            m[NodeIPKey].(string),
-		ClusterEnpoint:    m[ClusterEnpointKey].(string),
-		TalosImage:        m[TalosImageKey].(string),
-		KubernetesVersion: m[KubernetesVersionKey].(string),
-		UserConfigPatches: m[UserConfigPatchesKey].(string),
-		Configuration:     m[ConfigurationKey].(string),
+		NodeIP:            pulumi.String(m[NodeIPKey].(string)),
+		ClusterEnpoint:    pulumi.String(m[ClusterEnpointKey].(string)),
+		TalosImage:        pulumi.String(m[TalosImageKey].(string)),
+		KubernetesVersion: pulumi.String(m[KubernetesVersionKey].(string)),
+		UserConfigPatches: pulumi.String(m[UserConfigPatchesKey].(string)),
+		Configuration:     pulumi.String(m[ConfigurationKey].(string)),
 	}
 }

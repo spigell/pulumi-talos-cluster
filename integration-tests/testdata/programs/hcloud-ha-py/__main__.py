@@ -43,6 +43,7 @@ apply = Apply(
     cluster.name,
     client_configuration=talos_cluster.client_configuration,
     apply_machines=talos_cluster.machines,
+    machine_topology=talos_cluster.machine_topology,
     skip_init_apply=cluster.skipInitApply,
 )
 

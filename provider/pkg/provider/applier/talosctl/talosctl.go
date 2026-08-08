@@ -24,6 +24,7 @@ var interpreter = []string{
 type Talosctl struct {
 	Binary       string
 	BasicCommand string
+	NodeIP       pulumi.StringInput
 	TalosConfig  pulumi.StringInput // Wired-in configuration
 }
 
@@ -70,6 +71,13 @@ func (t *Talosctl) WithTalosConfig(config pulumi.StringInput) *Talosctl {
 // WithNodeIP adds `-n` and `-e` flags for the provided node IP address.
 func (t *Talosctl) WithNodeIP(ip string) *Talosctl {
 	t.BasicCommand = fmt.Sprintf("%s -n %s -e %s", t.BasicCommand, ip, ip)
+
+	return t
+}
+
+// WithNodeIPInput adds node flags without requiring the IP to be known during preview.
+func (t *Talosctl) WithNodeIPInput(ip pulumi.StringInput) *Talosctl {
+	t.NodeIP = ip
 
 	return t
 }
@@ -172,23 +180,31 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 	}
 
 	// Prepare: write talosctl.yaml + additional files
-	prepared := t.prepareAll(ctx, args)
+	prepared := pulumi.Unsecret(t.prepareAll(ctx, args)).(pulumi.BoolOutput)
 
-	createGated = pulumi.All(prepared, args.CommandArgs).
+	basicCommand := pulumi.StringInput(pulumi.String(t.BasicCommand))
+	if t.NodeIP != nil {
+		basicCommand = pulumi.Unsecret(
+			pulumi.Sprintf("%s -n %s -e %s", t.BasicCommand, t.NodeIP, t.NodeIP),
+		).(pulumi.StringOutput)
+	}
+
+	createGated = pulumi.All(prepared, args.CommandArgs, basicCommand).
 		ApplyT(func(v []any) string {
 			if !v[0].(bool) {
 				return ""
 			}
 
 			cmdArgs := v[1].(string)
+			resolvedBasicCommand := v[2].(string)
 			hasConfig := t.TalosConfig != nil
 
 			// Build base commands (no retries yet).
-			secure := fmt.Sprintf("%s %s --talosconfig %s", t.BasicCommand, cmdArgs, talosctlConfigName)
+			secure := fmt.Sprintf("%s %s --talosconfig %s", resolvedBasicCommand, cmdArgs, talosctlConfigName)
 			if !hasConfig {
-				secure = fmt.Sprintf("%s %s", t.BasicCommand, cmdArgs)
+				secure = fmt.Sprintf("%s %s", resolvedBasicCommand, cmdArgs)
 			}
-			insecure := fmt.Sprintf("%s %s --insecure", t.BasicCommand, cmdArgs)
+			insecure := fmt.Sprintf("%s %s --insecure", resolvedBasicCommand, cmdArgs)
 
 			// Select auth pipeline.
 			selected := secure

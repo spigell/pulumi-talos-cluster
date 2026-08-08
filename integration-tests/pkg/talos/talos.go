@@ -107,6 +107,7 @@ func (t *Cluster) Apply(deps []pulumi.Resource) (*Credentials, error) {
 		SkipInitApply:       pulumi.Bool(t.machines[0].SkipInitApply),
 		ClientConfiguration: t.Cluster.ClientConfiguration,
 		ApplyMachines:       t.Cluster.Machines,
+		MachineTopology:     t.Cluster.MachineTopology,
 	}, pulumi.DependsOn(deps), pulumi.IgnoreChanges([]string{"skipInitApply"}))
 	if err != nil {
 		return nil, fmt.Errorf("error apply: %w", err)

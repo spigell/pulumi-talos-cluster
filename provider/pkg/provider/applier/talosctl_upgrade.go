@@ -42,35 +42,33 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 		}
 	}
 
-	args, err := talosctlUpgradeArgs(m)
-	if err != nil {
-		return nil, err
-	}
-
 	stageName := "cli-upgrade"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().
-		WithNodeIP(m.NodeIP).
+		WithNodeIPInput(m.NodeIP).
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
+	upgradeArgs := m.TalosImage.ToStringOutput().ApplyT(func(image string) (string, error) {
+		return talosctlUpgradeArgs(image, m.MachineID)
+	}).(pulumi.StringOutput)
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		PrepareDeps: deps,
 		Dir:         home,
-		CommandArgs: pulumi.String(args),
+		CommandArgs: upgradeArgs,
 		RetryCount:  10,
 		Environment: pulumi.StringMap{
-			"NODE_IP":            pulumi.String(m.NodeIP),
+			"NODE_IP":            m.NodeIP,
 			"TALOSCTL_HOME":      pulumi.String(home),
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 		},
-		Triggers: pulumi.Array{pulumi.String(m.TalosImage)},
+		UpdateOnChange: true,
 	}, opts...)
 }
 
-func talosctlUpgradeArgs(m *types.MachineInfo) (string, error) {
-	img := strings.TrimSpace(m.TalosImage)
+func talosctlUpgradeArgs(image, machineID string) (string, error) {
+	img := strings.TrimSpace(image)
 	if img == "" {
-		return "", fmt.Errorf("talos image is required for machine %s", m.MachineID)
+		return "", fmt.Errorf("talos image is required for machine %s", machineID)
 	}
 
 	// --drain defaults to true since talosctl v1.13 and requires a kubeconfig

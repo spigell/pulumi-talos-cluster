@@ -191,6 +191,34 @@
                 "configuration"
             ]
         },
+        "talos-cluster:index:machineTopology": {
+            "properties": {
+                "controlplane": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "init": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "worker": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object",
+            "required": [
+                "init",
+                "controlplane",
+                "worker"
+            ]
+        },
         "talos-cluster:index:machineTypes": {
             "description": "Allowed machine types",
             "type": "string",
@@ -236,6 +264,11 @@
                     "description": "Client configuration for bootstrapping and applying resources.",
                     "secret": true
                 },
+                "machineTopology": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:machineTopology",
+                    "description": "Plain machine IDs grouped by type. Use the machineTopology output from Cluster."
+                },
                 "skipInitApply": {
                     "type": "boolean",
                     "description": "skipInitApply indicates that machines will be managed or configured by external tools. \nFor example, it can serve as a source for userdata in cloud provider setups. \nThis option helps accelerate node provisioning. \nNote: init node is always applied. \nDefault is false.",
@@ -244,6 +277,7 @@
             },
             "requiredInputs": [
                 "applyMachines",
+                "machineTopology",
                 "clientConfiguration"
             ],
             "isComponent": true
@@ -260,6 +294,11 @@
                     "type": "object",
                     "description": "Generated machine configuration YAML keyed by machine ID."
                 },
+                "machineTopology": {
+                    "type": "object",
+                    "$ref": "#types/talos-cluster:index:machineTopology",
+                    "description": "Plain machine IDs grouped by type for stable downstream resource registration."
+                },
                 "machines": {
                     "type": "object",
                     "$ref": "#types/talos-cluster:index:applyMachines",
@@ -272,6 +311,7 @@
             },
             "required": [
                 "machines",
+                "machineTopology",
                 "generatedConfigurations",
                 "clientConfiguration",
                 "talosconfig"

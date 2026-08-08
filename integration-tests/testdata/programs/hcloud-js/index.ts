@@ -31,4 +31,5 @@ const clu = new talos.Cluster(cluster.name, {
 export const apply = new talos.Apply(cluster.name, {
   clientConfiguration: clu.clientConfiguration,
   applyMachines: clu.machines,
+  machineTopology: clu.machineTopology,
 });

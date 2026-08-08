@@ -176,15 +176,18 @@ func ExtractTalosconfigCreds(raw, clusterName string) (ca, key, cert string, err
 	return caVal, keyVal, certVal, nil
 }
 
-func (a *Applier) buildTalosConfig(endpoints []string, nodes []string) pulumi.StringOutput {
-	return a.clientConfiguration.ApplyT(func(rawCfg map[string]string) (string, error) {
+func (a *Applier) buildTalosConfig(endpoints pulumi.StringArrayInput, nodes pulumi.StringArrayInput) pulumi.StringOutput {
+	return pulumi.All(a.clientConfiguration, endpoints, nodes).ApplyT(func(values []any) (string, error) {
+		rawCfg := values[0].(map[string]string)
+		resolvedEndpoints := values[1].([]string)
+		resolvedNodes := values[2].([]string)
 		ca := decodeMaybeBase64(rawCfg["caCertificate"])
 		key := decodeMaybeBase64(rawCfg["clientKey"])
 		cert := decodeMaybeBase64(rawCfg["clientCertificate"])
 
 		cfg := clientconfig.NewConfig(
 			a.name,
-			endpoints,
+			resolvedEndpoints,
 			[]byte(ca),
 			&x509.PEMEncodedCertificateAndKey{
 				Crt: []byte(cert),
@@ -193,7 +196,7 @@ func (a *Applier) buildTalosConfig(endpoints []string, nodes []string) pulumi.St
 		)
 
 		if ctx, ok := cfg.Contexts[a.name]; ok {
-			ctx.Nodes = nodes
+			ctx.Nodes = resolvedNodes
 		}
 
 		out, err := cfg.Bytes()

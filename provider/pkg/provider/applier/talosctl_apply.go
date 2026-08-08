@@ -47,16 +47,15 @@ func NewK8SImages(config *v1alpha1.Config) *K8SImages {
 // that Kubernetes image versions in the configuration align with the currently running
 // versions to prevent accidental downgrades (Talos does not support downgrades via specifying images in the config).
 func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
-	machineFile := pulumi.All(m.UserConfigPatches, m.NodeIP, m.Configuration, m.TalosImage).ApplyT(func(args []any) (pulumi.StringOutput, error) {
+	machineFile := pulumi.All(m.NodeIP, m.Configuration, m.TalosImage).ApplyT(func(args []any) (pulumi.StringOutput, error) {
 		// Extract current images to use instead of any potential downgraded images
-		userPatches := args[0].(string)
-		ip := args[1].(string)
-		machineConfig := args[2].(string)
-		talosImage := args[3].(string)
+		ip := args[0].(string)
+		machineConfig := args[1].(string)
+		talosImage := args[2].(string)
 
 		t2 := talosctl.New().
 			WithNodeIP(ip).
-			WithTalosConfig(a.TalosconfigForNode(ip))
+			WithTalosConfig(a.TalosconfigForNode(pulumi.String(ip)))
 		stageName := "cli-get-machine-config"
 
 		current, err := t2.RunGetCommand(a.ctx, &talosctl.Args{
@@ -83,10 +82,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 
 			oldK8SImages := NewK8SImages(&spec)
 
-			// Merge the base machine configuration with user-provided patches.
-			// This combines the configs into a single YAML representation.
-			installImagePatch := fmt.Sprintf("machine:\n  install:\n    image: %s\n", talosImage)
-			merged, err := MergeYAML(machineConfig, installImagePatch+"\n---\n"+userPatches).WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
+			merged, err := buildSecureApplyConfig(machineConfig, talosImage, oldK8SImages)
 			if err != nil {
 				return "", fmt.Errorf("failed merge yaml strings: %w", err)
 			}
@@ -98,7 +94,7 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 	stageName := "cli-apply-config"
 
 	t := talosctl.New().
-		WithNodeIP(m.NodeIP).
+		WithNodeIPInput(m.NodeIP).
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 
 	machineConfigName := "machineconfig.yaml"
@@ -107,13 +103,9 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		AdditionalFiles: []talosctl.ExtraFile{
 			{Name: machineConfigName, Content: machineFile},
 		},
-		CommandArgs: pulumi.Sprintf("apply-config -f %s", machineConfigName),
-		Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
-		Triggers: pulumi.Array{
-			pulumi.String(m.UserConfigPatches),
-			pulumi.String(m.ClusterEnpoint),
-			pulumi.String(m.TalosImage),
-		},
+		CommandArgs:    pulumi.Sprintf("apply-config -f %s", machineConfigName),
+		Dir:            generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
+		UpdateOnChange: true,
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: timeoutShort, Update: timeoutShort}),
@@ -124,4 +116,9 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 	}
 
 	return apply, nil
+}
+
+func buildSecureApplyConfig(machineConfig, talosImage string, oldK8SImages *K8SImages) (string, error) {
+	installImagePatch := fmt.Sprintf("machine:\n  install:\n    image: %s\n", talosImage)
+	return MergeYAML(machineConfig, installImagePatch).WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
 }

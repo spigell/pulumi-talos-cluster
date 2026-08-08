@@ -46,7 +46,7 @@ export interface MachineInfo {
      */
     clusterEndpoint?: string;
     /**
-     * Configuration settings for machines to apply.
+     * Configuration settings for machines to apply. 
      * This can be retrieved from the cluster resource.
      */
     configuration: string;
@@ -67,9 +67,15 @@ export interface MachineInfo {
      */
     talosImage?: string;
     /**
-     * User-provided machine configuration to apply.
+     * User-provided machine configuration to apply. 
      * This can be retrieved from the cluster resource.
      */
     userConfigPatches?: string;
+}
+
+export interface MachineTopology {
+    controlplane: string[];
+    init: string[];
+    worker: string[];
 }
 
