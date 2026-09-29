@@ -46,7 +46,7 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 
 			// 3.1) health/status
 			if err := checkEtcdStatus(run, healthTimeout); err != nil {
-				logger.Debug(fmt.Sprintf("talos-cluster: etcd status attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
+				_ = logger.Debug(fmt.Sprintf("talos-cluster: etcd status attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
 				time.Sleep(backoff)
 				continue
 			}
@@ -54,7 +54,7 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			// 3.2) members
 			peers, err := listEtcdPeers(run, listTimeout)
 			if err != nil {
-				logger.Debug(fmt.Sprintf("talos-cluster: etcd members attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
+				_ = logger.Debug(fmt.Sprintf("talos-cluster: etcd members attempt %d/%d failed: %v", attempt, maxRetries, err), nil)
 				time.Sleep(backoff)
 				continue
 			}
@@ -63,7 +63,7 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			ok, reason := peersReady(peers, expected)
 			if !ok {
 				consecutiveOK = 0
-				logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: %s", attempt, maxRetries, reason), nil)
+				_ = logger.Debug(fmt.Sprintf("talos-cluster: attempt %d/%d: %s", attempt, maxRetries, reason), nil)
 				time.Sleep(backoff)
 				continue
 			}
@@ -71,7 +71,7 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 			// 3.4) stability window
 			consecutiveOK++
 			if consecutiveOK < okStreak {
-				logger.Debug(fmt.Sprintf(
+				_ = logger.Debug(fmt.Sprintf(
 					"talos-cluster: attempt %d/%d: matched (%d). waiting for stability %d/%d",
 					attempt, maxRetries, len(peers), consecutiveOK, okStreak,
 				), nil)
@@ -79,7 +79,7 @@ func EtcdReadyHook(logger pulumi.Log) pulumi.ResourceHookFunction {
 				continue
 			}
 
-			logger.Info(fmt.Sprintf("talos-cluster: etcd health check passed after attempt %d/%d. members=%d",
+			_ = logger.Info(fmt.Sprintf("talos-cluster: etcd health check passed after attempt %d/%d. members=%d",
 				attempt, maxRetries, len(peers)), nil)
 			return nil
 		}
@@ -123,7 +123,7 @@ func makeTalosRunner(cli *talosctl.Talosctl, workDir string, logger pulumi.Log) 
 		full := strings.Fields(cli.BasicCommand)[1:]
 		full = append([]string{"--talosconfig", fmt.Sprintf("%s/%s", workDir, "talosctl.yaml")}, full...)
 		full = append(full, args...)
-		logger.Debug(fmt.Sprintf("exec: %s %s", cli.Binary, strings.Join(full, " ")), nil)
+		_ = logger.Debug(fmt.Sprintf("exec: %s %s", cli.Binary, strings.Join(full, " ")), nil)
 
 		// #nosec G204 — cli.Binary and args are our controlled values
 		cmd := exec.CommandContext(ctx, cli.Binary, full...)
