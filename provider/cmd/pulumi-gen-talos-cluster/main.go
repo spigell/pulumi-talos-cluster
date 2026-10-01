@@ -116,9 +116,11 @@ func mustWriteFile(rootDir, filename string, contents []byte) {
 	if relPath == ".." || filepath.IsAbs(relPath) || strings.HasPrefix(relPath, ".."+string(filepath.Separator)) {
 		panic(fmt.Errorf("invalid output path outside root: %s", outPath))
 	}
+	// #nosec G703 -- the CLI caller chooses the schema output directory.
 	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
 		panic(err)
 	}
+	// #nosec G703 -- the CLI caller chooses the schema output directory; the filename is fixed.
 	if err := os.WriteFile(outPath, contents, 0o600); err != nil {
 		panic(err)
 	}
