@@ -77,11 +77,11 @@ func generateSchema() schema.PackageSpec {
 					"@types/node": "^20.0.0",
 				},
 				"dependencies": map[string]any{
-					"@pulumi/pulumi":  "3.251.0",
+					"@pulumi/pulumi":  "3.267.0",
 					"@pulumi/command": "v1.2.1",
 				},
 				"resolutions": map[string]any{
-					"@pulumi/pulumi": "3.251.0",
+					"@pulumi/pulumi": "3.267.0",
 				},
 			}),
 			"go": rawMessage(map[string]any{
