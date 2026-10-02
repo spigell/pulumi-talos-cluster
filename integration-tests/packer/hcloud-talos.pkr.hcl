@@ -10,7 +10,7 @@ packer {
 
 variable "talos_version" {
   type    = string
-  default = "v1.13.6"
+  default = "v1.14.2"
 }
 
 variable "talos_schematic_id" {

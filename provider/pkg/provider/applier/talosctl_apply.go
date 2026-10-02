@@ -28,15 +28,15 @@ type MachineConfig struct {
 // NewK8SImages constructs a K8SImages structure from the provided Talos config.
 func NewK8SImages(config *v1alpha1.Config) *K8SImages {
 	images := &K8SImages{
-		Kubelet: config.MachineConfig.MachineKubelet.KubeletImage,
+		Kubelet: config.K8sKubeletConfig().Image(),
 	}
 
 	// This struct is not filled in worker configurations.
 	if config.MachineConfig.MachineType == machine.TypeControlPlane.String() || config.MachineConfig.MachineType == machine.TypeInit.String() {
-		images.APIServer = config.ClusterConfig.APIServerConfig.ContainerImage
-		images.KubeProxy = config.ClusterConfig.ProxyConfig.ContainerImage
-		images.Scheduler = config.ClusterConfig.SchedulerConfig.ContainerImage
-		images.ControllerManager = config.ClusterConfig.ControllerManagerConfig.ContainerImage
+		images.APIServer = config.K8sAPIServerConfig().Image()
+		images.KubeProxy = config.K8sProxyConfig().Image()
+		images.Scheduler = config.K8sSchedulerConfig().Image()
+		images.ControllerManager = config.K8sControllerManagerConfig().Image()
 	}
 
 	return images
