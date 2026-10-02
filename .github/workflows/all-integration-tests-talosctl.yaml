@@ -28,7 +28,7 @@ jobs:
           working-directory: 'integration-tests'
 
       - name: Install talosctl
-        uses: jaxxstorm/action-install-gh-release@v1.10.0
+        uses: jaxxstorm/action-install-gh-release@v1.14.0
         with:
           repo: siderolabs/talos
           rename-to: talosctl
