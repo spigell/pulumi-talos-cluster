@@ -863,10 +863,10 @@
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
 
-"@pulumi/hcloud@1.39.0":
-  version "1.39.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/hcloud/-/hcloud-1.39.0.tgz#caeca5c204e66e2a43df043d32eedd374f7e0874"
-  integrity sha512-rrjOZ1bPliOpsuoGBrd6b9GOeM+CoNSLTJrd061JzwAREdztVP6vy8UEROQj7zIUypEI0+eCqXAA1bxYIQSwkQ==
+"@pulumi/hcloud@1.42.0":
+  version "1.42.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/hcloud/-/hcloud-1.42.0.tgz#0d25fb35330ea214ea12e0a0812fb48b94bdc436"
+  integrity sha512-vy/GJSVADB+q+rSLDeFM0dDM59r8wz6VeJr5Da1N7CRt4qYa2WeITQywkzqLbEZJfrJ8ghV7kYSSkeFSIKbKkA==
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
 

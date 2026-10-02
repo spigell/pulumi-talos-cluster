@@ -8,7 +8,7 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
-        "@pulumi/hcloud": "1.39.0",
+        "@pulumi/hcloud": "1.42.0",
         "@pulumi/pulumi": "3.267.0",
         "@spigell/pulumi-talos-cluster": "^0.4.0",
         "node-forge": "^1.3.1",
