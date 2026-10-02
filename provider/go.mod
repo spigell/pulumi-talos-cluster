@@ -4,7 +4,7 @@ go 1.26.6
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/pulumi/pulumi-command/sdk v1.1.3
+	github.com/pulumi/pulumi-command/sdk v1.2.1
 	github.com/pulumi/pulumi/pkg/v3 v3.267.0
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
 	github.com/siderolabs/crypto v0.6.5
