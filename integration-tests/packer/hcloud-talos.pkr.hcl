@@ -35,7 +35,7 @@ locals {
   variant = length(regexall("metal", var.target)) > 0 ? "metal" : "cloud"
 
   # Add local variables for inline shell commands
-  download_image = "wget -q --timeout=5 --waitretry=5 --tries=5 --retry-connrefused --inet4-only -O /tmp/talos.raw.xz "
+  download_image = "wget --no-verbose --timeout=60 --waitretry=10 --tries=10 --retry-connrefused --inet4-only -O /tmp/talos.raw.xz "
 
   write_image = <<-EOT
     set -ex
