@@ -14,7 +14,7 @@ require (
 	github.com/siderolabs/talos/pkg/machinery v1.13.6
 	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20260113153301-d002ecfc0330
 	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.55.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -234,6 +234,7 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.4 // indirect
 	gocloud.dev v0.46.1-0.20260810195832-b5401c07b5f1 // indirect
 	gocloud.dev/secrets/hashivault v0.46.0 // indirect
