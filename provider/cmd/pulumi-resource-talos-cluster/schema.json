@@ -26,7 +26,7 @@
         "nodejs": {
             "dependencies": {
                 "@pulumi/command": "v1.2.1",
-                "@pulumi/pulumi": "3.251.0"
+                "@pulumi/pulumi": "3.267.0"
             },
             "devDependencies": {
                 "@types/node": "^20.0.0",
@@ -34,7 +34,7 @@
             },
             "packageName": "@spigell/pulumi-talos-cluster",
             "resolutions": {
-                "@pulumi/pulumi": "3.251.0"
+                "@pulumi/pulumi": "3.267.0"
             }
         },
         "python": {
