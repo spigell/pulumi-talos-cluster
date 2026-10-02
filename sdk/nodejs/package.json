@@ -14,7 +14,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@pulumi/command": "1.2.1",
+        "@pulumi/command": "v1.2.1",
         "@pulumi/pulumi": "3.251.0"
     },
     "devDependencies": {

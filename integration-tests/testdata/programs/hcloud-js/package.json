@@ -10,7 +10,7 @@
     "dependencies": {
         "@pulumi/hcloud": "1.39.0",
         "@pulumi/pulumi": "3.251.0",
-        "@spigell/pulumi-talos-cluster": "^0.3.2",
+        "@spigell/pulumi-talos-cluster": "^0.4.0",
         "node-forge": "^1.3.1",
         "prettier": "^3.6.2",
         "ts-node": "^10.9.2"
