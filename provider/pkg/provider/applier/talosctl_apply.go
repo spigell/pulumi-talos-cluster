@@ -5,7 +5,6 @@ import (
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
-	"github.com/siderolabs/talos/pkg/machinery/config/types/v1alpha1"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/applier/talosctl"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"gopkg.in/yaml.v3"
@@ -25,21 +24,41 @@ type MachineConfig struct {
 	Spec string
 }
 
-// NewK8SImages constructs a K8SImages structure from the provided Talos config.
-func NewK8SImages(config *v1alpha1.Config) *K8SImages {
-	images := &K8SImages{
-		Kubelet: config.MachineConfig.MachineKubelet.KubeletImage,
+// NewK8SImages extracts only explicitly configured images from the current machine spec.
+func NewK8SImages(spec string) (*K8SImages, error) {
+	var current struct {
+		Machine struct {
+			Type    string `yaml:"type"`
+			Kubelet struct {
+				Image string `yaml:"image"`
+			} `yaml:"kubelet"`
+		} `yaml:"machine"`
+		Cluster struct {
+			APIServer struct {
+				Image string `yaml:"image"`
+			} `yaml:"apiServer"`
+			Proxy struct {
+				Image string `yaml:"image"`
+			} `yaml:"proxy"`
+			Scheduler struct {
+				Image string `yaml:"image"`
+			} `yaml:"scheduler"`
+			ControllerManager struct {
+				Image string `yaml:"image"`
+			} `yaml:"controllerManager"`
+		} `yaml:"cluster"`
 	}
-
-	// This struct is not filled in worker configurations.
-	if config.MachineConfig.MachineType == machine.TypeControlPlane.String() || config.MachineConfig.MachineType == machine.TypeInit.String() {
-		images.APIServer = config.ClusterConfig.APIServerConfig.ContainerImage
-		images.KubeProxy = config.ClusterConfig.ProxyConfig.ContainerImage
-		images.Scheduler = config.ClusterConfig.SchedulerConfig.ContainerImage
-		images.ControllerManager = config.ClusterConfig.ControllerManagerConfig.ContainerImage
+	if err := yaml.Unmarshal([]byte(spec), &current); err != nil {
+		return nil, fmt.Errorf("error parsing YAML spec string: %w", err)
 	}
-
-	return images
+	images := &K8SImages{Kubelet: current.Machine.Kubelet.Image}
+	if current.Machine.Type == machine.TypeControlPlane.String() || current.Machine.Type == machine.TypeInit.String() {
+		images.APIServer = current.Cluster.APIServer.Image
+		images.KubeProxy = current.Cluster.Proxy.Image
+		images.Scheduler = current.Cluster.Scheduler.Image
+		images.ControllerManager = current.Cluster.ControllerManager.Image
+	}
+	return images, nil
 }
 
 // apply prepares and returns a Talos CLI command to apply a machine configuration.
@@ -75,12 +94,10 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 				return "", fmt.Errorf("error parsing YAML output: %w", err)
 			}
 
-			var spec v1alpha1.Config
-			if err := yaml.Unmarshal([]byte(config.Spec), &spec); err != nil {
-				return "", fmt.Errorf("error parsing YAML spec string: %w", err)
+			oldK8SImages, err := NewK8SImages(config.Spec)
+			if err != nil {
+				return "", err
 			}
-
-			oldK8SImages := NewK8SImages(&spec)
 
 			// Merge the base machine configuration with user-provided patches.
 			// This combines the configs into a single YAML representation.
