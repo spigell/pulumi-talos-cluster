@@ -2,6 +2,9 @@ name: Build hcloud Image with Packer and Talos
 
 on:
   push:
+    # Renovate branches skip CI to save Actions minutes.
+    branches-ignore:
+      - 'renovate/**'
     paths:
       - .github/workflows/triggers-build-test-images.yaml
       - integration-tests/packer/run-packer.go
