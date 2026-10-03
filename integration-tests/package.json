@@ -10,15 +10,15 @@
     "prepare": "yarn run build"
   },
   "dependencies": {
-    "@pulumi/pulumi": "3.251.0",
+    "@pulumi/pulumi": "3.267.0",
     "ajv": "^8.17.1",
     "yaml": "^2.6.0"
   },
   "devDependencies": {
-    "@types/node": "^22.7.4",
+    "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
-    "eslint": "9.39.5",
+    "eslint": "10.12.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-promise": "^7.1.0",

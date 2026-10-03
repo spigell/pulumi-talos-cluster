@@ -22,7 +22,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Setup Go ✨
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v7
         with:
           cache: false
           go-version-file: provider/go.mod
@@ -37,7 +37,7 @@ jobs:
       - name: Make provider
         shell: bash
         run: make build_provider
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: pulumi-component-${{ steps.short-sha.outputs.sha }}
           path: bin/pulumi-resource-talos-cluster
