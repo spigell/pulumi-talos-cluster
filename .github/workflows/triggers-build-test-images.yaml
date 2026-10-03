@@ -3,7 +3,6 @@ name: Build hcloud Image with Packer and Talos
 on:
   push:
     paths:
-      - .github/workflows/triggers-build-test-images.yaml
       - integration-tests/packer/run-packer.go
       - integration-tests/packer/hcloud-talos.pkr.hcl
   workflow_dispatch:
