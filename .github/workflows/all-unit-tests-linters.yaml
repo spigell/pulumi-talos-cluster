@@ -3,10 +3,8 @@ on:
   push:
     tags-ignore:
       - '**'
-    # Renovate branches skip CI to save Actions minutes; reforge workers
-    # build and test every Renovate update locally before it merges.
-    branches-ignore:
-      - 'renovate/**'
+    branches:
+      - '**'
 
 permissions:
   contents: read
