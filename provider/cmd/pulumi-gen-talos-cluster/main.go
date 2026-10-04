@@ -73,7 +73,7 @@ func generateSchema() schema.PackageSpec {
 			"nodejs": rawMessage(map[string]any{
 				"packageName": fmt.Sprintf("@spigell/pulumi-%s", provider.ProviderName),
 				"devDependencies": map[string]any{
-					"typescript":  "^4.3.5",
+					"typescript":  "^6.0.0",
 					"@types/node": "^24.0.0",
 				},
 				"dependencies": map[string]any{
