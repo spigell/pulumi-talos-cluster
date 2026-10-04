@@ -1,2 +1,2 @@
-pulumi==3.251.0
+pulumi==3.267.0
 pulumi-hcloud==1.24.0
