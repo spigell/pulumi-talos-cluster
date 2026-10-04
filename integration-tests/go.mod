@@ -12,7 +12,7 @@ require (
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
-	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261003212816-ec3f66959c54
+	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261004030002-a53af12cd40a
 	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004022409-327c5045c19c
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.57.0
