@@ -481,13 +481,13 @@ files = [
 
 [[package]]
 name = "pulumi"
-version = "3.251.0"
+version = "3.267.0"
 description = "Pulumi's Python SDK"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "pulumi-3.251.0-py3-none-any.whl", hash = "sha256:ef71b08b1dc2f0457e0445fabb5c88c4a99023522398cba58d5565dc396d102e"},
+    {file = "pulumi-3.267.0-py3-none-any.whl", hash = "sha256:2fe9efcf92a06e8f312da71387cc4a5ee7467ebd858440d33bf9f615c93020f2"},
 ]
 
 [package.dependencies]
@@ -505,6 +505,7 @@ packaging = ">=26.0"
 protobuf = ">=3.20.3,<7"
 pyyaml = ">=6.0,<7.0"
 semver = ">=3.0,<4.0"
+typing-extensions = ">=4.11,<5"
 
 [[package]]
 name = "pulumi-hcloud"
@@ -1000,4 +1001,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "e6afe5d51a31f6aa108c8af751fe4f83e4808cf9d4c1714c2b93bebe35fe6e69"
+content-hash = "c60a64d41d11f93f73fd03844a1c5f9470e618103278b523b505117747bc1ac6"
