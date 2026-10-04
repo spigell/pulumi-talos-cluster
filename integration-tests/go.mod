@@ -12,7 +12,7 @@ require (
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
-	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20260113153301-d002ecfc0330
+	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261003212816-ec3f66959c54
 	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.57.0
@@ -183,7 +183,7 @@ require (
 	github.com/pulumi/appdash v0.0.0-20231130102222-75f619a67231 // indirect
 	github.com/pulumi/inflector v0.1.1 // indirect
 	github.com/pulumi/pulumi-cloud-sdk/go v1.20260918.0 // indirect
-	github.com/pulumi/pulumi-command/sdk v1.1.3 // indirect
+	github.com/pulumi/pulumi-command/sdk v1.2.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
