@@ -11,6 +11,7 @@ require (
 	github.com/pulumi/pulumi/pkg/v3 v3.267.0
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
 	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261003212816-ec3f66959c54
 	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273
