@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schema.json"
 
 with SCHEMA_PATH.open("r", encoding="utf-8") as f:
-    _SCHEMA: Dict[str, Any] = json.load(f)
+    _SCHEMA: dict[str, Any] = json.load(f)
 
 
-def apply_defaults(node: Any, schema: Dict[str, Any] | None = None) -> None:
+def apply_defaults(node: Any, schema: dict[str, Any] | None = None) -> None:
     if schema is None:
         schema = _SCHEMA
 
@@ -35,7 +35,7 @@ def apply_defaults(node: Any, schema: Dict[str, Any] | None = None) -> None:
                     apply_defaults(item, target_schema)
 
 
-def get_default(path: List[str]) -> Any:
+def get_default(path: list[str]) -> Any:
     node: Any = _SCHEMA
     for segment in path:
         if not isinstance(node, dict) or segment not in node:
@@ -46,5 +46,5 @@ def get_default(path: List[str]) -> Any:
     return node
 
 
-def schema() -> Dict[str, Any]:
+def schema() -> dict[str, Any]:
     return _SCHEMA
