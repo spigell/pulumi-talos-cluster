@@ -7,7 +7,7 @@ replace github.com/spigell/pulumi-talos-cluster/provider => ../provider
 replace github.com/spigell/pulumi-talos-cluster/sdk => ../sdk
 
 require (
-	github.com/pulumi/pulumi-hcloud/sdk v1.42.0
+	github.com/pulumi/pulumi-hcloud/sdk v1.43.0
 	github.com/pulumi/pulumi/pkg/v3 v3.267.0
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
