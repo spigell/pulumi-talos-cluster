@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: runs-on/cache@v4
+      - uses: runs-on/cache@v5.0.7
         with:
           path: |
             ~/.cache/go-build
