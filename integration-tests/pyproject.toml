@@ -7,9 +7,9 @@ dependencies = [
   "pyyaml==6.0.3",
   "pytest==9.1.1",
   "jsonschema==4.26.0",
-  "pulumi==3.251.0",
-  "pulumi-hcloud==1.24.0",
-  "ruff==0.14.7",
+  "pulumi==3.267.0",
+  "pulumi-hcloud==1.43.0",
+  "ruff==0.16.10",
 ]
 
 [build-system]

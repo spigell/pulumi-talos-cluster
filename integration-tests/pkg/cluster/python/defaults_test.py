@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
+import yaml
 from cluster.python.defaults import get_default, schema
 from cluster.python.validation import validate_cluster
-import yaml
-from pathlib import Path
 
 
 def test_schema_defaults_present() -> None:
