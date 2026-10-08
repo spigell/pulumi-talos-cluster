@@ -10,7 +10,6 @@ require (
 	github.com/pulumi/pulumi-hcloud/sdk v1.43.0
 	github.com/pulumi/pulumi/pkg/v3 v3.267.0
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
-	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
 	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261004030002-a53af12cd40a
@@ -189,6 +188,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.9 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/segmentio/encoding v0.5.3 // indirect
