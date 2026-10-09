@@ -8,7 +8,6 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl></PackageProjectUrl>
     <RepositoryUrl>https://github.com/spigell/pulumi-talos-cluster</RepositoryUrl>
-    <PackageIcon>logo.png</PackageIcon>
 
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -44,18 +43,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pulumi" Version="3.114.1" />
+    <PackageReference Include="Pulumi" Version="3.114.2" />
     <PackageReference Include="Pulumi.Command" Version="1.2.1" ExcludeAssets="contentFiles" />
   </ItemGroup>
 
   <ItemGroup>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="logo.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
   </ItemGroup>
 
 </Project>

@@ -61,6 +61,8 @@ gen_go_sdk::
 gen_dotnet_sdk::
 	rm -rf sdk/dotnet
 	pulumi package gen-sdk ${SCHEMA_PATH} --language dotnet
+	# Pulumi's generator references logo.png even though this package has no icon.
+	sed -i '/<PackageIcon>logo.png<\/PackageIcon>/d; /<None Include="logo.png">/,/<\/None>/d' sdk/dotnet/Pulumi.TalosCluster.csproj
 
 build_dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl get version --language dotnet)
 build_dotnet_sdk:: gen_dotnet_sdk

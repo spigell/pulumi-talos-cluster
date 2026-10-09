@@ -4,7 +4,7 @@ go 1.26.6
 
 require (
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
-	github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261003212816-ec3f66959c54
+	github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261004030002-a53af12cd40a
 )
 
 require (
@@ -82,7 +82,7 @@ require (
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273 // indirect
+	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004022409-327c5045c19c // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect

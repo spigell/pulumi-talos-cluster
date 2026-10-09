@@ -1,13 +1,13 @@
 package cluster
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
 	"sync"
 
-	"github.com/santhosh-tekuri/jsonschema/v5"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 	clusterschema "github.com/spigell/pulumi-talos-cluster/integration-tests/pkg/cluster"
 	"gopkg.in/yaml.v3"
 )
@@ -106,8 +106,13 @@ var (
 func loadSchema() (*jsonschema.Schema, error) {
 	schemaOnce.Do(func() {
 		compiler := jsonschema.NewCompiler()
-		compiler.Draft = jsonschema.Draft7
-		if err := compiler.AddResource("schema.json", bytes.NewReader(clusterschema.JSON)); err != nil {
+		compiler.DefaultDraft(jsonschema.Draft7)
+		var document any
+		if err := json.Unmarshal(clusterschema.JSON, &document); err != nil {
+			schemaErr = fmt.Errorf("parse schema: %w", err)
+			return
+		}
+		if err := compiler.AddResource("schema.json", document); err != nil {
 			schemaErr = fmt.Errorf("load schema: %w", err)
 			return
 		}

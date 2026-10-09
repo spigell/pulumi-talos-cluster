@@ -7,13 +7,13 @@ replace github.com/spigell/pulumi-talos-cluster/provider => ../provider
 replace github.com/spigell/pulumi-talos-cluster/sdk => ../sdk
 
 require (
-	github.com/pulumi/pulumi-hcloud/sdk v1.42.0
+	github.com/pulumi/pulumi-hcloud/sdk v1.43.0
 	github.com/pulumi/pulumi/pkg/v3 v3.267.0
 	github.com/pulumi/pulumi/sdk/v3 v3.267.0
-	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
-	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261003212816-ec3f66959c54
-	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273
+	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261004030002-a53af12cd40a
+	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004030002-a53af12cd40a
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.57.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -188,6 +188,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06 // indirect
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1 // indirect
 	github.com/sasha-s/go-deadlock v0.3.9 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/segmentio/encoding v0.5.3 // indirect
