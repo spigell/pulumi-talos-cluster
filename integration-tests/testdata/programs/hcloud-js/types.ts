@@ -1,5 +1,5 @@
 import * as pulumi from "@pulumi/pulumi";
-import type { Cluster as ClusterSpec } from "pulumi-talos-cluster-integration-tests-infra/pkg/cluster/typescript/spec.js";
+import type { Cluster as ClusterSpec } from "pulumi-talos-cluster-integration-tests-infra/pkg/cluster/typescript/cluster.js";
 
 export type DeployedServer = {
   id: string;

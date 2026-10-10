@@ -5,6 +5,7 @@ import { parse } from "yaml";
 import { validateCluster } from "./validation.js";
 
 import type { Cluster, Machine } from "./cluster.js";
+export type { Cluster, Machine };
 
 // These specs are internal
 type MachineSpec = Omit<Machine, "configPatches" | "applyConfigViaUserdata"> & {
