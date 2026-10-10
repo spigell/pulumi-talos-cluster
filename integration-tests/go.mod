@@ -13,7 +13,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	github.com/siderolabs/talos/pkg/machinery v1.14.2
 	github.com/spigell/pulumi-talos-cluster/provider v0.0.0-20261004030002-a53af12cd40a
-	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004030002-a53af12cd40a
+	github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261009222207-7c0d4a03d910
 	github.com/stretchr/testify v1.12.1
 	golang.org/x/crypto v0.58.0
 	gopkg.in/yaml.v3 v3.0.1
