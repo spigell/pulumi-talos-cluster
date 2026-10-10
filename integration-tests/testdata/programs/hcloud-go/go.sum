@@ -202,6 +202,8 @@ github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261004030002-
 github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261004030002-a53af12cd40a/go.mod h1:1/d23EoTWw0GjPAkNdapRUlb2B46d4FB5GsVTXgQZ0s=
 github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261009222207-7c0d4a03d910 h1:lFfuPIh7RI5mgFiL8KkBYdUfRFw4YR8YHWHnAoRqF+o=
 github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261009222207-7c0d4a03d910/go.mod h1:yCfg+T4cQLv1aS/1xWsFzvgfqMGNU4X/9a/bSF+CKcY=
+github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261010040519-e94c02b82abd h1:mp7oS+CL2+r9yvhjwz+G2kQBpheac6RcGNNTRXWUqgE=
+github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261010040519-e94c02b82abd/go.mod h1:yCfg+T4cQLv1aS/1xWsFzvgfqMGNU4X/9a/bSF+CKcY=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273 h1:+thht/++iDLTDP+k6AvmcSTVIuVI1L+/QKDUgnTL65s=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273/go.mod h1:4kI5am564q1H3OdozAMs9EqE7R8xtvxUeGAAS3Bf1lA=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004022409-327c5045c19c h1:PtSJcBL2XtDwzkAdpZzfGv0kPPyNCiwuyWK6e9MkZ4c=
