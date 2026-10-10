@@ -13,6 +13,7 @@
 - `make unit_tests`: Run Go unit tests (excludes generated/CRD packages).
 - `make -C integration-tests integration_tests`: Build provider and SDKs, then run long E2E suites (set `TEST=<regex>` to scope, e.g., `TEST=TestHcloud make -C integration-tests integration_tests_go`).
 - Node SDK iteration: `make build_nodejs_sdk` then `yarn link --cwd sdk/nodejs/bin` for local use.
+- Node/TypeScript programs (such as `integration-tests/testdata/programs/hcloud-js`) run via `tsx` (`typescript: false`, `nodeargs: --import tsx --no-warnings`). Do not go back to ts-node: it cannot load TypeScript 7.
 
 ## Coding Style & Naming Conventions
 - Go code must be `gofmt`-clean and pass `golangci-lint`; prefer idiomatic interfaces and explicit error wrapping (`github.com/pkg/errors`).
