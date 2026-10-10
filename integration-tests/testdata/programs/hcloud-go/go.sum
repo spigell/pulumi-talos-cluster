@@ -204,12 +204,16 @@ github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261009222207-
 github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261009222207-7c0d4a03d910/go.mod h1:yCfg+T4cQLv1aS/1xWsFzvgfqMGNU4X/9a/bSF+CKcY=
 github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261010040519-e94c02b82abd h1:mp7oS+CL2+r9yvhjwz+G2kQBpheac6RcGNNTRXWUqgE=
 github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261010040519-e94c02b82abd/go.mod h1:yCfg+T4cQLv1aS/1xWsFzvgfqMGNU4X/9a/bSF+CKcY=
+github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261010083423-40a11e8753d8 h1:K+i1Pzgo+2C+a2C8Z4lQ/xBRAzPHO4/0T6XUIVMqCZg=
+github.com/spigell/pulumi-talos-cluster/integration-tests v0.0.0-20261010083423-40a11e8753d8/go.mod h1:FmPQZTRBwBSK2Xro41Ke1DXSQfcc5+EJyB6JH00/ffg=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273 h1:+thht/++iDLTDP+k6AvmcSTVIuVI1L+/QKDUgnTL65s=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20250913135849-16db0cf29273/go.mod h1:4kI5am564q1H3OdozAMs9EqE7R8xtvxUeGAAS3Bf1lA=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004022409-327c5045c19c h1:PtSJcBL2XtDwzkAdpZzfGv0kPPyNCiwuyWK6e9MkZ4c=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004022409-327c5045c19c/go.mod h1:JHbpysR3QpSzCYxN2CFby47UyRglOSAJVOF112NVuI8=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004030002-a53af12cd40a h1:hXuXLViWrJiennCEUCyDxSx1jhXttmh2Nfta5eyAMto=
 github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261004030002-a53af12cd40a/go.mod h1:JHbpysR3QpSzCYxN2CFby47UyRglOSAJVOF112NVuI8=
+github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261010040519-e94c02b82abd h1:cge2TT2kXCDndcOQbmqEE7H2gPnAXH5NGd3VHWZIHus=
+github.com/spigell/pulumi-talos-cluster/sdk v0.0.0-20261010040519-e94c02b82abd/go.mod h1:JHbpysR3QpSzCYxN2CFby47UyRglOSAJVOF112NVuI8=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.5.3 h1:jmXUvGomnU1o3W/V5h2VEradbpJDwGrzugQQvL0POH4=
 github.com/stretchr/objx v0.5.3/go.mod h1:rDQraq+vQZU7Fde9LOZLr8Tax6zZvy4kuNKF+QYS+U0=
