@@ -30,7 +30,7 @@
             },
             "devDependencies": {
                 "@types/node": "^24.0.0",
-                "typescript": "^6.0.0"
+                "typescript": "^7.0.0"
             },
             "packageName": "@spigell/pulumi-talos-cluster",
             "resolutions": {
