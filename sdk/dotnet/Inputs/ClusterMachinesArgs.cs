@@ -47,14 +47,14 @@ namespace Pulumi.TalosCluster.Inputs
         /// <summary>
         /// Talos OS installation image. 
         /// Used in the `install` configuration and set via CLI. 
-        /// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
+        /// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
         /// </summary>
         [Input("talosImage")]
         public Input<string>? TalosImage { get; set; }
 
         public ClusterMachinesArgs()
         {
-            TalosImage = "ghcr.io/siderolabs/installer:v1.13.6";
+            TalosImage = "ghcr.io/siderolabs/installer:v1.14.2";
         }
         public static new ClusterMachinesArgs Empty => new ClusterMachinesArgs();
     }

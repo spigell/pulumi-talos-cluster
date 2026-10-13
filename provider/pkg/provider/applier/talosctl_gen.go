@@ -150,16 +150,16 @@ func mergePatchesYAML(patches []string) (map[string]string, error) {
 				return nil, fmt.Errorf("patch %d: %w", i+1, err)
 			}
 
-			_, hasAPIV := m2["apiVersion"]
-			_, hasKind := m2["kind"]
+			_, hasAPIV := m2[yamlKeyAPIVersion]
+			_, hasKind := m2[yamlKeyKind]
 			switch {
 			case hasAPIV && hasKind:
 				extensions = append(extensions, doc)
 				continue
 			case hasAPIV != hasKind:
-				missing := "kind"
+				missing := yamlKeyKind
 				if hasKind {
-					missing = "apiVersion"
+					missing = yamlKeyAPIVersion
 				}
 				return nil, fmt.Errorf("patch %d has incomplete extension document: missing %s", i+1, missing)
 			}

@@ -55,14 +55,14 @@ func generateSchema() schema.PackageSpec {
 		Language: map[string]schema.RawMessage{
 			"csharp": rawMessage(map[string]any{
 				"packageReferences": map[string]string{
-					"Pulumi":         "3.98.0-alpha.cb0f35c",
-					"Pulumi.Command": "1.1.3",
+					"Pulumi":         "3.114.1",
+					"Pulumi.Command": "1.2.1",
 				},
 			}),
 			"python": rawMessage(map[string]any{
 				"requires": map[string]string{
 					"pulumi":         ">=3.251.0,<4.0.0",
-					"pulumi-command": "==1.1.3",
+					"pulumi-command": "==1.2.1",
 				},
 				"usesIOClasses":                true,
 				"liftSingleValueMethodReturns": true,
@@ -73,15 +73,15 @@ func generateSchema() schema.PackageSpec {
 			"nodejs": rawMessage(map[string]any{
 				"packageName": fmt.Sprintf("@spigell/pulumi-%s", provider.ProviderName),
 				"devDependencies": map[string]any{
-					"typescript":  "^4.3.5",
-					"@types/node": "^20.0.0",
+					"typescript":  "^7.0.0",
+					"@types/node": "^24.0.0",
 				},
 				"dependencies": map[string]any{
-					"@pulumi/pulumi":  "3.251.0",
-					"@pulumi/command": "v1.1.3",
+					"@pulumi/pulumi":  "3.267.0",
+					"@pulumi/command": "v1.2.1",
 				},
 				"resolutions": map[string]any{
-					"@pulumi/pulumi": "3.251.0",
+					"@pulumi/pulumi": "3.267.0",
 				},
 			}),
 			"go": rawMessage(map[string]any{
@@ -116,9 +116,11 @@ func mustWriteFile(rootDir, filename string, contents []byte) {
 	if relPath == ".." || filepath.IsAbs(relPath) || strings.HasPrefix(relPath, ".."+string(filepath.Separator)) {
 		panic(fmt.Errorf("invalid output path outside root: %s", outPath))
 	}
+	// #nosec G703 -- the CLI caller chooses the schema output directory.
 	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
 		panic(err)
 	}
+	// #nosec G703 -- the CLI caller chooses the schema output directory; the filename is fixed.
 	if err := os.WriteFile(outPath, contents, 0o600); err != nil {
 		panic(err)
 	}

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, List, Optional
 import ipaddress
+from pathlib import Path
+from typing import Any
 
-from jsonschema import Draft7Validator, ValidationError as SchemaValidationError
+from jsonschema import Draft7Validator
+from jsonschema import ValidationError as SchemaValidationError
 
 from .defaults import _SCHEMA, apply_defaults
 
@@ -42,7 +43,7 @@ def _validate_machine(machine: dict[str, Any], validation_cidr: str) -> None:
 
     _assert_ip_in_network(private_ip, validation_cidr, machine_id)
 
-def _first_validation_error(data: dict[str, Any]) -> Optional[str]:
+def _first_validation_error(data: dict[str, Any]) -> str | None:
     try:
         _VALIDATOR.validate(data)
     except SchemaValidationError as exc:
@@ -76,8 +77,8 @@ def _format_validation_error(exc: SchemaValidationError) -> str:
     return f"Invalid cluster spec: {exc.message}"
 
 
-def _format_path(parts: List[Any], missing: Optional[str] = None) -> str:
-    tokens: List[str] = []
+def _format_path(parts: list[Any], missing: str | None = None) -> str:
+    tokens: list[str] = []
     for idx, part in enumerate(parts):
         if isinstance(part, int):
             tokens.append(f"[{part}]")

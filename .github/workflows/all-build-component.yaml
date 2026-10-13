@@ -12,8 +12,8 @@ jobs:
     name: "Build and save component binary"
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: runs-on/cache@v4
+      - uses: actions/checkout@v7
+      - uses: runs-on/cache@v5.0.7
         with:
           path: |
             ~/.cache/go-build
@@ -22,11 +22,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Setup Go ✨
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v7
         with:
           cache: false
           go-version-file: provider/go.mod
-      - uses: benjlevesque/short-sha@v2.2
+      - uses: benjlevesque/short-sha@v4.0
         id: short-sha
         with:
           length: 6
@@ -37,7 +37,7 @@ jobs:
       - name: Make provider
         shell: bash
         run: make build_provider
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: pulumi-component-${{ steps.short-sha.outputs.sha }}
           path: bin/pulumi-resource-talos-cluster

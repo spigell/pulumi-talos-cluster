@@ -15,6 +15,11 @@ var (
 	yamlPathCluster = "cluster"
 )
 
+const (
+	yamlKeyAPIVersion = "apiVersion"
+	yamlKeyKind       = "kind"
+)
+
 type Guard func(root map[string]any) error
 
 type Merger struct {
@@ -57,19 +62,19 @@ func MergeYAML(yaml1, yaml2 string) *Merger {
 
 		hasAPIV := false
 		hasKind := false
-		_, hasAPIV = m2["apiVersion"]
-		_, hasKind = m2["kind"]
+		_, hasAPIV = m2[yamlKeyAPIVersion]
+		_, hasKind = m2[yamlKeyKind]
 
 		switch {
 		case hasAPIV && hasKind:
 			verbatim = append(verbatim, doc)
 
 		case hasAPIV != hasKind:
-			missing := "kind"
+			missing := yamlKeyKind
 			if hasKind {
-				missing = "apiVersion"
+				missing = yamlKeyAPIVersion
 			}
-			m.err = fmt.Errorf("yaml2 doc %d has %s but missing %s", docNum, map[bool]string{hasAPIV: "apiVersion", hasKind: "kind"}[true], missing)
+			m.err = fmt.Errorf("yaml2 doc %d has %s but missing %s", docNum, map[bool]string{hasAPIV: yamlKeyAPIVersion, hasKind: yamlKeyKind}[true], missing)
 			return m
 
 		default:
@@ -171,16 +176,31 @@ func (m *Merger) Build() (string, error) {
 // to ensure we don't downgrade Kubernetes components.
 func GuardUnmodifyK8sImages(img *K8SImages) Guard {
 	return func(root map[string]any) error {
+		preserveImage := func(path []string, image string) {
+			if image != "" {
+				setPath(root, path, image)
+				return
+			}
+			m := root
+			for _, key := range path[:len(path)-1] {
+				child, ok := m[key].(map[string]any)
+				if !ok {
+					return
+				}
+				m = child
+			}
+			delete(m, path[len(path)-1])
+		}
 		// machine.kubelet.image
-		setPath(root, []string{"machine", "kubelet", yamlPathImage}, img.Kubelet)
+		preserveImage([]string{"machine", "kubelet", yamlPathImage}, img.Kubelet)
 		// cluster.apiServer.image
-		setPath(root, []string{yamlPathCluster, "apiServer", yamlPathImage}, img.APIServer)
+		preserveImage([]string{yamlPathCluster, "apiServer", yamlPathImage}, img.APIServer)
 		// cluster.controllerManager.image
-		setPath(root, []string{yamlPathCluster, "controllerManager", yamlPathImage}, img.ControllerManager)
+		preserveImage([]string{yamlPathCluster, "controllerManager", yamlPathImage}, img.ControllerManager)
 		// cluster.scheduler.image
-		setPath(root, []string{yamlPathCluster, "scheduler", yamlPathImage}, img.Scheduler)
+		preserveImage([]string{yamlPathCluster, "scheduler", yamlPathImage}, img.Scheduler)
 		// cluster.proxy.image
-		setPath(root, []string{yamlPathCluster, "proxy", yamlPathImage}, img.KubeProxy)
+		preserveImage([]string{yamlPathCluster, "proxy", yamlPathImage}, img.KubeProxy)
 		return nil
 	}
 }

@@ -1,10 +1,8 @@
 name: Run integration tests
 
 on:
-  push:
-    branches:
-      - main
-      - preview
+  # hcloud integration tests create real Hetzner Cloud resources, so they run
+  # only when started by hand.
   workflow_dispatch:
     inputs:
       test:
@@ -21,7 +19,7 @@ on:
 
 jobs:
   TestHcloudClusterGo:
-    if: contains(fromJson('["all", "TestHcloudClusterGo"]'), inputs.test) || github.ref == 'refs/heads/main'
+    if: contains(fromJson('["all", "TestHcloudClusterGo"]'), inputs.test)
     uses: ./.github/workflows/reuse-run-integration-tests.yaml
     with:
       name: ${{ inputs.test }}
@@ -31,7 +29,7 @@ jobs:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
   TestHcloudHAClusterGo:
-    if: contains(fromJson('["all", "TestHcloudHAClusterGo"]'), inputs.test) || github.ref == 'refs/heads/main'
+    if: contains(fromJson('["all", "TestHcloudHAClusterGo"]'), inputs.test)
     uses: ./.github/workflows/reuse-run-integration-tests.yaml
     with:
       name: ${{ inputs.test }}
@@ -41,7 +39,7 @@ jobs:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
   TestHcloudClusterJS:
-    if: contains(fromJson('["all", "TestHcloudClusterJS"]'), inputs.test) || github.ref == 'refs/heads/main'
+    if: contains(fromJson('["all", "TestHcloudClusterJS"]'), inputs.test)
     uses: ./.github/workflows/reuse-run-integration-tests.yaml
     with:
       name: ${{ inputs.test }}
@@ -51,7 +49,7 @@ jobs:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}
       hcloud-token: ${{ secrets.HCLOUD_TOKEN }}
   TestHcloudHAClusterPy:
-    if: contains(fromJson('["all", "TestHcloudHAClusterPy"]'), inputs.test) || github.ref == 'refs/heads/main'
+    if: contains(fromJson('["all", "TestHcloudHAClusterPy"]'), inputs.test)
     uses: ./.github/workflows/reuse-run-integration-tests.yaml
     with:
       name: ${{ inputs.test }}

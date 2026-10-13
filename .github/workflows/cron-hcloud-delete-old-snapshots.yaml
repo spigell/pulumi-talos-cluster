@@ -19,7 +19,7 @@ jobs:
     name: Clean
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Install Hetzner Cloud CLI
       run: |
         sudo apt-get update && sudo apt-get install -y curl jq

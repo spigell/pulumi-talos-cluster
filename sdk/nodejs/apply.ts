@@ -44,9 +44,6 @@ export class Apply extends pulumi.ComponentResource {
             if (args?.clientConfiguration === undefined && !opts.urn) {
                 throw new Error("Missing required property 'clientConfiguration'");
             }
-            if (args?.machineTopology === undefined && !opts.urn) {
-                throw new Error("Missing required property 'machineTopology'");
-            }
             resourceInputs["applyMachines"] = args?.applyMachines;
             resourceInputs["clientConfiguration"] = args?.clientConfiguration ? pulumi.secret(args.clientConfiguration) : undefined;
             resourceInputs["machineTopology"] = args?.machineTopology;
@@ -73,14 +70,14 @@ export interface ApplyArgs {
      */
     clientConfiguration: pulumi.Input<inputs.ClientConfigurationArgs>;
     /**
-     * Plain machine IDs grouped by type. Use the machineTopology output from Cluster.
+     * Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
      */
-    machineTopology: pulumi.Input<inputs.MachineTopologyArgs>;
+    machineTopology?: pulumi.Input<inputs.MachineTopologyArgs | undefined>;
     /**
-     * skipInitApply indicates that machines will be managed or configured by external tools. 
-     * For example, it can serve as a source for userdata in cloud provider setups. 
-     * This option helps accelerate node provisioning. 
-     * Note: init node is always applied. 
+     * skipInitApply indicates that machines will be managed or configured by external tools.
+     * For example, it can serve as a source for userdata in cloud provider setups.
+     * This option helps accelerate node provisioning.
+     * Note: init node is always applied.
      * Default is false.
      */
     skipInitApply?: pulumi.Input<boolean | undefined>;

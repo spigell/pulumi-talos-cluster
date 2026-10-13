@@ -70,6 +70,12 @@ namespace Pulumi.TalosCluster
         }
 
         /// <summary>
+        /// Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
+        /// </summary>
+        [Input("machineTopology")]
+        public Input<Inputs.MachineTopologyArgs>? MachineTopology { get; set; }
+
+        /// <summary>
         /// skipInitApply indicates that machines will be managed or configured by external tools. 
         /// For example, it can serve as a source for userdata in cloud provider setups. 
         /// This option helps accelerate node provisioning. 

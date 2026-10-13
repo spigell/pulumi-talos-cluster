@@ -10,22 +10,24 @@
     "prepare": "yarn run build"
   },
   "dependencies": {
-    "@pulumi/pulumi": "3.251.0",
+    "@pulumi/pulumi": "3.267.0",
     "ajv": "^8.17.1",
     "yaml": "^2.6.0"
   },
   "devDependencies": {
-    "@types/node": "^22.7.4",
+    "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
-    "eslint": "9.39.1",
+    "eslint": "10.12.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-import-resolver-typescript": "^4.0.0",
     "eslint-plugin-promise": "^7.1.0",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "globals": "^15.11.0",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.3"
+    "globals": "^17.0.0",
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
+    "typescript7": "npm:typescript@^7.0.0",
+    "vite": "^8.0.0",
+    "vitest": "^5.0.0"
   },
   "packageManager": "yarn@1.22.22"
 }

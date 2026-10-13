@@ -4,7 +4,11 @@ runtime:
   name: nodejs
   options:
     packagemanager: yarn
-    nodeargs: '--loader ts-node/esm --no-warnings --inspect'
+    # TypeScript 7 has no compiler API, so ts-node (and Pulumi's built-in
+    # TypeScript support, which uses ts-node) cannot run it. tsx strips the
+    # types with esbuild instead; `yarn typecheck` runs tsc.
+    typescript: false
+    nodeargs: '--import tsx --no-warnings'
 config:
   pulumi:tags:
     value:

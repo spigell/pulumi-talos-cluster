@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 import yaml
 
@@ -9,22 +8,22 @@ from .validation import validate_cluster
 @dataclass
 class HcloudMachine:
     serverType: str
-    location: Optional[str] = None
+    location: str | None = None
 
 
 @dataclass
 class Machine:
     id: str
     type: str
-    platform: Optional[str] = None
+    platform: str | None = None
     variant: str = ""
-    talosInitialVersion: Optional[str] = None
-    talosImage: Optional[str] = None
+    talosInitialVersion: str | None = None
+    talosImage: str | None = None
     privateIP: str = ""
-    configPatches: List[str] = field(default_factory=list)
-    userdata: Optional[str] = None
+    configPatches: list[str] = field(default_factory=list)
+    userdata: str | None = None
     applyConfigViaUserdata: bool = False
-    hcloud: Optional[HcloudMachine] = None
+    hcloud: HcloudMachine | None = None
 
 
 @dataclass
@@ -33,7 +32,7 @@ class Cluster:
     privateNetwork: str
     privateSubnetwork: str
     kubernetesVersion: str
-    machines: List[Machine] = field(default_factory=list)
+    machines: list[Machine] = field(default_factory=list)
     skipInitApply: bool = False
     usePrivateNetwork: bool = False
 

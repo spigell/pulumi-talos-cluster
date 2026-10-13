@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	tmachine "github.com/siderolabs/talos/pkg/machinery/config/machine"
 	"github.com/spigell/pulumi-talos-cluster/provider/pkg/provider/types"
 	"github.com/stretchr/testify/require"
 )
@@ -30,4 +31,34 @@ func TestMachineInfoAtOnlyKeepsSensitiveValuesSecret(t *testing.T) {
 	require.False(t, pulumi.IsSecret(machine.KubernetesVersion.ToStringOutput()))
 	require.True(t, pulumi.IsSecret(machine.UserConfigPatches.ToStringOutput()))
 	require.True(t, pulumi.IsSecret(machine.Configuration.ToStringOutput()))
+}
+
+func TestMachineTopologyFromApplyMachines(t *testing.T) {
+	var (
+		initType         = tmachine.TypeInit.String()
+		controlPlaneType = tmachine.TypeControlPlane.String()
+		workerType       = tmachine.TypeWorker.String()
+	)
+	machines := pulumi.ToSecret(pulumi.MapArrayMap{
+		initType:         pulumi.MapArray{pulumi.Map{types.MachineIDKey: pulumi.String("master-1")}},
+		controlPlaneType: pulumi.MapArray{pulumi.Map{types.MachineIDKey: pulumi.String("master-2")}},
+		workerType: pulumi.MapArray{
+			pulumi.Map{types.MachineIDKey: pulumi.String("worker-1")},
+			pulumi.Map{types.MachineIDKey: pulumi.String("worker-2")},
+		},
+	}).(pulumi.MapArrayMapOutput)
+
+	topology := machineTopologyFromApplyMachines(machines)
+	resolved := make(chan map[string][]string, 1)
+	topology.ApplyT(func(v map[string][]string) map[string][]string {
+		resolved <- v
+		return v
+	})
+
+	require.False(t, pulumi.IsSecret(topology))
+	require.Equal(t, map[string][]string{
+		initType:         {"master-1"},
+		controlPlaneType: {"master-2"},
+		workerType:       {"worker-1", "worker-2"},
+	}, <-resolved)
 }

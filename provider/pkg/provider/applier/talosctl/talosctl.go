@@ -31,14 +31,17 @@ type Talosctl struct {
 
 // Args groups arguments used to execute a talosctl command.
 type Args struct {
-	TalosConfig      pulumi.StringInput
-	PrepareDeps      []pulumi.Resource
-	Dir              string
-	CommandArgs      pulumi.StringInput
-	RetryCount       int
-	Environment      pulumi.StringMap
-	Triggers         pulumi.Array
-	UpdateOnChange   bool
+	TalosConfig    pulumi.StringInput
+	PrepareDeps    []pulumi.Resource
+	Dir            string
+	CommandArgs    pulumi.StringInput
+	RetryCount     int
+	Environment    pulumi.StringMap
+	Triggers       pulumi.Array
+	UpdateOnChange bool
+	// UpdateSkipIf is a bash script run in a subshell before the update command (requires UpdateOnChange).
+	// When it exits 0, the update is skipped. It can reach the node via the talosctl_node shell function.
+	UpdateSkipIf     string
 	AdditionalFiles  []ExtraFile
 	TryInsecureFirst bool
 	// Logging controls what the Pulumi engine records from the command execution.
@@ -112,7 +115,18 @@ func (t *Talosctl) RunCommand(
 		Logging:     logging,
 	}
 	if a.UpdateOnChange {
-		commandArgs.Update = createGated.ToStringPtrOutput()
+		update := createGated
+		if a.UpdateSkipIf != "" {
+			update = pulumi.All(createGated, t.basicCommand()).ApplyT(func(v []any) string {
+				cmd := v[0].(string)
+				if cmd == "" {
+					return ""
+				}
+
+				return withSkipIf(cmd, t.nodeCommand(v[1].(string)), a.UpdateSkipIf)
+			}).(pulumi.StringOutput)
+		}
+		commandArgs.Update = update.ToStringPtrOutput()
 	}
 
 	main, err := local.NewCommand(ctx, name, commandArgs, opts...)
@@ -213,14 +227,7 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 	// Prepare: write talosctl.yaml + additional files
 	prepared := pulumi.Unsecret(t.prepareAll(ctx, args)).(pulumi.BoolOutput)
 
-	basicCommand := pulumi.StringInput(pulumi.String(t.BasicCommand))
-	if t.NodeIP != nil {
-		basicCommand = pulumi.Unsecret(
-			pulumi.Sprintf("%s -n %s -e %s", t.BasicCommand, t.NodeIP, t.NodeIP),
-		).(pulumi.StringOutput)
-	}
-
-	createGated = pulumi.All(prepared, args.CommandArgs, basicCommand).
+	createGated = pulumi.All(prepared, args.CommandArgs, t.basicCommand()).
 		ApplyT(func(v []any) string {
 			if !v[0].(bool) {
 				return ""
@@ -252,6 +259,26 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 		}).(pulumi.StringOutput)
 
 	return createGated, env, nil
+}
+
+// basicCommand returns the talosctl invocation with node flags, resolving NodeIP when it is an input.
+func (t *Talosctl) basicCommand() pulumi.StringInput {
+	if t.NodeIP == nil {
+		return pulumi.String(t.BasicCommand)
+	}
+
+	return pulumi.Unsecret(
+		pulumi.Sprintf("%s -n %s -e %s", t.BasicCommand, t.NodeIP, t.NodeIP),
+	).(pulumi.StringOutput)
+}
+
+// nodeCommand returns the talosctl invocation used by UpdateSkipIf scripts.
+func (t *Talosctl) nodeCommand(basicCommand string) string {
+	if t.TalosConfig == nil {
+		return basicCommand
+	}
+
+	return fmt.Sprintf("%s --talosconfig %s", basicCommand, talosctlConfigName)
 }
 
 // prepareAll builds one shell that writes talosctl.yaml (if provided) and any AdditionalFiles.
@@ -296,6 +323,20 @@ func (t *Talosctl) prepareAll(ctx *pulumi.Context, args *Args) pulumi.BoolOutput
 		}
 		return true, nil
 	}).(pulumi.BoolOutput)
+}
+
+// withSkipIf runs cmd unless the condition script exits 0.
+func withSkipIf(cmd, nodeCommand, condition string) string {
+	return fmt.Sprintf(strings.Join([]string{
+		`talosctl_node() { %s "$@"; }`,
+		"if (",
+		"%s",
+		"); then",
+		"echo 'update skipped: node is already in the desired state'",
+		"else",
+		"%s",
+		"fi",
+	}, "\n"), nodeCommand, condition, cmd)
 }
 
 func withBashRetry(cmd, maxTries string) string {

@@ -24,6 +24,8 @@ __all__ = [
     'ClusterMachinesArgsDict',
     'MachineInfoArgs',
     'MachineInfoArgsDict',
+    'MachineTopologyArgs',
+    'MachineTopologyArgsDict',
 ]
 
 class ApplyMachinesArgsDict(TypedDict):
@@ -163,7 +165,7 @@ class ClusterMachinesArgsDict(TypedDict):
     """
     Talos OS installation image.
     Used in the `install` configuration and set via CLI.
-    The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
+    The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
     """
 
 @pulumi.input_type
@@ -183,7 +185,7 @@ class ClusterMachinesArgs:
                For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         :param pulumi.Input[_builtins.str] talos_image: Talos OS installation image.
                Used in the `install` configuration and set via CLI.
-               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
+               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
         """
         pulumi.set(__self__, "machine_id", machine_id)
         pulumi.set(__self__, "machine_type", machine_type)
@@ -191,7 +193,7 @@ class ClusterMachinesArgs:
         if config_patches is not None:
             pulumi.set(__self__, "config_patches", config_patches)
         if talos_image is None:
-            talos_image = 'ghcr.io/siderolabs/installer:v1.13.6'
+            talos_image = 'ghcr.io/siderolabs/installer:v1.14.2'
         if talos_image is not None:
             pulumi.set(__self__, "talos_image", talos_image)
 
@@ -251,7 +253,7 @@ class ClusterMachinesArgs:
         """
         Talos OS installation image.
         Used in the `install` configuration and set via CLI.
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.13.6.
+        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
         """
         return pulumi.get(self, "talos_image")
 
@@ -410,5 +412,48 @@ class MachineInfoArgs:
     @user_config_patches.setter
     def user_config_patches(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "user_config_patches", value)
+
+
+class MachineTopologyArgsDict(TypedDict):
+    controlplane: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]
+    init: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]
+    worker: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]
+
+@pulumi.input_type
+class MachineTopologyArgs:
+    def __init__(__self__, *,
+                 controlplane: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]],
+                 init: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]],
+                 worker: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]):
+        pulumi.set(__self__, "controlplane", controlplane)
+        pulumi.set(__self__, "init", init)
+        pulumi.set(__self__, "worker", worker)
+
+    @_builtins.property
+    @pulumi.getter
+    def controlplane(self) -> pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]:
+        return pulumi.get(self, "controlplane")
+
+    @controlplane.setter
+    def controlplane(self, value: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]):
+        pulumi.set(self, "controlplane", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def init(self) -> pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]:
+        return pulumi.get(self, "init")
+
+    @init.setter
+    def init(self, value: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]):
+        pulumi.set(self, "init", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def worker(self) -> pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]:
+        return pulumi.get(self, "worker")
+
+    @worker.setter
+    def worker(self, value: pulumi.Input[Sequence[pulumi.Input[_builtins.str]]]):
+        pulumi.set(self, "worker", value)
 
 

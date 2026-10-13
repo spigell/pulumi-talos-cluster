@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Optional
 import json
+from pathlib import Path
 
 import pytest
 import yaml
-from cluster.python.validation import validate_cluster
 from cluster.python.defaults import get_default
+from cluster.python.validation import validate_cluster
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 SCHEMA_PATH = Path(__file__).resolve().parents[1] / "schema.json"
@@ -36,7 +35,7 @@ with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
         ("validation-unknown-machine.yaml", "unknown field 'machines[0].unknown' is not allowed"),
     ],
 )
-def test_validate_cluster(fixture_name: str, message: Optional[str]) -> None:
+def test_validate_cluster(fixture_name: str, message: str | None) -> None:
     data = _load_fixture(fixture_name)
     if message is None:
         validate_cluster(data)
