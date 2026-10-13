@@ -30,6 +30,12 @@ namespace Pulumi.TalosCluster
         public Output<ImmutableDictionary<string, string>> GeneratedConfigurations { get; private set; } = null!;
 
         /// <summary>
+        /// Plain machine IDs grouped by type for stable downstream resource registration.
+        /// </summary>
+        [Output("machineTopology")]
+        public Output<Outputs.MachineTopology> MachineTopology { get; private set; } = null!;
+
+        /// <summary>
         /// Machine information grouped by machine type.
         /// </summary>
         [Output("machines")]

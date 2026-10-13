@@ -53,6 +53,14 @@ func ApplyInputProperties() map[string]schema.PropertySpec {
 			},
 			Description: "The machine configurations to apply.",
 		},
+		provider.ClusterResourceOutputsMachineTopology: {
+			TypeSpec: schema.TypeSpec{
+				Type: typeObject,
+				Ref:  fmt.Sprintf("#types/%s", BasicMachineTopologyPath),
+			},
+			Description: "Plain machine IDs grouped by type. Use the machineTopology output from Cluster. " +
+				"Optional: when omitted, it is derived from applyMachines.",
+		},
 		"skipInitApply": {
 			TypeSpec: schema.TypeSpec{
 				Type: "boolean",

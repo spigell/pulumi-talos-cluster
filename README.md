@@ -44,6 +44,29 @@ flowchart TD
 
 The Pulumi command provider executes each CLI operation. Temporary credentials are written with restrictive permissions, sensitive stdout is suppressed, and working directories are removed after execution.
 
+## Talos Image Upgrades
+
+Changing a machine's `talosImage` upgrades the node to that image: `talosctl upgrade` uses the machine's `talosImage` directly and the following `apply-config` sets `machine.install.image` to the same value. (Up to 0.4.1, the upgrade read the install image from a stale generated configuration, so image changes were not applied.)
+
+`Apply` accepts an optional `machineTopology` input (plain machine IDs grouped by type). Pass `Cluster.machineTopology` so that per-node resources can be planned before `applyMachines` is known. When it is omitted, as in programs written for 0.4.1, the topology is derived from `applyMachines`, which keeps the 0.4.1 behaviour.
+
+The CLI stages now re-run (update) when their inputs change, not only when a few trigger values change. They keep the same `triggers` as 0.4.1 (`talosImage` for `cli-upgrade`, the config patches and cluster endpoint for `cli-apply-config`, the Kubernetes version for `cli-upgrade-k8s`). A change to a trigger still replaces the command, and a replacement runs the create command. To avoid needless reboots, the create and update commands run the same guard:
+
+- `talosctl upgrade` is skipped when the node already runs the target image. This means the installed config's `machine.install.image` equals `talosImage`, `talosctl version` reports the image tag and, for Image Factory images, the running `schematic` extension matches the schematic in the image path. If any of these cannot be read or does not match, the upgrade runs. Images without a tag are always upgraded. On a new node the upgrade runs as before, unless the node already runs the target image (for example, because its initial install used that image).
+- `talosctl apply-config` is skipped when `apply-config --dry-run` reports `No changes`. Otherwise it applies in the default `auto` mode.
+- `talosctl upgrade-k8s` is not guarded. It never reboots nodes, and it skips components that already run the target version, but it re-syncs the bootstrap manifests.
+
+### First `pulumi up` after upgrading from 0.4.1
+
+The preview shows updates, not replaces, for `gen-machine-config`, `cli-upgrade`, `cli-apply-config`, `cli-upgrade-k8s` and `kubeconfig`. The command resources gain an `update` command and a content hash, and their `triggers` stay unchanged. Expect the following:
+
+- Nodes that already run their `talosImage` skip `talosctl upgrade` and are not rebooted.
+- Nodes whose `talosImage` was changed under 0.4.1 still run the old image, because 0.4.1 ignored the change. These nodes are upgraded and rebooted once. Control planes are upgraded one after another, each gated by the etcd health check. Workers are upgraded in parallel.
+- `apply-config` applies only real differences. One example is the de-duplication of list entries that 0.4.1 produced by merging the config patches twice.
+- `upgrade-k8s` runs once and re-syncs the bootstrap manifests.
+
+The skip check depends on the `talosctl` output formats described above. To be safe, run `pulumi preview` first and roll out one stack at a time.
+
 ## Motivation
 
 The official Terraform (and therefore Pulumi) provider for Talos has certain limitations, particularly around upgrading and configuring clusters, as highlighted in issues like [#195](https://github.com/siderolabs/terraform-provider-talos/issues/195). This component directly orchestrates `talosctl` and utilizes the `pulumi/command` provider to fully manage Talos clusters, overcoming these limitations and providing a more native experience.

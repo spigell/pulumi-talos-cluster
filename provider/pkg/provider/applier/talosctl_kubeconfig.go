@@ -11,7 +11,7 @@ import (
 func (a *Applier) GetKubeconfig(deps []pulumi.Resource) pulumi.StringOutput {
 	t := talosctl.New().
 		WithTalosConfig(a.TalosconfigForNode(a.InitNode.IP)).
-		WithNodeIP(a.InitNode.IP)
+		WithNodeIPInput(a.InitNode.IP)
 	dir := generateWorkDirNameForTalosctl(a.name, "kubeconfig", "kubeconfig")
 
 	cmd, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, "kubeconfig", a.InitNode.Name), &talosctl.Args{

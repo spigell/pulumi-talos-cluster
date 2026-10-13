@@ -11,6 +11,7 @@ import (
 var (
 	BasicClientConfifgurationPath = provider.ProviderName + ":index:" + provider.ClusterResourceOutputsClientConfiguration
 	BasicMachinesByTypePath       = provider.ProviderName + ":index:" + "applyMachines"
+	BasicMachineTopologyPath      = provider.ProviderName + ":index:" + provider.ClusterResourceOutputsMachineTopology
 )
 
 func BasicTypes() map[string]schema.ComplexTypeSpec {
@@ -41,6 +42,28 @@ func BasicTypes() map[string]schema.ComplexTypeSpec {
 			},
 			Required: []string{
 				machine.TypeInit.String(),
+			},
+		},
+	}
+
+	types[BasicMachineTopologyPath] = schema.ComplexTypeSpec{
+		ObjectTypeSpec: schema.ObjectTypeSpec{
+			Type: typeObject,
+			Properties: map[string]schema.PropertySpec{
+				machine.TypeControlPlane.String(): {
+					TypeSpec: schema.TypeSpec{Type: typeArray, Items: &schema.TypeSpec{Type: typeString}},
+				},
+				machine.TypeInit.String(): {
+					TypeSpec: schema.TypeSpec{Type: typeArray, Items: &schema.TypeSpec{Type: typeString}},
+				},
+				machine.TypeWorker.String(): {
+					TypeSpec: schema.TypeSpec{Type: typeArray, Items: &schema.TypeSpec{Type: typeString}},
+				},
+			},
+			Required: []string{
+				machine.TypeInit.String(),
+				machine.TypeControlPlane.String(),
+				machine.TypeWorker.String(),
 			},
 		},
 	}

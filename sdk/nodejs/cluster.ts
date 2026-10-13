@@ -36,6 +36,10 @@ export class Cluster extends pulumi.ComponentResource {
      */
     declare public /*out*/ readonly generatedConfigurations: pulumi.Output<{[key: string]: string}>;
     /**
+     * Plain machine IDs grouped by type for stable downstream resource registration.
+     */
+    declare public /*out*/ readonly machineTopology: pulumi.Output<outputs.MachineTopology>;
+    /**
      * Machine information grouped by machine type.
      */
     declare public /*out*/ readonly machines: pulumi.Output<outputs.ApplyMachines>;
@@ -71,11 +75,13 @@ export class Cluster extends pulumi.ComponentResource {
             resourceInputs["talosVersionContract"] = (args?.talosVersionContract) ?? "v1.14.2";
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
+            resourceInputs["machineTopology"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
             resourceInputs["talosconfig"] = undefined /*out*/;
         } else {
             resourceInputs["clientConfiguration"] = undefined /*out*/;
             resourceInputs["generatedConfigurations"] = undefined /*out*/;
+            resourceInputs["machineTopology"] = undefined /*out*/;
             resourceInputs["machines"] = undefined /*out*/;
             resourceInputs["talosconfig"] = undefined /*out*/;
         }

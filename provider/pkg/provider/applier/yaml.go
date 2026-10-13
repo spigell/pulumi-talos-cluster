@@ -15,6 +15,11 @@ var (
 	yamlPathCluster = "cluster"
 )
 
+const (
+	yamlKeyAPIVersion = "apiVersion"
+	yamlKeyKind       = "kind"
+)
+
 type Guard func(root map[string]any) error
 
 type Merger struct {
@@ -26,20 +31,15 @@ type Merger struct {
 func MergeYAML(yaml1, yaml2 string) *Merger {
 	m := &Merger{}
 
-	var h1 any
-	if err := yaml.Unmarshal([]byte(yaml1), &h1); err != nil {
-		m.err = fmt.Errorf("yaml1 parse: %w", err)
-		return m
-	}
-	r1, ok := normalize(h1).(map[string]any)
-	if !ok {
-		m.err = fmt.Errorf("yaml1 top-level is not a mapping")
+	r1, yaml1Tail, err := splitYAMLHeadAndTail(yaml1)
+	if err != nil {
+		m.err = err
 		return m
 	}
 
 	// Split all yaml2 docs
 	docs := splitYaml2All(yaml2)
-	var verbatim []string
+	verbatim := yaml1Tail
 	docNum := 0
 
 	for _, doc := range docs {
@@ -62,19 +62,19 @@ func MergeYAML(yaml1, yaml2 string) *Merger {
 
 		hasAPIV := false
 		hasKind := false
-		_, hasAPIV = m2["apiVersion"]
-		_, hasKind = m2["kind"]
+		_, hasAPIV = m2[yamlKeyAPIVersion]
+		_, hasKind = m2[yamlKeyKind]
 
 		switch {
 		case hasAPIV && hasKind:
 			verbatim = append(verbatim, doc)
 
 		case hasAPIV != hasKind:
-			missing := "kind"
+			missing := yamlKeyKind
 			if hasKind {
-				missing = "apiVersion"
+				missing = yamlKeyAPIVersion
 			}
-			m.err = fmt.Errorf("yaml2 doc %d has %s but missing %s", docNum, map[bool]string{hasAPIV: "apiVersion", hasKind: "kind"}[true], missing)
+			m.err = fmt.Errorf("yaml2 doc %d has %s but missing %s", docNum, map[bool]string{hasAPIV: yamlKeyAPIVersion, hasKind: yamlKeyKind}[true], missing)
 			return m
 
 		default:
@@ -97,6 +97,43 @@ func MergeYAML(yaml1, yaml2 string) *Merger {
 	}
 
 	return m
+}
+
+func splitYAMLHeadAndTail(raw string) (map[string]any, []string, error) {
+	docs := splitYaml2All(raw)
+	var head map[string]any
+	var tail []string
+	docNum := 0
+
+	for _, doc := range docs {
+		doc = strings.TrimSpace(doc)
+		if doc == "" {
+			continue
+		}
+		docNum++
+
+		var h any
+		if err := yaml.Unmarshal([]byte(doc), &h); err != nil {
+			return nil, nil, fmt.Errorf("yaml1 doc %d parse: %w", docNum, err)
+		}
+		m, ok := normalize(h).(map[string]any)
+		if !ok {
+			return nil, nil, fmt.Errorf("yaml1 doc %d top-level is not a mapping", docNum)
+		}
+
+		if head == nil {
+			head = m
+			continue
+		}
+
+		tail = append(tail, doc)
+	}
+
+	if head == nil {
+		return nil, nil, fmt.Errorf("yaml1 top-level is not a mapping")
+	}
+
+	return head, tail, nil
 }
 
 func (m *Merger) WithGuard(g Guard) *Merger {

@@ -20,6 +20,7 @@ const (
 
 const (
 	ClusterResourceOutputsMachines                                = "machines"
+	ClusterResourceOutputsMachineTopology                         = "machineTopology"
 	ClusterResourceOutputsGeneratedConfigurations                 = "generatedConfigurations"
 	ClusterResourceOutputsControlplaneMachineConfigurations       = "controlplaneMachineConfigurations"
 	ClusterResourceOutputsWorkerMachineConfigurations             = "workerMachineConfigurations"
@@ -38,6 +39,7 @@ type Cluster struct {
 	ClientConfiguration     pulumi.StringMapOutput `pulumi:"clientConfiguration"`
 	GeneratedConfigurations pulumi.StringMap       `pulumi:"generatedConfigurations"`
 	Machines                pulumi.ArrayMap        `pulumi:"machines"`
+	MachineTopology         pulumi.StringArrayMap  `pulumi:"machineTopology"`
 	Talosconfig             pulumi.StringOutput    `pulumi:"talosconfig"`
 }
 
@@ -82,6 +84,11 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	controlplanes := make(pulumi.Array, 0)
 	generated := make(pulumi.StringMap, 0)
 	c.Machines = make(pulumi.ArrayMap)
+	c.MachineTopology = pulumi.StringArrayMap{
+		tmachine.TypeInit.String():         pulumi.StringArray{},
+		tmachine.TypeControlPlane.String(): pulumi.StringArray{},
+		tmachine.TypeWorker.String():       pulumi.StringArray{},
+	}
 
 	for _, m := range args.ClusterMachines {
 		// The provider doesn't know anything about init node type.
@@ -132,14 +139,23 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 		switch m.MachineType {
 		case tmachine.TypeControlPlane.String():
 			controlplanes = append(controlplanes, mInfo)
+			c.MachineTopology[tmachine.TypeControlPlane.String()] = append(
+				c.MachineTopology[tmachine.TypeControlPlane.String()].(pulumi.StringArray),
+				pulumi.String(m.MachineID),
+			)
 		case tmachine.TypeWorker.String():
 			workers = append(workers, mInfo)
+			c.MachineTopology[tmachine.TypeWorker.String()] = append(
+				c.MachineTopology[tmachine.TypeWorker.String()].(pulumi.StringArray),
+				pulumi.String(m.MachineID),
+			)
 		case tmachine.TypeInit.String():
 			if len(c.Machines) == 1 {
 				return nil, fmt.Errorf("only one init node should present. Please use 'controlplane' type for %s", m.MachineID)
 			}
 
 			c.Machines[tmachine.TypeInit.String()] = pulumi.Array{mInfo}
+			c.MachineTopology[tmachine.TypeInit.String()] = pulumi.StringArray{pulumi.String(m.MachineID)}
 		default:
 			return nil, fmt.Errorf("unknown machine type %s", m.MachineType)
 		}
@@ -172,6 +188,7 @@ func cluster(ctx *pulumi.Context, c *Cluster, name string,
 	if err := ctx.RegisterResourceOutputs(c, pulumi.Map{
 		ClusterResourceOutputsClientConfiguration:     c.ClientConfiguration,
 		ClusterResourceOutputsMachines:                c.Machines,
+		ClusterResourceOutputsMachineTopology:         c.MachineTopology,
 		ClusterResourceOutputsGeneratedConfigurations: generated,
 		ClusterResourceOutputsTalosconfig:             c.Talosconfig,
 	}); err != nil {

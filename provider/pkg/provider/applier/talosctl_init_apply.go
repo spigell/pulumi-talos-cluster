@@ -12,13 +12,13 @@ import (
 func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Resource, error) {
 	stageName := "cli-initial-apply-config"
 	t := talosctl.New().
-		WithNodeIP(m.NodeIP).
+		WithNodeIPInput(m.NodeIP).
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 	machineConfigName := "machineconfig.yaml"
 
 	apply, err := t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
 		AdditionalFiles: []talosctl.ExtraFile{
-			{Name: machineConfigName, Content: pulumi.String(m.Configuration)},
+			{Name: machineConfigName, Content: m.Configuration},
 		},
 		CommandArgs:      pulumi.Sprintf("apply-config -f %s --mode reboot", machineConfigName),
 		Dir:              generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),

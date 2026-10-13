@@ -97,3 +97,9 @@ export interface MachineInfoArgs {
      */
     userConfigPatches?: pulumi.Input<string | undefined>;
 }
+
+export interface MachineTopologyArgs {
+    controlplane: pulumi.Input<pulumi.Input<string>[]>;
+    init: pulumi.Input<pulumi.Input<string>[]>;
+    worker: pulumi.Input<pulumi.Input<string>[]>;
+}

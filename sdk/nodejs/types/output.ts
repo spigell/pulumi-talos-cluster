@@ -73,3 +73,9 @@ export interface MachineInfo {
     userConfigPatches?: string;
 }
 
+export interface MachineTopology {
+    controlplane: string[];
+    init: string[];
+    worker: string[];
+}
+

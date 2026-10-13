@@ -12,7 +12,7 @@ func (a *Applier) upgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) (pulu
 	stageName := "cli-upgrade-k8s"
 	home := generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID)
 	t := talosctl.New().
-		WithNodeIP(m.NodeIP).
+		WithNodeIPInput(m.NodeIP).
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
@@ -20,9 +20,9 @@ func (a *Applier) upgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) (pulu
 		Dir:         home,
 		CommandArgs: pulumi.Sprintf("upgrade-k8s --with-docs=false --with-examples=false --to %s", m.KubernetesVersion),
 		RetryCount:  1,
-		Triggers: pulumi.Array{
-			pulumi.String(m.KubernetesVersion),
-		},
+		// Same triggers as 0.4.1: dropping them would replace the command on the first run after the bump.
+		Triggers:       pulumi.Array{m.KubernetesVersion},
+		UpdateOnChange: true,
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "20m", Update: "20m"}),

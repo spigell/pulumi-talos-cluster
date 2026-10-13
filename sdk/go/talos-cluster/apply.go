@@ -52,6 +52,8 @@ type applyArgs struct {
 	ApplyMachines ApplyMachines `pulumi:"applyMachines"`
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfiguration `pulumi:"clientConfiguration"`
+	// Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
+	MachineTopology *MachineTopology `pulumi:"machineTopology"`
 	// skipInitApply indicates that machines will be managed or configured by external tools.
 	// For example, it can serve as a source for userdata in cloud provider setups.
 	// This option helps accelerate node provisioning.
@@ -66,6 +68,8 @@ type ApplyArgs struct {
 	ApplyMachines ApplyMachinesInput
 	// Client configuration for bootstrapping and applying resources.
 	ClientConfiguration ClientConfigurationInput
+	// Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
+	MachineTopology MachineTopologyPtrInput
 	// skipInitApply indicates that machines will be managed or configured by external tools.
 	// For example, it can serve as a source for userdata in cloud provider setups.
 	// This option helps accelerate node provisioning.

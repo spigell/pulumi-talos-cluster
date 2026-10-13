@@ -25,9 +25,10 @@ func ApplyType() string {
 }
 
 type ApplyArgs struct {
-	ClientConfiguration pulumi.StringMapInput `pulumi:"clientConfiguration"`
-	ApplyMachines       pulumi.ArrayMapOutput `pulumi:"applyMachines"`
-	SkipInitApply       pulumi.BoolOutput     `pulumi:"skipInitApply"`
+	ClientConfiguration pulumi.StringMapInput      `pulumi:"clientConfiguration"`
+	ApplyMachines       pulumi.MapArrayMapOutput   `pulumi:"applyMachines"`
+	MachineTopology     pulumi.StringArrayMapInput `pulumi:"machineTopology"`
+	SkipInitApply       pulumi.BoolOutput          `pulumi:"skipInitApply"`
 }
 
 type ApplyMachines struct {
@@ -49,12 +50,18 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		return nil, err
 	}
 
-	a.Credentials = pulumi.All(args.ApplyMachines, args.SkipInitApply).ApplyT(func(v []any) (pulumi.StringMapOutput, error) {
-		creds := make(pulumi.StringMap, 0)
-		endpoints := make([]string, 0)
-		nodes := make([]string, 0)
+	// machineTopology is optional so programs written for SDKs without it keep working.
+	topology := args.MachineTopology
+	if topology == nil {
+		topology = machineTopologyFromApplyMachines(args.ApplyMachines)
+	}
 
-		ma := v[0].(map[string][]any)
+	a.Credentials = pulumi.All(topology, args.SkipInitApply).ApplyT(func(v []any) (pulumi.StringMapOutput, error) {
+		creds := make(pulumi.StringMap, 0)
+		endpoints := make(pulumi.StringArray, 0)
+		nodes := make(pulumi.StringArray, 0)
+
+		ma := v[0].(map[string][]string)
 
 		init := ma[tmachine.TypeInit.String()]
 		if len(init) == 0 {
@@ -74,7 +81,7 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		app.WithSkipedInitApply(v[1].(bool))
 		app.WithEtcdMembersCount(len(cp) + 1)
 
-		i := types.ParseMachineInfo(init[0].(map[string]any))
+		i := machineInfoAt(args.ApplyMachines, tmachine.TypeInit.String(), 0, init[0])
 
 		endpoints = append(endpoints, i.NodeIP)
 
@@ -90,13 +97,8 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 
 		controlplanesReady := inited
 
-		for _, m := range cp {
-			ma, ok := m.(map[string]any)
-			if !ok {
-				return creds.ToStringMapOutput(), fmt.Errorf("expected map[string]any, got: %T", m)
-			}
-
-			node := types.ParseMachineInfo(ma)
+		for index, machineID := range cp {
+			node := machineInfoAt(args.ApplyMachines, tmachine.TypeControlPlane.String(), index, machineID)
 
 			endpoints = append(endpoints, node.NodeIP)
 
@@ -118,12 +120,8 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 		// Nodes contains all nodes, including endpoints
 		nodes = append(nodes, endpoints...)
 
-		for _, m := range workers {
-			ma, ok := m.(map[string]any)
-			if !ok {
-				return creds.ToStringMapOutput(), fmt.Errorf("expected map[string]any, got: %T", m)
-			}
-			node := types.ParseMachineInfo(ma)
+		for index, machineID := range workers {
+			node := machineInfoAt(args.ApplyMachines, tmachine.TypeWorker.String(), index, machineID)
 
 			nodes = append(nodes, node.NodeIP)
 
@@ -156,4 +154,51 @@ func apply(ctx *pulumi.Context, a *Apply, name string,
 	}
 
 	return provider.NewConstructResult(a)
+}
+
+// machineTopologyFromApplyMachines derives plain machine IDs grouped by type from applyMachines.
+// Unlike an explicit machineTopology, it resolves only when applyMachines is known.
+func machineTopologyFromApplyMachines(machines pulumi.MapArrayMapOutput) pulumi.StringArrayMapOutput {
+	return pulumi.Unsecret(machines.ApplyT(func(byType map[string][]map[string]any) (map[string][]string, error) {
+		topology := make(map[string][]string, len(byType))
+		for role, list := range byType {
+			ids := make([]string, 0, len(list))
+			for _, m := range list {
+				id, ok := m[types.MachineIDKey].(string)
+				if !ok {
+					return nil, fmt.Errorf("machine of type %s has no %s", role, types.MachineIDKey)
+				}
+				ids = append(ids, id)
+			}
+			topology[role] = ids
+		}
+
+		return topology, nil
+	})).(pulumi.StringArrayMapOutput)
+}
+
+func machineInfoAt(machines pulumi.MapArrayMapOutput, role string, index int, machineID string) *types.MachineInfo {
+	machine := machines.MapIndex(pulumi.String(role)).Index(pulumi.Int(index))
+	stringValue := func(key string) pulumi.StringOutput {
+		return machine.MapIndex(pulumi.String(key)).ApplyT(func(value any) string {
+			if value == nil {
+				return ""
+			}
+
+			return value.(string)
+		}).(pulumi.StringOutput)
+	}
+	publicStringValue := func(key string) pulumi.StringOutput {
+		return pulumi.Unsecret(stringValue(key)).(pulumi.StringOutput)
+	}
+
+	return &types.MachineInfo{
+		MachineID:         machineID,
+		NodeIP:            publicStringValue(types.NodeIPKey),
+		ClusterEnpoint:    publicStringValue(types.ClusterEnpointKey),
+		UserConfigPatches: stringValue(types.UserConfigPatchesKey),
+		TalosImage:        publicStringValue(types.TalosImageKey),
+		KubernetesVersion: publicStringValue(types.KubernetesVersionKey),
+		Configuration:     stringValue(types.ConfigurationKey),
+	}
 }

@@ -211,6 +211,7 @@ class Cluster(pulumi.ComponentResource):
             __props__.__dict__["talos_version_contract"] = talos_version_contract
             __props__.__dict__["client_configuration"] = None
             __props__.__dict__["generated_configurations"] = None
+            __props__.__dict__["machine_topology"] = None
             __props__.__dict__["machines"] = None
             __props__.__dict__["talosconfig"] = None
         super(Cluster, __self__).__init__(
@@ -235,6 +236,14 @@ class Cluster(pulumi.ComponentResource):
         Generated machine configuration YAML keyed by machine ID.
         """
         return pulumi.get(self, "generated_configurations")
+
+    @_builtins.property
+    @pulumi.getter(name="machineTopology")
+    def machine_topology(self) -> pulumi.Output['outputs.MachineTopology']:
+        """
+        Plain machine IDs grouped by type for stable downstream resource registration.
+        """
+        return pulumi.get(self, "machine_topology")
 
     @_builtins.property
     @pulumi.getter

@@ -46,6 +46,7 @@ export class Apply extends pulumi.ComponentResource {
             }
             resourceInputs["applyMachines"] = args?.applyMachines;
             resourceInputs["clientConfiguration"] = args?.clientConfiguration ? pulumi.secret(args.clientConfiguration) : undefined;
+            resourceInputs["machineTopology"] = args?.machineTopology;
             resourceInputs["skipInitApply"] = (args?.skipInitApply) ?? false;
             resourceInputs["credentials"] = undefined /*out*/;
         } else {
@@ -68,6 +69,10 @@ export interface ApplyArgs {
      * Client configuration for bootstrapping and applying resources.
      */
     clientConfiguration: pulumi.Input<inputs.ClientConfigurationArgs>;
+    /**
+     * Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
+     */
+    machineTopology?: pulumi.Input<inputs.MachineTopologyArgs | undefined>;
     /**
      * skipInitApply indicates that machines will be managed or configured by external tools.
      * For example, it can serve as a source for userdata in cloud provider setups.

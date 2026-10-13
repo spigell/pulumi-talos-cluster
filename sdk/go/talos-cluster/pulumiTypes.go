@@ -501,6 +501,169 @@ func (o MachineInfoArrayOutput) Index(i pulumi.IntInput) MachineInfoOutput {
 	}).(MachineInfoOutput)
 }
 
+type MachineTopology struct {
+	Controlplane []string `pulumi:"controlplane"`
+	Init         []string `pulumi:"init"`
+	Worker       []string `pulumi:"worker"`
+}
+
+// MachineTopologyInput is an input type that accepts MachineTopologyArgs and MachineTopologyOutput values.
+// You can construct a concrete instance of `MachineTopologyInput` via:
+//
+//	MachineTopologyArgs{...}
+type MachineTopologyInput interface {
+	pulumi.Input
+
+	ToMachineTopologyOutput() MachineTopologyOutput
+	ToMachineTopologyOutputWithContext(context.Context) MachineTopologyOutput
+}
+
+type MachineTopologyArgs struct {
+	Controlplane pulumi.StringArrayInput `pulumi:"controlplane"`
+	Init         pulumi.StringArrayInput `pulumi:"init"`
+	Worker       pulumi.StringArrayInput `pulumi:"worker"`
+}
+
+func (MachineTopologyArgs) ElementType() reflect.Type {
+	return reflect.TypeOf((*MachineTopology)(nil)).Elem()
+}
+
+func (i MachineTopologyArgs) ToMachineTopologyOutput() MachineTopologyOutput {
+	return i.ToMachineTopologyOutputWithContext(context.Background())
+}
+
+func (i MachineTopologyArgs) ToMachineTopologyOutputWithContext(ctx context.Context) MachineTopologyOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(MachineTopologyOutput)
+}
+
+func (i MachineTopologyArgs) ToMachineTopologyPtrOutput() MachineTopologyPtrOutput {
+	return i.ToMachineTopologyPtrOutputWithContext(context.Background())
+}
+
+func (i MachineTopologyArgs) ToMachineTopologyPtrOutputWithContext(ctx context.Context) MachineTopologyPtrOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(MachineTopologyOutput).ToMachineTopologyPtrOutputWithContext(ctx)
+}
+
+// MachineTopologyPtrInput is an input type that accepts MachineTopologyArgs, MachineTopologyPtr and MachineTopologyPtrOutput values.
+// You can construct a concrete instance of `MachineTopologyPtrInput` via:
+//
+//	        MachineTopologyArgs{...}
+//
+//	or:
+//
+//	        nil
+type MachineTopologyPtrInput interface {
+	pulumi.Input
+
+	ToMachineTopologyPtrOutput() MachineTopologyPtrOutput
+	ToMachineTopologyPtrOutputWithContext(context.Context) MachineTopologyPtrOutput
+}
+
+type machineTopologyPtrType MachineTopologyArgs
+
+func MachineTopologyPtr(v *MachineTopologyArgs) MachineTopologyPtrInput {
+	return (*machineTopologyPtrType)(v)
+}
+
+func (*machineTopologyPtrType) ElementType() reflect.Type {
+	return reflect.TypeOf((**MachineTopology)(nil)).Elem()
+}
+
+func (i *machineTopologyPtrType) ToMachineTopologyPtrOutput() MachineTopologyPtrOutput {
+	return i.ToMachineTopologyPtrOutputWithContext(context.Background())
+}
+
+func (i *machineTopologyPtrType) ToMachineTopologyPtrOutputWithContext(ctx context.Context) MachineTopologyPtrOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(MachineTopologyPtrOutput)
+}
+
+type MachineTopologyOutput struct{ *pulumi.OutputState }
+
+func (MachineTopologyOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*MachineTopology)(nil)).Elem()
+}
+
+func (o MachineTopologyOutput) ToMachineTopologyOutput() MachineTopologyOutput {
+	return o
+}
+
+func (o MachineTopologyOutput) ToMachineTopologyOutputWithContext(ctx context.Context) MachineTopologyOutput {
+	return o
+}
+
+func (o MachineTopologyOutput) ToMachineTopologyPtrOutput() MachineTopologyPtrOutput {
+	return o.ToMachineTopologyPtrOutputWithContext(context.Background())
+}
+
+func (o MachineTopologyOutput) ToMachineTopologyPtrOutputWithContext(ctx context.Context) MachineTopologyPtrOutput {
+	return o.ApplyTWithContext(ctx, func(_ context.Context, v MachineTopology) *MachineTopology {
+		return &v
+	}).(MachineTopologyPtrOutput)
+}
+
+func (o MachineTopologyOutput) Controlplane() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v MachineTopology) []string { return v.Controlplane }).(pulumi.StringArrayOutput)
+}
+
+func (o MachineTopologyOutput) Init() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v MachineTopology) []string { return v.Init }).(pulumi.StringArrayOutput)
+}
+
+func (o MachineTopologyOutput) Worker() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v MachineTopology) []string { return v.Worker }).(pulumi.StringArrayOutput)
+}
+
+type MachineTopologyPtrOutput struct{ *pulumi.OutputState }
+
+func (MachineTopologyPtrOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((**MachineTopology)(nil)).Elem()
+}
+
+func (o MachineTopologyPtrOutput) ToMachineTopologyPtrOutput() MachineTopologyPtrOutput {
+	return o
+}
+
+func (o MachineTopologyPtrOutput) ToMachineTopologyPtrOutputWithContext(ctx context.Context) MachineTopologyPtrOutput {
+	return o
+}
+
+func (o MachineTopologyPtrOutput) Elem() MachineTopologyOutput {
+	return o.ApplyT(func(v *MachineTopology) MachineTopology {
+		if v != nil {
+			return *v
+		}
+		var ret MachineTopology
+		return ret
+	}).(MachineTopologyOutput)
+}
+
+func (o MachineTopologyPtrOutput) Controlplane() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *MachineTopology) []string {
+		if v == nil {
+			return nil
+		}
+		return v.Controlplane
+	}).(pulumi.StringArrayOutput)
+}
+
+func (o MachineTopologyPtrOutput) Init() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *MachineTopology) []string {
+		if v == nil {
+			return nil
+		}
+		return v.Init
+	}).(pulumi.StringArrayOutput)
+}
+
+func (o MachineTopologyPtrOutput) Worker() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *MachineTopology) []string {
+		if v == nil {
+			return nil
+		}
+		return v.Worker
+	}).(pulumi.StringArrayOutput)
+}
+
 func init() {
 	pulumi.RegisterInputType(reflect.TypeOf((*ApplyMachinesInput)(nil)).Elem(), ApplyMachinesArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*ClientConfigurationInput)(nil)).Elem(), ClientConfigurationArgs{})
@@ -508,6 +671,8 @@ func init() {
 	pulumi.RegisterInputType(reflect.TypeOf((*ClusterMachinesArrayInput)(nil)).Elem(), ClusterMachinesArray{})
 	pulumi.RegisterInputType(reflect.TypeOf((*MachineInfoInput)(nil)).Elem(), MachineInfoArgs{})
 	pulumi.RegisterInputType(reflect.TypeOf((*MachineInfoArrayInput)(nil)).Elem(), MachineInfoArray{})
+	pulumi.RegisterInputType(reflect.TypeOf((*MachineTopologyInput)(nil)).Elem(), MachineTopologyArgs{})
+	pulumi.RegisterInputType(reflect.TypeOf((*MachineTopologyPtrInput)(nil)).Elem(), MachineTopologyArgs{})
 	pulumi.RegisterOutputType(ApplyMachinesOutput{})
 	pulumi.RegisterOutputType(ClientConfigurationOutput{})
 	pulumi.RegisterOutputType(ClusterMachinesOutput{})
@@ -515,4 +680,6 @@ func init() {
 	pulumi.RegisterOutputType(CredentialsOutput{})
 	pulumi.RegisterOutputType(MachineInfoOutput{})
 	pulumi.RegisterOutputType(MachineInfoArrayOutput{})
+	pulumi.RegisterOutputType(MachineTopologyOutput{})
+	pulumi.RegisterOutputType(MachineTopologyPtrOutput{})
 }

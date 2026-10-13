@@ -1,6 +1,7 @@
 package talosctl
 
 import (
+	"os/exec"
 	"strings"
 	"testing"
 )
@@ -28,5 +29,25 @@ func TestTalosctlWithNodeIPExtendsCommand(t *testing.T) {
 
 	if !strings.HasPrefix(talos.BasicCommand, talos.Binary) {
 		t.Fatalf("expected basic command to start with binary %q, got %q", talos.Binary, talos.BasicCommand)
+	}
+}
+
+func TestWithSkipIfRunsCommandOnlyWhenConditionFails(t *testing.T) {
+	for _, tc := range []struct {
+		condition string
+		expected  string
+	}{
+		{condition: "talosctl_node is-current", expected: "skipped: node"},
+		{condition: "exit 1", expected: "ran"},
+	} {
+		script := withSkipIf("echo ran", "echo", tc.condition)
+
+		out, err := exec.CommandContext(t.Context(), "/bin/bash", "-c", script).CombinedOutput()
+		if err != nil {
+			t.Fatalf("script failed: %v: %s", err, out)
+		}
+		if !strings.Contains(string(out), tc.expected) || (tc.expected != "ran" && strings.Contains(string(out), "ran")) {
+			t.Fatalf("condition %q: expected %q in output, got %q", tc.condition, tc.expected, out)
+		}
 	}
 }

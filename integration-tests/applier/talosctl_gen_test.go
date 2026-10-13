@@ -158,6 +158,7 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 		expectTypeIn string
 		patches      []string
 		expectSnips  []string
+		expectFlags  []string
 	}{
 		{name: controlPlaneMachineType, machineType: controlPlaneMachineType, expectTypeIn: "type: controlplane"},
 		{name: workerMachineType, machineType: workerMachineType, expectTypeIn: "type: worker"},
@@ -184,6 +185,10 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 				"disabled: false", // from timeEnabled patch
 				"kind: ExtensionServiceConfig",
 				"name: cloudflared",
+			},
+			expectFlags: []string{
+				"--config-patch @patches.yaml",
+				"--config-patch @extension-patches.yaml",
 			},
 		},
 		{
@@ -229,6 +234,9 @@ func TestGenerateConfigMachineTypes(t *testing.T) {
 					assert.Contains(t, raw, tt.expectTypeIn)
 					for _, snip := range tt.expectSnips {
 						assert.Contains(t, raw, snip)
+					}
+					for _, flag := range tt.expectFlags {
+						assert.Contains(t, mock.lastCreate, flag)
 					}
 					return nil
 				})

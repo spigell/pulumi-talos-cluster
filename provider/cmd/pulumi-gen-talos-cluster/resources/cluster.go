@@ -150,12 +150,20 @@ func ClusterProperties() map[string]schema.PropertySpec {
 			},
 			Description: "Machine information grouped by machine type.",
 		},
+		provider.ClusterResourceOutputsMachineTopology: {
+			TypeSpec: schema.TypeSpec{
+				Type: typeObject,
+				Ref:  fmt.Sprintf("#types/%s", BasicMachineTopologyPath),
+			},
+			Description: "Plain machine IDs grouped by type for stable downstream resource registration.",
+		},
 	}
 }
 
 func ClusterRequiredProperties() []string {
 	return []string{
 		provider.ClusterResourceOutputsMachines,
+		provider.ClusterResourceOutputsMachineTopology,
 		provider.ClusterResourceOutputsGeneratedConfigurations,
 		provider.ClusterResourceOutputsClientConfiguration,
 		provider.ClusterResourceOutputsTalosconfig,

@@ -21,6 +21,7 @@ __all__ = [
     'ClientConfiguration',
     'Credentials',
     'MachineInfo',
+    'MachineTopology',
 ]
 
 @pulumi.output_type
@@ -261,5 +262,31 @@ class MachineInfo(dict):
         This can be retrieved from the cluster resource.
         """
         return pulumi.get(self, "user_config_patches")
+
+
+@pulumi.output_type
+class MachineTopology(dict):
+    def __init__(__self__, *,
+                 controlplane: Sequence[_builtins.str],
+                 init: Sequence[_builtins.str],
+                 worker: Sequence[_builtins.str]):
+        pulumi.set(__self__, "controlplane", controlplane)
+        pulumi.set(__self__, "init", init)
+        pulumi.set(__self__, "worker", worker)
+
+    @_builtins.property
+    @pulumi.getter
+    def controlplane(self) -> Sequence[_builtins.str]:
+        return pulumi.get(self, "controlplane")
+
+    @_builtins.property
+    @pulumi.getter
+    def init(self) -> Sequence[_builtins.str]:
+        return pulumi.get(self, "init")
+
+    @_builtins.property
+    @pulumi.getter
+    def worker(self) -> Sequence[_builtins.str]:
+        return pulumi.get(self, "worker")
 
 

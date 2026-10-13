@@ -22,6 +22,8 @@ type Cluster struct {
 	ClientConfiguration ClientConfigurationOutput `pulumi:"clientConfiguration"`
 	// Generated machine configuration YAML keyed by machine ID.
 	GeneratedConfigurations pulumi.StringMapOutput `pulumi:"generatedConfigurations"`
+	// Plain machine IDs grouped by type for stable downstream resource registration.
+	MachineTopology MachineTopologyOutput `pulumi:"machineTopology"`
 	// Machine information grouped by machine type.
 	Machines ApplyMachinesOutput `pulumi:"machines"`
 	// Raw talosconfig including endpoints for all nodes and control planes.
@@ -190,6 +192,11 @@ func (o ClusterOutput) ClientConfiguration() ClientConfigurationOutput {
 // Generated machine configuration YAML keyed by machine ID.
 func (o ClusterOutput) GeneratedConfigurations() pulumi.StringMapOutput {
 	return o.ApplyT(func(v *Cluster) pulumi.StringMapOutput { return v.GeneratedConfigurations }).(pulumi.StringMapOutput)
+}
+
+// Plain machine IDs grouped by type for stable downstream resource registration.
+func (o ClusterOutput) MachineTopology() MachineTopologyOutput {
+	return o.ApplyT(func(v *Cluster) MachineTopologyOutput { return v.MachineTopology }).(MachineTopologyOutput)
 }
 
 // Machine information grouped by machine type.

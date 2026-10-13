@@ -1,6 +1,7 @@
 package talosctl
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"path/filepath"
@@ -24,18 +25,24 @@ var interpreter = []string{
 type Talosctl struct {
 	Binary       string
 	BasicCommand string
+	NodeIP       pulumi.StringInput
 	TalosConfig  pulumi.StringInput // Wired-in configuration
 }
 
 // Args groups arguments used to execute a talosctl command.
 type Args struct {
-	TalosConfig      pulumi.StringInput
-	PrepareDeps      []pulumi.Resource
-	Dir              string
-	CommandArgs      pulumi.StringInput
-	RetryCount       int
-	Environment      pulumi.StringMap
-	Triggers         pulumi.Array
+	TalosConfig    pulumi.StringInput
+	PrepareDeps    []pulumi.Resource
+	Dir            string
+	CommandArgs    pulumi.StringInput
+	RetryCount     int
+	Environment    pulumi.StringMap
+	Triggers       pulumi.Array
+	UpdateOnChange bool
+	// SkipIf is a bash script run in a subshell before the create and update commands.
+	// When it exits 0, the command is skipped. It can reach the node via the talosctl_node shell function.
+	// Guarding create as well matters because any change to Triggers replaces the resource.
+	SkipIf           string
 	AdditionalFiles  []ExtraFile
 	TryInsecureFirst bool
 	// Logging controls what the Pulumi engine records from the command execution.
@@ -73,6 +80,13 @@ func (t *Talosctl) WithNodeIP(ip string) *Talosctl {
 	return t
 }
 
+// WithNodeIPInput adds node flags without requiring the IP to be known during preview.
+func (t *Talosctl) WithNodeIPInput(ip pulumi.StringInput) *Talosctl {
+	t.NodeIP = ip
+
+	return t
+}
+
 // RunCommand executes a talosctl command as a Pulumi resource.
 func (t *Talosctl) RunCommand(
 	ctx *pulumi.Context,
@@ -89,15 +103,35 @@ func (t *Talosctl) RunCommand(
 	if err != nil {
 		return nil, err
 	}
+	if a.UpdateOnChange {
+		env = environmentWithAdditionalFilesHash(env, a.AdditionalFiles)
+	}
 
-	main, err := local.NewCommand(ctx, name, &local.CommandArgs{
-		Create:      createGated,
+	command := createGated
+	if a.SkipIf != "" {
+		command = pulumi.All(createGated, t.basicCommand()).ApplyT(func(v []any) string {
+			cmd := v[0].(string)
+			if cmd == "" {
+				return ""
+			}
+
+			return withSkipIf(cmd, t.nodeCommand(v[1].(string)), a.SkipIf)
+		}).(pulumi.StringOutput)
+	}
+
+	commandArgs := &local.CommandArgs{
+		Create:      command,
 		Dir:         pulumi.String(a.Dir),
 		Interpreter: pulumi.ToStringArray(interpreter),
 		Environment: env,
 		Triggers:    a.Triggers,
 		Logging:     logging,
-	}, opts...)
+	}
+	if a.UpdateOnChange {
+		commandArgs.Update = command.ToStringPtrOutput()
+	}
+
+	main, err := local.NewCommand(ctx, name, commandArgs, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +143,33 @@ func (t *Talosctl) RunCommand(
 	}, pulumi.DependsOn([]pulumi.Resource{main}))
 
 	return main, nil
+}
+
+func environmentWithAdditionalFilesHash(env pulumi.StringMap, files []ExtraFile) pulumi.StringMap {
+	if len(files) == 0 {
+		return env
+	}
+
+	inputs := make([]any, len(files))
+	for i, f := range files {
+		inputs[i] = f.Content
+	}
+
+	filesHash := pulumi.Unsecret(pulumi.All(inputs...).ApplyT(func(resolved []any) string {
+		h := sha256.New()
+		for i, f := range files {
+			h.Write([]byte(f.Name))
+			h.Write([]byte{0})
+			h.Write([]byte(resolved[i].(string)))
+			h.Write([]byte{0})
+		}
+
+		return fmt.Sprintf("%x", h.Sum(nil))
+	}).(pulumi.StringOutput)).(pulumi.StringOutput)
+
+	env["PULUMI_TALOS_ADDITIONAL_FILES_SHA256"] = filesHash
+
+	return env
 }
 
 // RunGetCommand executes a talosctl command as an invoke and returns its standard output.
@@ -166,23 +227,24 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 	}
 
 	// Prepare: write talosctl.yaml + additional files
-	prepared := t.prepareAll(ctx, args)
+	prepared := pulumi.Unsecret(t.prepareAll(ctx, args)).(pulumi.BoolOutput)
 
-	createGated = pulumi.All(prepared, args.CommandArgs).
+	createGated = pulumi.All(prepared, args.CommandArgs, t.basicCommand()).
 		ApplyT(func(v []any) string {
 			if !v[0].(bool) {
 				return ""
 			}
 
 			cmdArgs := v[1].(string)
+			resolvedBasicCommand := v[2].(string)
 			hasConfig := t.TalosConfig != nil
 
 			// Build base commands (no retries yet).
-			secure := fmt.Sprintf("%s %s --talosconfig %s", t.BasicCommand, cmdArgs, talosctlConfigName)
+			secure := fmt.Sprintf("%s %s --talosconfig %s", resolvedBasicCommand, cmdArgs, talosctlConfigName)
 			if !hasConfig {
-				secure = fmt.Sprintf("%s %s", t.BasicCommand, cmdArgs)
+				secure = fmt.Sprintf("%s %s", resolvedBasicCommand, cmdArgs)
 			}
-			insecure := fmt.Sprintf("%s %s --insecure", t.BasicCommand, cmdArgs)
+			insecure := fmt.Sprintf("%s %s --insecure", resolvedBasicCommand, cmdArgs)
 
 			// Select auth pipeline.
 			selected := secure
@@ -199,6 +261,26 @@ func (t *Talosctl) prepareAndGate(ctx *pulumi.Context, args *Args) (createGated 
 		}).(pulumi.StringOutput)
 
 	return createGated, env, nil
+}
+
+// basicCommand returns the talosctl invocation with node flags, resolving NodeIP when it is an input.
+func (t *Talosctl) basicCommand() pulumi.StringInput {
+	if t.NodeIP == nil {
+		return pulumi.String(t.BasicCommand)
+	}
+
+	return pulumi.Unsecret(
+		pulumi.Sprintf("%s -n %s -e %s", t.BasicCommand, t.NodeIP, t.NodeIP),
+	).(pulumi.StringOutput)
+}
+
+// nodeCommand returns the talosctl invocation used by SkipIf scripts.
+func (t *Talosctl) nodeCommand(basicCommand string) string {
+	if t.TalosConfig == nil {
+		return basicCommand
+	}
+
+	return fmt.Sprintf("%s --talosconfig %s", basicCommand, talosctlConfigName)
 }
 
 // prepareAll builds one shell that writes talosctl.yaml (if provided) and any AdditionalFiles.
@@ -243,6 +325,20 @@ func (t *Talosctl) prepareAll(ctx *pulumi.Context, args *Args) pulumi.BoolOutput
 		}
 		return true, nil
 	}).(pulumi.BoolOutput)
+}
+
+// withSkipIf runs cmd unless the condition script exits 0.
+func withSkipIf(cmd, nodeCommand, condition string) string {
+	return fmt.Sprintf(strings.Join([]string{
+		`talosctl_node() { %s "$@"; }`,
+		"if (",
+		"%s",
+		"); then",
+		"echo 'skipped: node is already in the desired state'",
+		"else",
+		"%s",
+		"fi",
+	}, "\n"), nodeCommand, condition, cmd)
 }
 
 func withBashRetry(cmd, maxTries string) string {

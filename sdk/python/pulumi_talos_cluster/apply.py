@@ -23,12 +23,14 @@ class ApplyArgs:
     def __init__(__self__, *,
                  apply_machines: pulumi.Input['ApplyMachinesArgs'],
                  client_configuration: pulumi.Input['ClientConfigurationArgs'],
+                 machine_topology: pulumi.Input[Optional['MachineTopologyArgs']] = None,
                  skip_init_apply: pulumi.Input[Optional[_builtins.bool]] = None):
         """
         The set of arguments for constructing a Apply resource.
 
         :param pulumi.Input['ApplyMachinesArgs'] apply_machines: The machine configurations to apply.
         :param pulumi.Input['ClientConfigurationArgs'] client_configuration: Client configuration for bootstrapping and applying resources.
+        :param pulumi.Input['MachineTopologyArgs'] machine_topology: Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
         :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools.
                For example, it can serve as a source for userdata in cloud provider setups.
                This option helps accelerate node provisioning.
@@ -37,6 +39,8 @@ class ApplyArgs:
         """
         pulumi.set(__self__, "apply_machines", apply_machines)
         pulumi.set(__self__, "client_configuration", client_configuration)
+        if machine_topology is not None:
+            pulumi.set(__self__, "machine_topology", machine_topology)
         if skip_init_apply is None:
             skip_init_apply = False
         if skip_init_apply is not None:
@@ -67,6 +71,18 @@ class ApplyArgs:
         pulumi.set(self, "client_configuration", value)
 
     @_builtins.property
+    @pulumi.getter(name="machineTopology")
+    def machine_topology(self) -> pulumi.Input[Optional['MachineTopologyArgs']]:
+        """
+        Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
+        """
+        return pulumi.get(self, "machine_topology")
+
+    @machine_topology.setter
+    def machine_topology(self, value: pulumi.Input[Optional['MachineTopologyArgs']]):
+        pulumi.set(self, "machine_topology", value)
+
+    @_builtins.property
     @pulumi.getter(name="skipInitApply")
     def skip_init_apply(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
@@ -91,6 +107,7 @@ class Apply(pulumi.ComponentResource):
                  opts: Optional[pulumi.ResourceOptions] = None,
                  apply_machines: pulumi.Input[Optional[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
                  client_configuration: pulumi.Input[Optional[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
+                 machine_topology: pulumi.Input[Optional[Union['MachineTopologyArgs', 'MachineTopologyArgsDict']]] = None,
                  skip_init_apply: pulumi.Input[Optional[_builtins.bool]] = None,
                  __props__=None):
         """
@@ -100,6 +117,7 @@ class Apply(pulumi.ComponentResource):
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']] apply_machines: The machine configurations to apply.
         :param pulumi.Input[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']] client_configuration: Client configuration for bootstrapping and applying resources.
+        :param pulumi.Input[Union['MachineTopologyArgs', 'MachineTopologyArgsDict']] machine_topology: Plain machine IDs grouped by type. Use the machineTopology output from Cluster. Optional: when omitted, it is derived from applyMachines.
         :param pulumi.Input[_builtins.bool] skip_init_apply: skipInitApply indicates that machines will be managed or configured by external tools.
                For example, it can serve as a source for userdata in cloud provider setups.
                This option helps accelerate node provisioning.
@@ -132,6 +150,7 @@ class Apply(pulumi.ComponentResource):
                  opts: Optional[pulumi.ResourceOptions] = None,
                  apply_machines: pulumi.Input[Optional[Union['ApplyMachinesArgs', 'ApplyMachinesArgsDict']]] = None,
                  client_configuration: pulumi.Input[Optional[Union['ClientConfigurationArgs', 'ClientConfigurationArgsDict']]] = None,
+                 machine_topology: pulumi.Input[Optional[Union['MachineTopologyArgs', 'MachineTopologyArgsDict']]] = None,
                  skip_init_apply: pulumi.Input[Optional[_builtins.bool]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
@@ -150,6 +169,7 @@ class Apply(pulumi.ComponentResource):
             if client_configuration is None and not opts.urn:
                 raise TypeError("Missing required property 'client_configuration'")
             __props__.__dict__["client_configuration"] = None if client_configuration is None else pulumi.Output.secret(client_configuration)
+            __props__.__dict__["machine_topology"] = machine_topology
             if skip_init_apply is None:
                 skip_init_apply = False
             __props__.__dict__["skip_init_apply"] = skip_init_apply
