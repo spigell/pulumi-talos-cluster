@@ -82,14 +82,7 @@ func TestUpgradeSkipIfNodeRunsTargetImage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dir := t.TempDir()
-			for name, content := range map[string]string{"machineconfig": tt.machineConfig, "version": tt.version, "extensions": tt.extensions} {
-				require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600))
-			}
-			fake := "#!/bin/bash\ncase \"$*\" in\n" +
-				"  *'get machineconfig'*) f=machineconfig ;;\n  *'get extensions'*) f=extensions ;;\n  *version*) f=version ;;\nesac\n" +
-				"[ -s \"$FAKE_DIR/$f\" ] || exit 1\ncat \"$FAKE_DIR/$f\"\n"
-			require.NoError(t, os.WriteFile(filepath.Join(dir, "talosctl"), []byte(fake), 0o700))
+			dir := writeFakeTalosctl(t, tt.machineConfig, tt.version, tt.extensions)
 
 			cmd := exec.CommandContext(t.Context(), "/bin/bash", "-c", "talosctl_node() { talosctl -n 10.0.0.2 \"$@\"; }\n"+upgradeSkipIfNodeRunsTargetImage)
 			cmd.Env = append(os.Environ(),
@@ -108,4 +101,21 @@ func TestUpgradeSkipIfNodeRunsTargetImage(t *testing.T) {
 			}
 		})
 	}
+}
+
+// writeFakeTalosctl writes a talosctl stub that serves the given node state, logs every call to
+// $FAKE_DIR/calls and succeeds for any other subcommand. It returns the directory to use as FAKE_DIR.
+func writeFakeTalosctl(t *testing.T, machineConfig, version, extensions string) string {
+	t.Helper()
+
+	dir := t.TempDir()
+	for name, content := range map[string]string{"machineconfig": machineConfig, "version": version, "extensions": extensions} {
+		require.NoError(t, os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600))
+	}
+	fake := "#!/bin/bash\necho \"$*\" >> \"$FAKE_DIR/calls\"\ncase \"$*\" in\n" +
+		"  *'get machineconfig'*) f=machineconfig ;;\n  *'get extensions'*) f=extensions ;;\n  *version*) f=version ;;\n  *) exit 0 ;;\nesac\n" +
+		"[ -s \"$FAKE_DIR/$f\" ] || exit 1\ncat \"$FAKE_DIR/$f\"\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "talosctl"), []byte(fake), 0o700))
+
+	return dir
 }

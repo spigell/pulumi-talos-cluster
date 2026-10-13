@@ -39,9 +39,10 @@ type Args struct {
 	Environment    pulumi.StringMap
 	Triggers       pulumi.Array
 	UpdateOnChange bool
-	// UpdateSkipIf is a bash script run in a subshell before the update command (requires UpdateOnChange).
-	// When it exits 0, the update is skipped. It can reach the node via the talosctl_node shell function.
-	UpdateSkipIf     string
+	// SkipIf is a bash script run in a subshell before the create and update commands.
+	// When it exits 0, the command is skipped. It can reach the node via the talosctl_node shell function.
+	// Guarding create as well matters because any change to Triggers replaces the resource.
+	SkipIf           string
 	AdditionalFiles  []ExtraFile
 	TryInsecureFirst bool
 	// Logging controls what the Pulumi engine records from the command execution.
@@ -106,8 +107,20 @@ func (t *Talosctl) RunCommand(
 		env = environmentWithAdditionalFilesHash(env, a.AdditionalFiles)
 	}
 
+	command := createGated
+	if a.SkipIf != "" {
+		command = pulumi.All(createGated, t.basicCommand()).ApplyT(func(v []any) string {
+			cmd := v[0].(string)
+			if cmd == "" {
+				return ""
+			}
+
+			return withSkipIf(cmd, t.nodeCommand(v[1].(string)), a.SkipIf)
+		}).(pulumi.StringOutput)
+	}
+
 	commandArgs := &local.CommandArgs{
-		Create:      createGated,
+		Create:      command,
 		Dir:         pulumi.String(a.Dir),
 		Interpreter: pulumi.ToStringArray(interpreter),
 		Environment: env,
@@ -115,18 +128,7 @@ func (t *Talosctl) RunCommand(
 		Logging:     logging,
 	}
 	if a.UpdateOnChange {
-		update := createGated
-		if a.UpdateSkipIf != "" {
-			update = pulumi.All(createGated, t.basicCommand()).ApplyT(func(v []any) string {
-				cmd := v[0].(string)
-				if cmd == "" {
-					return ""
-				}
-
-				return withSkipIf(cmd, t.nodeCommand(v[1].(string)), a.UpdateSkipIf)
-			}).(pulumi.StringOutput)
-		}
-		commandArgs.Update = update.ToStringPtrOutput()
+		commandArgs.Update = command.ToStringPtrOutput()
 	}
 
 	main, err := local.NewCommand(ctx, name, commandArgs, opts...)
@@ -272,7 +274,7 @@ func (t *Talosctl) basicCommand() pulumi.StringInput {
 	).(pulumi.StringOutput)
 }
 
-// nodeCommand returns the talosctl invocation used by UpdateSkipIf scripts.
+// nodeCommand returns the talosctl invocation used by SkipIf scripts.
 func (t *Talosctl) nodeCommand(basicCommand string) string {
 	if t.TalosConfig == nil {
 		return basicCommand
@@ -332,7 +334,7 @@ func withSkipIf(cmd, nodeCommand, condition string) string {
 		"if (",
 		"%s",
 		"); then",
-		"echo 'update skipped: node is already in the desired state'",
+		"echo 'skipped: node is already in the desired state'",
 		"else",
 		"%s",
 		"fi",

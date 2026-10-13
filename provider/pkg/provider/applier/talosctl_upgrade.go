@@ -62,8 +62,10 @@ func (a *Applier) upgrade(m *types.MachineInfo, role tmachine.Type, deps []pulum
 			"ETCD_MEMBER_TARGET": pulumi.String(fmt.Sprint(etcdMemberTarget)),
 			"TALOS_TARGET_IMAGE": m.TalosImage,
 		},
+		// Same triggers as 0.4.1: dropping them would replace the command on the first run after the bump.
+		Triggers:       pulumi.Array{m.TalosImage},
 		UpdateOnChange: true,
-		UpdateSkipIf:   upgradeSkipIfNodeRunsTargetImage,
+		SkipIf:         upgradeSkipIfNodeRunsTargetImage,
 	}, opts...)
 }
 

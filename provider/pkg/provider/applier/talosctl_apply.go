@@ -120,11 +120,13 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 		AdditionalFiles: []talosctl.ExtraFile{
 			{Name: machineConfigName, Content: machineFile},
 		},
-		CommandArgs:    pulumi.Sprintf("apply-config -f %s", machineConfigName),
-		Dir:            generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
+		CommandArgs: pulumi.Sprintf("apply-config -f %s", machineConfigName),
+		Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
+		// Same triggers as 0.4.1: dropping them would replace the command on the first run after the bump.
+		Triggers:       pulumi.Array{m.UserConfigPatches, m.ClusterEnpoint},
 		UpdateOnChange: true,
 		// Re-runs are no-ops when the node already has this configuration.
-		UpdateSkipIf: fmt.Sprintf("talosctl_node apply-config --dry-run -f %s 2>&1 | grep -q 'No changes'", machineConfigName),
+		SkipIf: fmt.Sprintf("talosctl_node apply-config --dry-run -f %s 2>&1 | grep -q 'No changes'", machineConfigName),
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: timeoutShort, Update: timeoutShort}),

@@ -37,7 +37,7 @@ func TestWithSkipIfRunsCommandOnlyWhenConditionFails(t *testing.T) {
 		condition string
 		expected  string
 	}{
-		{condition: "talosctl_node is-current", expected: "update skipped"},
+		{condition: "talosctl_node is-current", expected: "skipped: node"},
 		{condition: "exit 1", expected: "ran"},
 	} {
 		script := withSkipIf("echo ran", "echo", tc.condition)
