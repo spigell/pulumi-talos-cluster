@@ -32,7 +32,7 @@
   3) Update Python requirements: set `pulumi==<version>` in `integration-tests/pyproject.toml` and Python test programs (e.g., `integration-tests/testdata/programs/hcloud-ha-py/requirements.txt`).
   4) Update `.pulumi.version` to the same version you just bumped.
   5) Tidy modules/checksums after bumps: `go mod tidy` in `provider/` and `integration-tests/`, then `go work sync` at repo root to refresh `go.sum`/`go.work.sum`. If stale Pulumi versions linger in `go.work.sum`, delete the file and run `go list -m all` (then `go work sync`) to regenerate it.
-  6) After version bumps, regenerate SDKs with `make generate_schema && make generate && make build` (requires `pulumictl` and `pulumi` on PATH).
+  6) After version bumps, set an explicit release `VERSION` and run `make generate_schema && make generate && make build` in the worker checkout (requires a local Pulumi CLI, but not `pulumictl`).
 - Pulumi/command provider:
   1) pulumi/command should be pinned across schema generation and provider usage; regenerate SDKs via the standard schema/generate/build pipeline when upgrading.
 - Talos SDK:
@@ -40,6 +40,12 @@
   2) Update `TALOSCTL_VERSION` in both `.github/workflows/all-integration-tests-talosctl.yaml` and `.github/workflows/reuse-run-integration-tests.yaml`.
   3) Packer: when upgrading Talos, bump versions in `integration-tests/packer/hcloud-talos.pkr.hcl`.
   4) When upgrading Pulumi, update `.pulumi.version` as well as the Go, Node.js, and Python dependencies listed above so local and GitHub runners use the same CLI version.
+
+## Release preparation
+
+- Follow README's "Preparing for release" procedure in the worker checkout. Use `VERSION=vX.Y.Z` to keep the provider and SDK package versions aligned; check `sdk/nodejs/bin/package.json` and the provider binary before committing.
+- Install a Pulumi CLI matching `.pulumi.version` into the worker's toolchain if it is absent. The worker also needs Go, Node.js/Yarn, .NET, Python 3, and Make for the full build.
+- The `pulumi-deployer` MCP can answer Pulumi CLI questions (and `pulumictl` questions once allowlisted), but its working directory is separate from this repository. Run all generation, builds, and artifact checks locally; the `pulumi-talos-cluster-mcp` runner is not needed for release preparation.
 
 ## Testing Guidelines
 - **Framework**: The testing framework uses Go's standard `testing` package with `stretchr/testify` helpers. The integration tests, located in `integration-tests/`, are written in Go and orchestrate deployments of Pulumi programs written in various languages (Go, Python, Node.js).
@@ -182,7 +188,7 @@ flowchart TD
 
 ## MCP Shell Server & Tooling
 
-This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) with the `shell_exec` tool for performing safe, remote operations within the workspace. The server is configured in `.mcp.json` at the repository root.
+When available, the specialized `pulumi-talos-cluster-mcp` server supports scoped integration tests and Talos debugging. It is configured in `.mcp.json` at the repository root. It may not be registered in reforge; release preparation uses the local worker checkout as described above.
 
 **Configuration:**
 - **Tool:** `shell_exec` (session tool name: `mcp__pulumi-talos-cluster-mcp__shell_exec`)
@@ -197,11 +203,9 @@ This environment provides a specialized MCP server (`pulumi-talos-cluster-mcp`) 
 
 **Capabilities & Workflows:**
 
-1.  **Build & Test:**
-    - **Provider Build:** `["make", "build_provider"]`
-    - **Full SDK regen/install pipeline**: run `make generate_schema`, `make generate`, `make build`, then install the SDK as needed (e.g., `make install_nodejs_sdk`).
+1.  **Integration Tests:**
     - **Unit Tests:** `["make", "unit_tests"]`
-    - **Integration Tests:** Run via make targets. Only scoped mode is allowed.
+    - Run end-to-end tests via make targets. Only scoped mode is allowed.
       - Scoped: `["make", "-C", "integration-tests", "integration_tests_go", "TEST=<TestName>"]`.
     - There are a skill called pulumi-integration-tests-runner with additional context. You should ask to enable it if you think should use the skill.
 

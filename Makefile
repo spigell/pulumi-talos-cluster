@@ -1,6 +1,22 @@
 SHELL := bash
 
-VERSION         ?= $(shell pulumictl get version)
+# An explicit release version must not be replaced by a language-specific
+# pulumictl value (which may include +dirty while the tree is being rebuilt).
+ifeq ($(origin VERSION), undefined)
+VERSION         := $(shell pulumictl get version)
+DOTNET_VERSION  := $(shell pulumictl get version --language dotnet)
+NODEJS_VERSION  := $(shell pulumictl get version --language javascript)
+PYPI_VERSION    := $(shell pulumictl get version --language python)
+else
+SDK_VERSION     := $(patsubst v%,%,$(VERSION))
+DOTNET_VERSION  := $(SDK_VERSION)
+NODEJS_VERSION  := v$(SDK_VERSION)
+PYPI_VERSION    = $(shell python3 scripts/python-version.py '$(SDK_VERSION)')
+endif
+
+ifeq ($(strip $(VERSION)),)
+$(error VERSION must not be empty)
+endif
 
 PACK            := talos-cluster
 PROJECT         := github.com/spigell/pulumi-${PACK}
@@ -64,7 +80,6 @@ gen_dotnet_sdk::
 	# Pulumi's generator references logo.png even though this package has no icon.
 	sed -i '/<PackageIcon>logo.png<\/PackageIcon>/d; /<None Include="logo.png">/,/<\/None>/d' sdk/dotnet/Pulumi.TalosCluster.csproj
 
-build_dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl get version --language dotnet)
 build_dotnet_sdk:: gen_dotnet_sdk
 	cd sdk/dotnet/ && \
 		echo "${DOTNET_VERSION}" >version.txt && \
@@ -82,14 +97,14 @@ gen_nodejs_sdk::
 	rm -rf sdk/nodejs
 	pulumi package gen-sdk ${SCHEMA_PATH} --language nodejs
 
-build_nodejs_sdk:: VERSION := $(shell pulumictl get version --language javascript)
 build_nodejs_sdk:: gen_nodejs_sdk
 	cd sdk/nodejs/ && \
 		yarn install && \
 		yarn run tsc --version && \
 		yarn run tsc && \
 		cp ${WORKING_DIR}/README.md package.json yarn.lock ./bin/ && \
-		sed -i -e "s/\$${VERSION}/$(VERSION)/g" ./bin/package.json
+		sed -i -e "s/\$${VERSION}/$(NODEJS_VERSION)/g" ./bin/package.json && \
+		node -e 'const actual = require("./bin/package.json").version; const expected = process.argv[1]; if (actual.includes("+dirty") || actual !== expected) { console.error("Node SDK version " + actual + " does not match " + expected + " or is dirty"); process.exit(1); }' '$(NODEJS_VERSION)'
 
 install_nodejs_sdk:: build_nodejs_sdk link_nodejs_sdk
 
@@ -105,9 +120,11 @@ gen_python_sdk::
 	pulumi package gen-sdk ${SCHEMA_PATH} --language python
 	cp ${WORKING_DIR}/README.md sdk/python
 
-build_python_sdk:: PYPI_VERSION := $(shell pulumictl get version --language python)
 build_python_sdk:: gen_python_sdk
 	cd sdk/python/ && \
+		test -n "$(PYPI_VERSION)" && \
+		sed -i -E 's/^  version = "[^"]*"/  version = "$(PYPI_VERSION)"/' pyproject.toml && \
+		grep -Fx '  version = "$(PYPI_VERSION)"' pyproject.toml && \
 		echo "module fake_python_module // Exclude this directory from Go tools\n\ngo 1.17" > go.mod && \
 		cp ../../README.md . && \
 		rm -rf ./bin/ ../python.bin/ && cp -R . ../python.bin && mv ../python.bin ./bin && \

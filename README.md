@@ -82,16 +82,32 @@ $ export PATH=$PATH:~/go/bin
 ```
 
 ### Preparing for release
-To build the provider and all SDKs (Go, Node.js, Python, and .NET) in one step, set the desired version explicitly (for example, `v0.7.0`):
+Run these commands in the release branch's local checkout. The worker needs Go, a Pulumi CLI matching `.pulumi.version`, Node.js and Yarn, .NET, Python 3 with `venv`, and Make on its `PATH`. On Linux x86_64, install a missing Pulumi CLI outside the checkout with:
 
 ```bash
-VERSION=v0.7.0 make build
-git add .
-git commit -m 'regenerate'
-VERSION=v0.7.0 make build
-git add .
-git commit -m 'release'
+PULUMI_TOOLS=$(mktemp -d)
+curl -fsSL "https://get.pulumi.com/releases/sdk/pulumi-v$(cat .pulumi.version)-linux-x64.tar.gz" -o "$PULUMI_TOOLS/pulumi.tar.gz"
+tar -xzf "$PULUMI_TOOLS/pulumi.tar.gz" -C "$PULUMI_TOOLS"
+export PATH="$PULUMI_TOOLS/pulumi:$PATH"
 ```
+
+The `pulumi-deployer` MCP may report its Pulumi or `pulumictl` version, but its working directory is separate from this checkout; it cannot write the SDKs here. An explicit `VERSION` makes `pulumictl` unnecessary for the build.
+
+```bash
+export VERSION=v0.5.1 # Replace with the intended release tag.
+make generate_schema
+make generate # Includes the Go SDK.
+make build    # Builds the provider, .NET, Node.js, and Python SDKs.
+
+node -e 'const v = require("./sdk/nodejs/bin/package.json").version; if (v !== process.env.VERSION || v.includes("+dirty")) process.exit(1)'
+test "$(cat sdk/dotnet/version.txt)" = "${VERSION#v}"
+grep -Fx "  version = \"$(python3 scripts/python-version.py "${VERSION#v}")\"" sdk/python/pyproject.toml
+go version -m bin/pulumi-resource-talos-cluster | grep -F "version.Version=$VERSION"
+git diff --check
+git status --short
+```
+
+Confirm that the provider binary records the requested `VERSION`, then review the generated diff before the release worker commits it. Go SDK consumers take their version from the Go module tag. When `VERSION` is unset, the Makefile retains the automatic `pulumictl` version lookup used by CI.
 
 ## Example
 Refer to the `integration-tests/testdata` directory for sample Pulumi programs using the `pulumi-talos-cluster` component.
