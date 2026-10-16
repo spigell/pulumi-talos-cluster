@@ -19,9 +19,8 @@ jobs:
       id-token: write
     with:
       package-directory: 'sdk/nodejs/bin'
-      build-command: >-
-        VERSION=$(node -p 'require(process.env.GITHUB_EVENT_PATH).inputs?.tag ||
-        process.env.GITHUB_REF_NAME') make build_nodejs_sdk
+      build-command: make build_nodejs_sdk
       ref: ${{ inputs.tag || github.ref_name }}
+      version: ${{ inputs.tag || github.ref_name }}
       setup-action: setup-pulumi-env
       trusted-publishing: true
