@@ -107,7 +107,7 @@ git diff --check
 git status --short
 ```
 
-Confirm that the provider binary records the requested `VERSION`, then review the generated diff before the release worker commits it. Go SDK consumers take their version from the Go module tag. When `VERSION` is unset, the Makefile retains the automatic `pulumictl` version lookup used by CI.
+Confirm that the provider binary records the requested `VERSION`, then review the generated diff before the release worker commits it. Go SDK consumers take their version from the Go module tag. When `VERSION` is unset, Make uses `pulumictl` if available; the provider-only CI build also works without it, with an empty embedded version.
 
 ## Example
 Refer to the `integration-tests/testdata` directory for sample Pulumi programs using the `pulumi-talos-cluster` component.

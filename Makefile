@@ -3,19 +3,18 @@ SHELL := bash
 # An explicit release version must not be replaced by a language-specific
 # pulumictl value (which may include +dirty while the tree is being rebuilt).
 ifeq ($(origin VERSION), undefined)
-VERSION         := $(shell pulumictl get version)
-DOTNET_VERSION  := $(shell pulumictl get version --language dotnet)
-NODEJS_VERSION  := $(shell pulumictl get version --language javascript)
-PYPI_VERSION    := $(shell pulumictl get version --language python)
+VERSION         := $(shell command -v pulumictl >/dev/null 2>&1 && pulumictl get version)
+DOTNET_VERSION  = $(shell pulumictl get version --language dotnet)
+NODEJS_VERSION  = $(shell pulumictl get version --language javascript)
+PYPI_VERSION    = $(shell pulumictl get version --language python)
 else
+ifeq ($(strip $(VERSION)),)
+$(error explicit VERSION must not be empty)
+endif
 SDK_VERSION     := $(patsubst v%,%,$(VERSION))
 DOTNET_VERSION  := $(SDK_VERSION)
 NODEJS_VERSION  := v$(SDK_VERSION)
 PYPI_VERSION    = $(shell python3 scripts/python-version.py '$(SDK_VERSION)')
-endif
-
-ifeq ($(strip $(VERSION)),)
-$(error VERSION must not be empty)
 endif
 
 PACK            := talos-cluster
