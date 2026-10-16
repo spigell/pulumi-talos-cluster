@@ -4,14 +4,21 @@ package main
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
 	"strings"
 	"sync"
 	"syscall"
+	"time"
+
+	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
 func main() {
@@ -24,6 +31,27 @@ func main() {
 	)
 	flag.Var(&varList, "var", "Extra -var key=value (repeatable). Example: -var talos_version=v1.10.3")
 	flag.Parse()
+
+	version, err := packerVariable(*template, "talos_version", varList)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	schematic, err := packerVariable(*template, "talos_schematic_id", varList)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	if len(schematic) != 64 {
+		fmt.Fprintln(os.Stderr, "talos_schematic_id must be 64 characters")
+		os.Exit(1)
+	}
+	token := os.Getenv("HCLOUD_TOKEN")
+	if token == "" {
+		fmt.Fprintln(os.Stderr, "HCLOUD_TOKEN is required")
+		os.Exit(1)
+	}
+	hcloudClient := &http.Client{Timeout: 30 * time.Second}
 
 	variants := []string{
 		"hcloud-amd64",
@@ -63,6 +91,27 @@ func main() {
 			if *timeout > 0 {
 				runCtx, cancelBuild = context.WithTimeout(ctx, *timeout)
 				defer cancelBuild()
+			}
+			arch := "x86"
+			if strings.HasSuffix(v, "arm64") {
+				arch = "arm"
+			}
+			variant := "cloud"
+			if strings.HasPrefix(v, "metal-") {
+				variant = "metal"
+			}
+			selector := fmt.Sprintf("os=talos,version=%s,arch=%s,variant=%s,schematic=%s,schematic_suffix=%s", version, arch, variant, schematic[:32], schematic[32:])
+			exists, err := snapshotExists(runCtx, hcloudClient, token, selector)
+			if err != nil {
+				errCh <- fmt.Errorf("[%s] check snapshot: %w", v, err)
+				if *failFast {
+					cancel()
+				}
+				return
+			}
+			if exists {
+				fmt.Printf("[%s] matching snapshot exists; skipping build\n", v)
+				return
 			}
 
 			args := []string{"build", "-var", "target=" + v}
@@ -118,6 +167,67 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("All builds finished successfully.")
+}
+
+func packerVariable(template, name string, overrides []string) (string, error) {
+	for i := len(overrides) - 1; i >= 0; i-- {
+		key, value, _ := strings.Cut(overrides[i], "=")
+		if key == name {
+			return value, nil
+		}
+	}
+	file, diags := hclparse.NewParser().ParseHCLFile(template)
+	if diags.HasErrors() {
+		return "", fmt.Errorf("parse %s: %s", template, diags.Error())
+	}
+	body, ok := file.Body.(*hclsyntax.Body)
+	if !ok {
+		return "", fmt.Errorf("unexpected Packer template body in %s", template)
+	}
+	for _, block := range body.Blocks {
+		if block.Type != "variable" || len(block.Labels) != 1 || block.Labels[0] != name {
+			continue
+		}
+		attribute, ok := block.Body.Attributes["default"]
+		if !ok {
+			break
+		}
+		value, diags := attribute.Expr.Value(nil)
+		if diags.HasErrors() || !value.IsKnown() || value.IsNull() || value.Type().FriendlyName() != "string" {
+			return "", fmt.Errorf("invalid default for %s", name)
+		}
+		return value.AsString(), nil
+	}
+	return "", fmt.Errorf("missing default for %s in %s", name, template)
+}
+
+func snapshotExists(ctx context.Context, client *http.Client, token, selector string) (bool, error) {
+	endpoint := "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=1&label_selector=" + url.QueryEscape(selector)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return false, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("Hetzner image lookup returned HTTP %d", resp.StatusCode)
+	}
+	var result struct {
+		Images *[]struct {
+			ID int `json:"id"`
+		} `json:"images"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, fmt.Errorf("decode Hetzner images: %w", err)
+	}
+	if result.Images == nil {
+		return false, fmt.Errorf("Hetzner image lookup omitted images")
+	}
+	return len(*result.Images) > 0, nil
 }
 
 type multiVar []string

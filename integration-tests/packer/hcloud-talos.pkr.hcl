@@ -60,11 +60,14 @@ source "hcloud" "talos" {
 
   snapshot_name = "Talos Linux ${var.talos_version} ${local.variant} ${local.arch} (schemaID: ${var.talos_schematic_id}) ${formatdate("YYYYMMDDhhmmss", timestamp())}"
   snapshot_labels = {
-    os      = "talos"
-    version = var.talos_version
-    arch    = local.arch
-    variant = local.variant
-    creator = "pulumi-talos-cluster"
+    os               = "talos"
+    version          = var.talos_version
+    arch             = local.arch
+    variant          = local.variant
+    # Hetzner label values are limited to 63 characters; schematic IDs have 64.
+    schematic        = substr(var.talos_schematic_id, 0, 32)
+    schematic_suffix = substr(var.talos_schematic_id, 32, 32)
+    creator          = "pulumi-talos-cluster"
   }
 }
 

@@ -2,6 +2,7 @@ name: Build hcloud Image with Packer and Talos
 
 on:
   push:
+    branches: [main]
     paths:
       - integration-tests/packer/run-packer.go
       - integration-tests/packer/hcloud-talos.pkr.hcl

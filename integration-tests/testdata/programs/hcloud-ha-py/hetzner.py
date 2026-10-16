@@ -71,7 +71,7 @@ def hetzner(cluster: Any) -> List[Dict[str, pulumi.Output]]:
         talos_version = _talos_version(machine, cluster)
         selector = f"os=talos,version={talos_version},variant={machine_variant},arch={server_arch}"
 
-        image = get_image_output(with_selector=selector, with_architecture=server_arch)
+        image = get_image_output(with_selector=selector, with_architecture=server_arch, most_recent=True)
 
         server_args: Dict[str, Any] = {
             "name": machine.id,
