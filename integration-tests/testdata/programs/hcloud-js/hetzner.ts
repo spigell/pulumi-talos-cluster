@@ -49,6 +49,7 @@ export function Hetzner(cluster: Cluster): DeployedServer[] {
     const image = hcloud.getImage({
       withSelector: selector,
       withArchitecture: serverArch,
+      mostRecent: true,
     });
 
     if (!machine.privateIP) {
