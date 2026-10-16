@@ -1,5 +1,6 @@
 {
     "name": "talos-cluster",
+    "version": "0.5.1",
     "description": "Create and manage Talos kubernetes cluster",
     "keywords": [
         "pulumi",

@@ -31,7 +31,7 @@ unit_tests:: generate_schema
 # Provider
 
 generate_schema::
-	cd provider/cmd/$(CODEGEN) && go run . schema ../$(PROVIDER)
+	cd provider/cmd/$(CODEGEN) && VERSION=${VERSION} go run . schema ../$(PROVIDER)
 	cd provider/cmd/${PROVIDER} && VERSION=${VERSION} SCHEMA=${SCHEMA_PATH} go generate main.go
 
 build_provider:: generate_schema
@@ -64,7 +64,7 @@ gen_dotnet_sdk::
 	# Pulumi's generator references logo.png even though this package has no icon.
 	sed -i '/<PackageIcon>logo.png<\/PackageIcon>/d; /<None Include="logo.png">/,/<\/None>/d' sdk/dotnet/Pulumi.TalosCluster.csproj
 
-build_dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl get version --language dotnet)
+build_dotnet_sdk:: DOTNET_VERSION := $(shell pulumictl convert-version --version $(VERSION) --language dotnet)
 build_dotnet_sdk:: gen_dotnet_sdk
 	cd sdk/dotnet/ && \
 		echo "${DOTNET_VERSION}" >version.txt && \
@@ -82,7 +82,7 @@ gen_nodejs_sdk::
 	rm -rf sdk/nodejs
 	pulumi package gen-sdk ${SCHEMA_PATH} --language nodejs
 
-build_nodejs_sdk:: VERSION := $(shell pulumictl get version --language javascript)
+build_nodejs_sdk:: VERSION := $(shell pulumictl convert-version --version $(VERSION) --language javascript)
 build_nodejs_sdk:: gen_nodejs_sdk
 	cd sdk/nodejs/ && \
 		yarn install && \
@@ -105,9 +105,10 @@ gen_python_sdk::
 	pulumi package gen-sdk ${SCHEMA_PATH} --language python
 	cp ${WORKING_DIR}/README.md sdk/python
 
-build_python_sdk:: PYPI_VERSION := $(shell pulumictl get version --language python)
+build_python_sdk:: PYPI_VERSION := $(shell pulumictl convert-version --version $(VERSION) --language python)
 build_python_sdk:: gen_python_sdk
 	cd sdk/python/ && \
+		sed -i -e 's/version = "0.0.0"/version = "${PYPI_VERSION}"/' pyproject.toml && \
 		echo "module fake_python_module // Exclude this directory from Go tools\n\ngo 1.17" > go.mod && \
 		cp ../../README.md . && \
 		rm -rf ./bin/ ../python.bin/ && cp -R . ../python.bin && mv ../python.bin ./bin && \
