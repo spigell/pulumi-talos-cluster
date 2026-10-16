@@ -8,10 +8,11 @@ on:
 jobs:
   sdk-nodejs-release:
     uses: spigell/my-shared-workflows/.github/workflows/nodejs-package-release.yaml@main
+    permissions:
+      contents: read
+      id-token: write
     with:
       package-directory: 'sdk/nodejs/bin'
       build-command: make build_nodejs_sdk
       setup-action: setup-pulumi-env
-      staged: true
-    secrets:
-      token: ${{ secrets.NPM_TOKEN }}
+      trusted-publishing: true
