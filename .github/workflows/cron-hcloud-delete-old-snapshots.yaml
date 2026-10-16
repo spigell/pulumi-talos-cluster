@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         arch: ['arm', 'x86']
-        variant: ['hcloud', 'metal']
+        variant: ['cloud', 'metal']
       fail-fast: false
     env:
       MAX_SNAPSHOTS: 1 # Max count for every arch

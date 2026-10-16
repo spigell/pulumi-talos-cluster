@@ -14,7 +14,7 @@ variable "talos_version" {
 }
 
 variable "talos_schematic_id" {
-  type    = string
+  type = string
   # With cloudflared extension
   default = "09dbcadc567d93b02a1610c70d651fadbe56aeac3aaca36bc488a38f3fffe99d"
   # The default one
@@ -31,7 +31,7 @@ variable "target" {
 locals {
   image_url = "https://factory.talos.dev/image/${var.talos_schematic_id}/${var.talos_version}/${var.target}.raw.xz"
 
-  arch    = length(regexall("arm", var.target))   > 0 ? "arm"   : "x86"
+  arch    = length(regexall("arm", var.target)) > 0 ? "arm" : "x86"
   variant = length(regexall("metal", var.target)) > 0 ? "metal" : "cloud"
 
   # Add local variables for inline shell commands
@@ -58,7 +58,7 @@ source "hcloud" "talos" {
   location     = local.arch == "arm" ? "hel1" : "fsn1"
   ssh_username = "root"
 
-  snapshot_name   = "Talos Linux ${var.talos_version} ${local.variant} ${local.arch} (schemaID: ${var.talos_schematic_id})"
+  snapshot_name = "Talos Linux ${var.talos_version} ${local.variant} ${local.arch} (schemaID: ${var.talos_schematic_id}) ${formatdate("YYYYMMDDhhmmss", timestamp())}"
   snapshot_labels = {
     os      = "talos"
     version = var.talos_version
