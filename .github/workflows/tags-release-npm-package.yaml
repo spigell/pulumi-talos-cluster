@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to publish (for example, v0.5.1)
+        required: true
+        type: string
 
 jobs:
   sdk-nodejs-release:
@@ -14,5 +20,7 @@ jobs:
     with:
       package-directory: 'sdk/nodejs/bin'
       build-command: make build_nodejs_sdk
+      ref: ${{ inputs.tag || github.ref_name }}
+      version: ${{ inputs.tag || github.ref_name }}
       setup-action: setup-pulumi-env
       trusted-publishing: true
