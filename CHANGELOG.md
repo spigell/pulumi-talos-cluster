@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.5.1 - 2026-10-16
 
 ### Fixed
 
+- 0.5.0 npm package requested plugin version 0.5.0+dirty; use 0.5.1.
 - `talosctl upgrade` now uses the machine's `talosImage`. Before, it read the install image from a stale generated configuration, so image changes never reached the nodes. The secure `apply-config` also sets `machine.install.image` to `talosImage`, and it no longer merges the config patches a second time, which duplicated list entries.
 - Extension documents (`apiVersion`/`kind`) in config patches are passed to `talosctl gen config` as a separate patch, so they are kept.
 

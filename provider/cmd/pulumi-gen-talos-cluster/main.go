@@ -44,6 +44,7 @@ func generateSchema() schema.PackageSpec {
 
 	return schema.PackageSpec{
 		Name:              provider.ProviderName,
+		Version:           strings.TrimPrefix(os.Getenv("VERSION"), "v"),
 		Description:       "Create and manage Talos kubernetes cluster",
 		License:           "Apache-2.0",
 		Keywords:          []string{"pulumi", "talos", "category/infrastructure", "kind/component", "kubernetes"},

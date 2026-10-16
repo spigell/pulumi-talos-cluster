@@ -46,7 +46,7 @@ unit_tests:: generate_schema
 # Provider
 
 generate_schema::
-	cd provider/cmd/$(CODEGEN) && go run . schema ../$(PROVIDER)
+	cd provider/cmd/$(CODEGEN) && VERSION=${VERSION} go run . schema ../$(PROVIDER)
 	cd provider/cmd/${PROVIDER} && VERSION=${VERSION} SCHEMA=${SCHEMA_PATH} go generate main.go
 
 build_provider:: generate_schema
