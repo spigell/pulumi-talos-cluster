@@ -82,7 +82,7 @@ gen_nodejs_sdk::
 	rm -rf sdk/nodejs
 	pulumi package gen-sdk ${SCHEMA_PATH} --language nodejs
 
-build_nodejs_sdk:: VERSION := $(shell pulumictl convert-version --version $(VERSION) --language javascript)
+build_nodejs_sdk:: VERSION := $(patsubst v%,%,$(shell pulumictl convert-version --version $(VERSION) --language javascript))
 build_nodejs_sdk:: gen_nodejs_sdk
 	cd sdk/nodejs/ && \
 		yarn install && \
