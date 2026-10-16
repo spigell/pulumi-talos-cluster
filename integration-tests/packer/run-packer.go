@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
+//nolint:gocognit,funlen // Coordinates concurrent builds, cancellation, and per-variant snapshot checks.
 func main() {
 	var (
 		template    = flag.String("template", "hcloud.pkr.hcl", "Path to Packer template")
@@ -214,7 +215,7 @@ func snapshotExists(ctx context.Context, client *http.Client, token, selector st
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("Hetzner image lookup returned HTTP %d", resp.StatusCode)
+		return false, fmt.Errorf("hetzner image lookup returned HTTP %d", resp.StatusCode)
 	}
 	var result struct {
 		Images *[]struct {
@@ -225,7 +226,7 @@ func snapshotExists(ctx context.Context, client *http.Client, token, selector st
 		return false, fmt.Errorf("decode Hetzner images: %w", err)
 	}
 	if result.Images == nil {
-		return false, fmt.Errorf("Hetzner image lookup omitted images")
+		return false, fmt.Errorf("hetzner image lookup omitted images")
 	}
 	return len(*result.Images) > 0, nil
 }
