@@ -16,7 +16,12 @@ func generatedConfig(t *testing.T, patches ...string) string {
 	contract, err := config.ParseContractFromVersion("v1.14.2")
 	require.NoError(t, err)
 
-	in, err := generate.NewInput("test", "https://10.0.0.1:6443", "1.32.0", generate.WithVersionContract(contract))
+	// Like `talosctl gen config`, whose default install disk makes it add the UnattendedInstallConfig document.
+	in, err := generate.NewInput("test", "https://10.0.0.1:6443", "1.32.0",
+		generate.WithVersionContract(contract),
+		generate.WithInstallDisk("/dev/sda"),
+		generate.WithInstallImage("ghcr.io/siderolabs/installer:v1.14.2"),
+	)
 	require.NoError(t, err)
 
 	cfg, err := in.Config(machine.TypeWorker)
@@ -58,4 +63,16 @@ func TestValidateMachineConfig(t *testing.T) {
 	t.Run("empty output is skipped", func(t *testing.T) {
 		require.NoError(t, validateMachineConfig("worker-1", ""))
 	})
+}
+
+func TestBuildSecureApplyConfigWithV114Contract(t *testing.T) {
+	const image = "factory.talos.dev/installer/abc:v1.14.2"
+
+	out, err := buildSecureApplyConfig(generatedConfig(t), image, &K8SImages{})
+	require.NoError(t, err)
+	require.NoError(t, validateMachineConfig("worker-1", out), "the node would reject this config")
+
+	require.Contains(t, out, "kind: UnattendedInstallConfig")
+	require.Contains(t, out, "image: "+image)
+	require.NotContains(t, out, "\n    install:", "machine.install conflicts with UnattendedInstallConfig")
 }

@@ -2,6 +2,7 @@ package applier
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/siderolabs/talos/pkg/machinery/config/machine"
@@ -138,6 +139,72 @@ func (a *Applier) apply(m *types.MachineInfo, deps []pulumi.Resource) (pulumi.Re
 }
 
 func buildSecureApplyConfig(machineConfig, talosImage string, oldK8SImages *K8SImages) (string, error) {
+	// Configs generated with the v1.14 contract keep the install settings in an UnattendedInstallConfig
+	// document, and Talos rejects machine.install next to it, so the image goes into that document.
+	if hasDocumentKind(machineConfig, unattendedInstallConfigKind) {
+		patched, err := setUnattendedInstallImage(machineConfig, talosImage)
+		if err != nil {
+			return "", err
+		}
+
+		return MergeYAML(patched, "").WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
+	}
+
 	installImagePatch := fmt.Sprintf("machine:\n  install:\n    image: %s\n", talosImage)
 	return MergeYAML(machineConfig, installImagePatch).WithGuard(GuardUnmodifyK8sImages(oldK8SImages)).Build()
+}
+
+const unattendedInstallConfigKind = "UnattendedInstallConfig"
+
+// setUnattendedInstallImage sets installer.image of the UnattendedInstallConfig document and keeps the other
+// documents as they are. The Talos config patcher is not used because its merge drops
+// provisioning.diskSelector.match from this document, which makes the config invalid.
+func setUnattendedInstallImage(machineConfig, talosImage string) (string, error) {
+	docs := splitYaml2All(machineConfig)
+	out := make([]string, 0, len(docs))
+
+	for _, doc := range docs {
+		if strings.TrimSpace(doc) == "" {
+			continue
+		}
+
+		var m map[string]any
+		if err := yaml.Unmarshal([]byte(doc), &m); err != nil {
+			return "", fmt.Errorf("parse machine config document: %w", err)
+		}
+
+		if m[yamlKeyKind] == unattendedInstallConfigKind {
+			installer, _ := m["installer"].(map[string]any)
+			if installer == nil {
+				installer = map[string]any{}
+			}
+			installer[yamlPathImage] = talosImage
+			m["installer"] = installer
+
+			raw, err := yaml.Marshal(m)
+			if err != nil {
+				return "", fmt.Errorf("encode %s document: %w", unattendedInstallConfigKind, err)
+			}
+			doc = string(raw)
+		}
+
+		out = append(out, strings.TrimRight(doc, "\n"))
+	}
+
+	return strings.Join(out, "\n---\n") + "\n", nil
+}
+
+// hasDocumentKind reports whether a multi-document machine config contains a document of the given kind.
+func hasDocumentKind(machineConfig, kind string) bool {
+	for _, doc := range splitYaml2All(machineConfig) {
+		var m map[string]any
+		if err := yaml.Unmarshal([]byte(doc), &m); err != nil {
+			continue
+		}
+		if m[yamlKeyKind] == kind {
+			return true
+		}
+	}
+
+	return false
 }
