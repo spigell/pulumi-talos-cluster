@@ -21,15 +21,14 @@ func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Reso
 			{Name: machineConfigName, Content: m.Configuration},
 		},
 		// talosctl 1.14 dropped the reboot mode; auto installs and reboots a node in maintenance mode.
-		CommandArgs: pulumi.Sprintf("apply-config -f %s --mode auto", machineConfigName),
-		Dir:         generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
-		// A freshly created server can take a few minutes before the Talos API listens (about 10s per try).
-		RetryCount:       17,
+		CommandArgs:      pulumi.Sprintf("apply-config -f %s --mode auto", machineConfigName),
+		Dir:              generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
+		RetryCount:       2,
 		TryInsecureFirst: true,
 	}, []pulumi.ResourceOption{
 		a.parent,
 		pulumi.IgnoreChanges([]string{ignoreCreateChange}),
-		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: "10m", Update: timeoutShort}),
+		pulumi.Timeouts(&pulumi.CustomTimeouts{Create: timeoutShort, Update: timeoutShort}),
 		pulumi.DependsOn(deps),
 	}...)
 	if err != nil {
