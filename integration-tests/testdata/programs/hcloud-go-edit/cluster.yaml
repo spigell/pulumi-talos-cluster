@@ -4,12 +4,15 @@ anchors:
     machineBase: &machineBase |
       debug: false
       machine:
-        kubelet:
-          nodeIP:
-            validSubnets:
-              - 10.10.10.0/24
         time:
           disabled: true
+    # Talos v1.14 contract: kubelet node settings live in the KubeNodeConfig document.
+    nodeConfig: &nodeConfig |
+      apiVersion: v1alpha1
+      kind: KubeNodeConfig
+      nodeIP:
+        validSubnets:
+          - 10.10.10.0/24
     controlplaneCluster: &controlplaneCluster |
       cluster:
         etcd:
@@ -27,17 +30,23 @@ anchors:
         - TUNNEL_TOKEN=CHANGE_ME_AGAIN
         - TUNNEL_METRICS=localhost:2001
         - TUNNEL_EDGE_IP_VERSION=auto
-    nodeLabels: &nodeLabels |
-      machine:
-        nodeLabels:
-          integration-test/edited: "true"
+    nodeConfigLabeled: &nodeConfigLabeled |
+      apiVersion: v1alpha1
+      kind: KubeNodeConfig
+      nodeIP:
+        validSubnets:
+          - 10.10.10.0/24
+      labels:
+        integration-test/edited: "true"
     controlplane: &controlplanePatches
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - *timeEnabled
       - *cloudflared
     worker: &workerPatches
       - *machineBase
+      - *nodeConfig
       - *timeEnabled
       - *cloudflared
   machineDefaults: &machineDefaults
@@ -68,9 +77,9 @@ machines:
     # Config change: one more patch on an existing node.
     configPatches:
       - *machineBase
+      - *nodeConfigLabeled
       - *timeEnabled
       - *cloudflared
-      - *nodeLabels
   # New node.
   - <<: *machineDefaults
     id: hcloud-go-worker-2

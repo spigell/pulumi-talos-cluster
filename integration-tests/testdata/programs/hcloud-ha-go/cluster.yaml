@@ -3,12 +3,15 @@ anchors:
     machineBase: &machineBase |
       debug: false
       machine:
-        kubelet:
-          nodeIP:
-            validSubnets:
-              - 10.10.10.0/24
         time:
           disabled: true
+    # Talos v1.14 contract: kubelet node settings live in the KubeNodeConfig document.
+    nodeConfig: &nodeConfig |
+      apiVersion: v1alpha1
+      kind: KubeNodeConfig
+      nodeIP:
+        validSubnets:
+          - 10.10.10.0/24
     controlplaneCluster: &controlplaneCluster |
       cluster:
         etcd:
@@ -24,10 +27,12 @@ anchors:
         - TUNNEL_EDGE_IP_VERSION=auto
     controlplane: &controlplanePatches
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - *cloudflared
     worker: &workerPatches
       - *machineBase
+      - *nodeConfig
       - *cloudflared
 
   machineDefaults: &machineDefaults
@@ -49,7 +54,7 @@ anchors:
     configPatches: *workerPatches
 
 name: hcloud-ha-go
-kubernetesVersion: v1.31.0
+kubernetesVersion: v1.32.0
 usePrivateNetwork: true
 privateNetwork: 10.10.10.0/24
 privateSubnetwork: 10.10.10.0/25
@@ -60,6 +65,7 @@ machines:
     privateIP: 10.10.10.5
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - *cloudflared
       - |
@@ -72,6 +78,7 @@ machines:
     privateIP: 10.10.10.2
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - *cloudflared
       - |
@@ -84,6 +91,7 @@ machines:
     privateIP: 10.10.10.10
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - *cloudflared
       - |
@@ -96,6 +104,7 @@ machines:
     privateIP: 10.10.10.3
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *cloudflared
       - |
         apiVersion: v1alpha1

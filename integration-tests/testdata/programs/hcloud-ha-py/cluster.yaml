@@ -3,12 +3,15 @@ anchors:
     machineBase: &machineBase |
       debug: false
       machine:
-        kubelet:
-          nodeIP:
-            validSubnets:
-              - 10.10.10.0/24
         time:
           disabled: true
+    # Talos v1.14 contract: kubelet node settings live in the KubeNodeConfig document.
+    nodeConfig: &nodeConfig |
+      apiVersion: v1alpha1
+      kind: KubeNodeConfig
+      nodeIP:
+        validSubnets:
+          - 10.10.10.0/24
     controlplaneCluster: &controlplaneCluster |
       cluster:
         etcd:
@@ -16,9 +19,11 @@ anchors:
             - 10.10.10.0/24
     controlplane: &controlplanePatches
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
     worker: &workerPatches
       - *machineBase
+      - *nodeConfig
 
   machineDefaults: &machineDefaults
     platform: hcloud
@@ -39,7 +44,7 @@ anchors:
     configPatches: *workerPatches
 
 name: hcloud-ha-py
-kubernetesVersion: v1.31.0
+kubernetesVersion: v1.32.0
 usePrivateNetwork: true
 privateNetwork: 10.10.10.0/24
 privateSubnetwork: 10.10.10.0/25
@@ -50,6 +55,7 @@ machines:
     privateIP: 10.10.10.5
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - |
         apiVersion: v1alpha1
@@ -61,6 +67,7 @@ machines:
     privateIP: 10.10.10.2
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - |
         apiVersion: v1alpha1
@@ -72,6 +79,7 @@ machines:
     privateIP: 10.10.10.10
     configPatches:
       - *machineBase
+      - *nodeConfig
       - *controlplaneCluster
       - |
         apiVersion: v1alpha1
@@ -83,6 +91,7 @@ machines:
     privateIP: 10.10.10.3
     configPatches:
       - *machineBase
+      - *nodeConfig
       - |
         apiVersion: v1alpha1
         kind: HostnameConfig
