@@ -13,6 +13,8 @@
 ### Fixed
 
 - The initial `apply-config` uses `--mode auto`; talosctl 1.14 removed the `reboot` mode.
+- The default `talosImage` is the Image Factory installer without customizations (`factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:<version>`). The previous default, `ghcr.io/siderolabs/installer:<version>`, is no longer published, so nodes could not pull the upgrade image.
+- With the v1.14 contract, the install image is set in the `UnattendedInstallConfig` document instead of `machine.install.image`, which the node rejected next to that document.
 
 ### Removed
 
