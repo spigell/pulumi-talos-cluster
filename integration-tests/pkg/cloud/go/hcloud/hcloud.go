@@ -184,22 +184,20 @@ func newServer(ctx *pulumi.Context, clu *cluster.Cluster, machine *cluster.Machi
 	}
 
 	ipv4, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv4", machine.ID), &hcloud.PrimaryIpArgs{
-		Name:         pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),
-		Location:     pulumi.String(location),
-		Type:         pulumi.String("ipv4"),
-		AssigneeType: pulumi.String("server"),
-		AutoDelete:   pulumi.Bool(false),
+		Name:       pulumi.Sprintf("%s-%s-ipv4", clu.Name, machine.ID),
+		Location:   pulumi.String(location),
+		Type:       pulumi.String("ipv4"),
+		AutoDelete: pulumi.Bool(false),
 	}, pulumi.IgnoreChanges([]string{"location"}))
 	if err != nil {
 		return nil, fmt.Errorf("allocate ipv4 for machine %q: %w", machine.ID, err)
 	}
 
 	ipv6, err := hcloud.NewPrimaryIp(ctx, fmt.Sprintf("%s-ipv6", machine.ID), &hcloud.PrimaryIpArgs{
-		Name:         pulumi.Sprintf("%s-%s-ipv6", clu.Name, machine.ID),
-		Location:     pulumi.String(location),
-		Type:         pulumi.String("ipv6"),
-		AssigneeType: pulumi.String("server"),
-		AutoDelete:   pulumi.Bool(false),
+		Name:       pulumi.Sprintf("%s-%s-ipv6", clu.Name, machine.ID),
+		Location:   pulumi.String(location),
+		Type:       pulumi.String("ipv6"),
+		AutoDelete: pulumi.Bool(false),
 	}, pulumi.IgnoreChanges([]string{"location"}))
 	if err != nil {
 		return nil, fmt.Errorf("allocate ipv6 for machine %q: %w", machine.ID, err)
