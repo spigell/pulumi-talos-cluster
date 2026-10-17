@@ -1,8 +1,6 @@
 package applier
 
 import (
-	"os"
-	"os/exec"
 	"strings"
 	"sync"
 	"testing"
@@ -50,26 +48,11 @@ func plainString(v resource.PropertyValue) string {
 	return v.StringValue()
 }
 
-func plainStrings(v resource.PropertyValue) []string {
-	if v.IsSecret() {
-		v = v.SecretValue().Element
-	}
-	if !v.IsArray() {
-		return nil
-	}
-
-	values := make([]string, 0, len(v.ArrayValue()))
-	for _, item := range v.ArrayValue() {
-		values = append(values, plainString(item))
-	}
-
-	return values
-}
-
-// Stacks created with 0.4.1 store triggers for these commands. pulumi-command replaces a command on any
-// trigger change and a replace runs create, so the first `pulumi up` after the bump must keep the same
-// triggers, and create must be guarded the same way as update in case a replace happens anyway.
-func TestCommandsKeep041TriggersAndGuardCreate(t *testing.T) {
+// The only deployed stack was created from the PR #39 branch build (f946658 + 38c95ab), which stores no
+// triggers and plain create/update commands. pulumi-command replaces a command on any trigger change and a
+// replace re-runs create, so these commands must not send triggers, and create must stay the plain command
+// so that state matches and nothing re-runs unless its inputs really change.
+func TestCommandsUpdateInPlaceWithoutTriggers(t *testing.T) {
 	const (
 		image      = "ghcr.io/siderolabs/installer:v1.12.9"
 		patches    = "machine:\n  network:\n    hostname: worker-1\n"
@@ -117,43 +100,27 @@ func TestCommandsKeep041TriggersAndGuardCreate(t *testing.T) {
 	require.NotNil(t, applyConfig)
 	require.NotNil(t, upgradeK8S)
 
-	require.Equal(t, []string{image}, plainStrings(upgrade["triggers"]))
-	require.Equal(t, []string{patches, endpoint}, plainStrings(applyConfig["triggers"]))
-	require.Equal(t, []string{k8sVersion}, plainStrings(upgradeK8S["triggers"]))
-
-	for name, inputs := range map[string]resource.PropertyMap{"cli-upgrade": upgrade, "cli-apply-config": applyConfig} {
-		create := plainString(inputs["create"])
-		require.Contains(t, create, "talosctl_node()", "%s create must run the skip guard", name)
-		require.Equal(t, create, plainString(inputs["update"]), "%s create and update must match", name)
-	}
-	require.Contains(t, plainString(applyConfig["create"]), "apply-config --dry-run -f machineconfig.yaml")
-
-	// Run the registered create command, as a replace would, against a node that already runs the image
-	// and against one that does not.
-	machineConfig := "spec: |\n    machine:\n        install:\n            image: " + image + "\n"
-	for _, tc := range []struct {
-		name        string
-		runningTag  string
-		wantUpgrade bool
-	}{
-		{name: "node already runs the image", runningTag: "v1.12.9"},
-		{name: "node runs an older image", runningTag: "v1.12.8", wantUpgrade: true},
+	for name, inputs := range map[string]resource.PropertyMap{
+		"cli-upgrade":      upgrade,
+		"cli-apply-config": applyConfig,
+		"cli-upgrade-k8s":  upgradeK8S,
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			dir := writeFakeTalosctl(t, machineConfig, "Server:\n\tTag:         "+tc.runningTag+"\n", "")
+		triggers, ok := inputs["triggers"]
+		require.True(t, !ok || triggers.IsNull() || (triggers.IsArray() && len(triggers.ArrayValue()) == 0),
+			"%s must not send triggers, got %v", name, triggers)
 
-			cmd := exec.CommandContext(t.Context(), "/bin/bash", "-c", plainString(upgrade["create"]))
-			cmd.Dir = t.TempDir()
-			cmd.Env = append(os.Environ(), "PATH="+dir+":"+os.Getenv("PATH"), "FAKE_DIR="+dir)
-			for key, value := range upgrade["environment"].ObjectValue() {
-				cmd.Env = append(cmd.Env, string(key)+"="+plainString(value))
-			}
-			out, err := cmd.CombinedOutput()
-			require.NoError(t, err, string(out))
-
-			calls, err := os.ReadFile(dir + "/calls")
-			require.NoError(t, err)
-			require.Equal(t, tc.wantUpgrade, strings.Contains(string(calls), "upgrade --debug --drain=false --image "+image), string(calls))
-		})
+		create := plainString(inputs["create"])
+		require.NotEmpty(t, create, name)
+		require.Equal(t, create, plainString(inputs["update"]), "%s create and update must match", name)
+		require.NotContains(t, create, "talosctl_node", "%s must run the plain talosctl command", name)
 	}
+
+	require.True(t, strings.HasPrefix(plainString(upgrade["create"]),
+		"n=0 ; until [ $n -ge 11 ] ; do talosctl -n 10.0.0.2 -e 10.0.0.2 upgrade --debug --drain=false --image "+image+" "),
+		plainString(upgrade["create"]))
+	require.NotContains(t, upgrade["environment"].ObjectValue(), resource.PropertyKey("TALOS_TARGET_IMAGE"))
+
+	require.Equal(t, "talosctl -n 10.0.0.2 -e 10.0.0.2 apply-config -f machineconfig.yaml --talosconfig talosctl.yaml",
+		plainString(applyConfig["create"]))
+	require.Contains(t, applyConfig["environment"].ObjectValue(), resource.PropertyKey("PULUMI_TALOS_ADDITIONAL_FILES_SHA256"))
 }

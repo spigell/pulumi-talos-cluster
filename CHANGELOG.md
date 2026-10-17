@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- CLI stages (`cli-upgrade`, `cli-apply-config`, `cli-upgrade-k8s`) no longer set `triggers`. They update in place when their command, environment or rendered files change, instead of being replaced. A replacement re-runs the create command, which could reboot nodes.
+
+### Removed
+
+- The bash skip checks added in 0.5.0 (`talosctl_node`, the `apply-config --dry-run` match on `No changes`, and the installed-image, tag and schematic checks before `talosctl upgrade`), and the `TALOS_TARGET_IMAGE` environment variable. They parsed human-readable `talosctl` output and were only needed because the triggers forced replacements.
+
+### Upgrade notes
+
+- Stacks deployed with 0.4.1, 0.5.0 or 0.5.1 store `triggers`, so the first `pulumi up` replaces these commands once and re-runs them (including `talosctl upgrade`). Remove `triggers` from those resources in the stack state first. See "Talos Image Upgrades" in the README.
+
 ## 0.5.1 - 2026-10-16
 
 ### Fixed
