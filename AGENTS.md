@@ -123,7 +123,7 @@ flowchart TD
 
     subgraph Leader["2. Leader Bootstrap"]
         LeaderNode["Select Leader Node"]
-        LeaderApply["talosctl apply-config --insecure --mode reboot (Resource: initial-apply-config) [TryInsecure]"]
+        LeaderApply["talosctl apply-config --insecure --mode auto (Resource: initial-apply-config) [TryInsecure]"]
         
         LeaderNode --> LeaderApply
     end
@@ -134,7 +134,7 @@ flowchart TD
     subgraph CPs["3. Remaining Control Planes"]
         CPIter["For Each CP"]
         CPSkip{"skipInitApply?"}
-        CPInit["talosctl apply-config --insecure --mode reboot (Resource: initial-apply-config) [TryInsecure]"]
+        CPInit["talosctl apply-config --insecure --mode auto (Resource: initial-apply-config) [TryInsecure]"]
         
         subgraph CPSecureFlow["Secure Apply Flow"]
             CPUpgrade["talosctl upgrade --image ... (Resource: cli-upgrade)"]
@@ -153,7 +153,7 @@ flowchart TD
     subgraph Workers["4. Workers"]
         WorkIter["For Each Worker"]
         WorkSkip{"skipInitApply?"}
-        WorkInit["talosctl apply-config --insecure --mode reboot (Resource: initial-apply-config) [TryInsecure]"]
+        WorkInit["talosctl apply-config --insecure --mode auto (Resource: initial-apply-config) [TryInsecure]"]
         
         subgraph WorkSecureFlow["Secure Apply Flow"]
             WorkUpgrade["talosctl upgrade --image ... (Resource: cli-upgrade)"]
