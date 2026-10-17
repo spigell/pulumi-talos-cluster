@@ -165,7 +165,7 @@ class ClusterMachinesArgsDict(TypedDict):
     """
     Talos OS installation image.
     Used in the `install` configuration and set via CLI.
-    The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+    The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
     """
 
 @pulumi.input_type
@@ -185,7 +185,7 @@ class ClusterMachinesArgs:
                For structure, see https://www.talos.dev/latest/reference/configuration/v1alpha1/config/
         :param pulumi.Input[_builtins.str] talos_image: Talos OS installation image.
                Used in the `install` configuration and set via CLI.
-               The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+               The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
         """
         pulumi.set(__self__, "machine_id", machine_id)
         pulumi.set(__self__, "machine_type", machine_type)
@@ -193,7 +193,7 @@ class ClusterMachinesArgs:
         if config_patches is not None:
             pulumi.set(__self__, "config_patches", config_patches)
         if talos_image is None:
-            talos_image = 'ghcr.io/siderolabs/installer:v1.14.2'
+            talos_image = 'factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2'
         if talos_image is not None:
             pulumi.set(__self__, "talos_image", talos_image)
 
@@ -253,7 +253,7 @@ class ClusterMachinesArgs:
         """
         Talos OS installation image.
         Used in the `install` configuration and set via CLI.
-        The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+        The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
         """
         return pulumi.get(self, "talos_image")
 

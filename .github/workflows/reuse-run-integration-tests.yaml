@@ -16,6 +16,10 @@ on:
         type: string
         required: true
         default: go
+      target:
+        description: "Make target suffix (integration_tests_<target>); defaults to runtime"
+        type: string
+        required: false
       test:
         type: string
         required: true
@@ -30,7 +34,7 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     name: Run tests
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -64,7 +68,11 @@ jobs:
         env:
           HCLOUD_TOKEN: ${{ secrets.hcloud-token }}
           PULUMI_CLOUD_URL: ${{ env.PULUMI_BACKEND }}
-        run: make integration_tests_${{ inputs.runtime }} TEST=${{ inputs.test }}
+        # A test name that matches nothing passes with "no tests to run"; treat that as a failure.
+        run: |
+          set -o pipefail
+          make integration_tests_${{ inputs.target || inputs.runtime }} TEST=${{ inputs.test }} 2>&1 | tee test-output.log
+          if grep -q 'no tests to run' test-output.log; then echo "::error::no test matched ${{ inputs.test }}"; exit 1; fi
         working-directory: integration-tests
 
       - name: Upload talos home artifacts

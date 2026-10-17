@@ -16,12 +16,10 @@ func (a *Applier) upgradeK8S(m *types.MachineInfo, deps []pulumi.Resource) (pulu
 		WithTalosConfig(a.TalosconfigForNode(m.NodeIP))
 
 	return t.RunCommand(a.ctx, fmt.Sprintf("%s:%s:%s", a.name, stageName, m.MachineID), &talosctl.Args{
-		PrepareDeps: deps,
-		Dir:         home,
-		CommandArgs: pulumi.Sprintf("upgrade-k8s --with-docs=false --with-examples=false --to %s", m.KubernetesVersion),
-		RetryCount:  1,
-		// Same triggers as 0.4.1: dropping them would replace the command on the first run after the bump.
-		Triggers:       pulumi.Array{m.KubernetesVersion},
+		PrepareDeps:    deps,
+		Dir:            home,
+		CommandArgs:    pulumi.Sprintf("upgrade-k8s --with-docs=false --with-examples=false --to %s", m.KubernetesVersion),
+		RetryCount:     1,
 		UpdateOnChange: true,
 	}, []pulumi.ResourceOption{
 		a.parent,

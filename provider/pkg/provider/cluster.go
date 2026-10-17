@@ -49,8 +49,13 @@ func ClusterType() string {
 
 // type ClusterArgs types.Cluster
 
+// defaultInstallerSchematic is the Image Factory schematic without customizations (customization: {}).
+const defaultInstallerSchematic = "376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba"
+
+// GenerateDefaultInstallerImage returns the Image Factory installer for the Talos machinery version.
+// ghcr.io/siderolabs/installer is no longer published for current Talos releases.
 func GenerateDefaultInstallerImage() string {
-	return fmt.Sprintf("%s/%s/installer:%s", gendata.ImagesRegistry, gendata.ImagesUsername, gendata.VersionTag)
+	return fmt.Sprintf("factory.talos.dev/installer/%s:%s", defaultInstallerSchematic, gendata.VersionTag)
 }
 
 func cluster(ctx *pulumi.Context, c *Cluster, name string,

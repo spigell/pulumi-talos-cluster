@@ -157,7 +157,7 @@ type ClusterMachines struct {
 	NodeIp string `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
-	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+	// The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
 	TalosImage *string `pulumi:"talosImage"`
 }
 
@@ -168,7 +168,7 @@ func (val *ClusterMachines) Defaults() *ClusterMachines {
 	}
 	tmp := *val
 	if tmp.TalosImage == nil {
-		talosImage_ := "ghcr.io/siderolabs/installer:v1.14.2"
+		talosImage_ := "factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2"
 		tmp.TalosImage = &talosImage_
 	}
 	return &tmp
@@ -198,7 +198,7 @@ type ClusterMachinesArgs struct {
 	NodeIp pulumi.StringInput `pulumi:"nodeIp"`
 	// Talos OS installation image.
 	// Used in the `install` configuration and set via CLI.
-	// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+	// The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
 	TalosImage pulumi.StringPtrInput `pulumi:"talosImage"`
 }
 
@@ -209,7 +209,7 @@ func (val *ClusterMachinesArgs) Defaults() *ClusterMachinesArgs {
 	}
 	tmp := *val
 	if tmp.TalosImage == nil {
-		tmp.TalosImage = pulumi.StringPtr("ghcr.io/siderolabs/installer:v1.14.2")
+		tmp.TalosImage = pulumi.StringPtr("factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2")
 	}
 	return &tmp
 }
@@ -288,7 +288,7 @@ func (o ClusterMachinesOutput) NodeIp() pulumi.StringOutput {
 
 // Talos OS installation image.
 // Used in the `install` configuration and set via CLI.
-// The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+// The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
 func (o ClusterMachinesOutput) TalosImage() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v ClusterMachines) *string { return v.TalosImage }).(pulumi.StringPtrOutput)
 }

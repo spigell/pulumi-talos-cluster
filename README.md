@@ -50,22 +50,17 @@ Changing a machine's `talosImage` upgrades the node to that image: `talosctl upg
 
 `Apply` accepts an optional `machineTopology` input (plain machine IDs grouped by type). Pass `Cluster.machineTopology` so that per-node resources can be planned before `applyMachines` is known. When it is omitted, as in programs written for 0.4.1, the topology is derived from `applyMachines`, which keeps the 0.4.1 behaviour.
 
-The CLI stages now re-run (update) when their inputs change, not only when a few trigger values change. They keep the same `triggers` as 0.4.1 (`talosImage` for `cli-upgrade`, the config patches and cluster endpoint for `cli-apply-config`, the Kubernetes version for `cli-upgrade-k8s`). A change to a trigger still replaces the command, and a replacement runs the create command. To avoid needless reboots, the create and update commands run the same guard:
+The CLI stages update in place when their inputs change. They do not use `triggers`, because pulumi-command replaces a command on any trigger change, and a replacement re-runs its create command. Each stage re-runs only when an input it actually uses changes:
 
-- `talosctl upgrade` is skipped when the node already runs the target image. This means the installed config's `machine.install.image` equals `talosImage`, `talosctl version` reports the image tag and, for Image Factory images, the running `schematic` extension matches the schematic in the image path. If any of these cannot be read or does not match, the upgrade runs. Images without a tag are always upgraded. On a new node the upgrade runs as before, unless the node already runs the target image (for example, because its initial install used that image).
-- `talosctl apply-config` is skipped when `apply-config --dry-run` reports `No changes`. Otherwise it applies in the default `auto` mode.
-- `talosctl upgrade-k8s` is not guarded. It never reboots nodes, and it skips components that already run the target version, but it re-syncs the bootstrap manifests.
+- `cli-upgrade`: the image is part of the `talosctl upgrade --image` command, so changing `talosImage` re-runs the upgrade.
+- `cli-apply-config`: the environment carries a hash of the rendered `machineconfig.yaml`, so the command re-runs only when the rendered config changes (for example, after a change to the config patches, the cluster endpoint or `talosImage`).
+- `cli-upgrade-k8s`: the Kubernetes version is part of the command.
 
-### First `pulumi up` after upgrading from 0.4.1
+The commands run `talosctl` directly, without extra checks against the node.
 
-The preview shows updates, not replaces, for `gen-machine-config`, `cli-upgrade`, `cli-apply-config`, `cli-upgrade-k8s` and `kubeconfig`. The command resources gain an `update` command and a content hash, and their `triggers` stay unchanged. Expect the following:
+### First `pulumi up` after upgrading from 0.4.1 or 0.5.x
 
-- Nodes that already run their `talosImage` skip `talosctl upgrade` and are not rebooted.
-- Nodes whose `talosImage` was changed under 0.4.1 still run the old image, because 0.4.1 ignored the change. These nodes are upgraded and rebooted once. Control planes are upgraded one after another, each gated by the etcd health check. Workers are upgraded in parallel.
-- `apply-config` applies only real differences. One example is the de-duplication of list entries that 0.4.1 produced by merging the config patches twice.
-- `upgrade-k8s` runs once and re-syncs the bootstrap manifests.
-
-The skip check depends on the `talosctl` output formats described above. To be safe, run `pulumi preview` first and roll out one stack at a time.
+Stacks deployed with 0.4.1, 0.5.0 or 0.5.1 store `triggers` on `cli-upgrade`, `cli-apply-config` and `cli-upgrade-k8s`. Dropping them replaces these commands once, and the replacement runs `talosctl upgrade` (a reboot per node, control planes one after another behind the etcd health check), `apply-config` and `upgrade-k8s`. To avoid this, remove `triggers` from those resources in the stack state (`pulumi stack export`, edit, `pulumi stack import`) before the first `pulumi up`, and check that `pulumi preview` shows no replacements.
 
 ## Motivation
 

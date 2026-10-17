@@ -1,0 +1,88 @@
+# Edit step for TestHcloudClusterGo: copied over hcloud-go after the first deployment.
+anchors:
+  patches:
+    machineBase: &machineBase |
+      debug: false
+      machine:
+        time:
+          disabled: true
+    # Talos v1.14 contract: kubelet node settings live in the KubeNodeConfig document.
+    nodeConfig: &nodeConfig |
+      apiVersion: v1alpha1
+      kind: KubeNodeConfig
+      nodeIP:
+        validSubnets:
+          - 10.10.10.0/24
+    controlplaneCluster: &controlplaneCluster |
+      cluster:
+        etcd:
+          advertisedSubnets:
+            - 10.10.10.0/24
+    timeEnabled: &timeEnabled |
+      machine:
+        time:
+          disabled: false
+    cloudflared: &cloudflared |
+      apiVersion: v1alpha1
+      kind: ExtensionServiceConfig
+      name: cloudflared
+      environment:
+        - TUNNEL_TOKEN=CHANGE_ME_AGAIN
+        - TUNNEL_METRICS=localhost:2001
+        - TUNNEL_EDGE_IP_VERSION=auto
+    nodeConfigLabeled: &nodeConfigLabeled |
+      apiVersion: v1alpha1
+      kind: KubeNodeConfig
+      nodeIP:
+        validSubnets:
+          - 10.10.10.0/24
+      labels:
+        integration-test/edited: "true"
+    controlplane: &controlplanePatches
+      - *machineBase
+      - *nodeConfig
+      - *controlplaneCluster
+      - *timeEnabled
+      - *cloudflared
+    worker: &workerPatches
+      - *machineBase
+      - *nodeConfig
+      - *timeEnabled
+      - *cloudflared
+  machineDefaults: &machineDefaults
+    platform: hcloud
+    variant: cloud
+    talosImage: factory.talos.dev/hcloud-installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2
+    hcloud:
+      serverType: cx23
+      location: fsn1
+    apply-config-via-userdata: true
+
+name: hcloud-go
+kubernetesVersion: 1.32.0 
+usePrivateNetwork: true
+privateNetwork: 10.10.10.0/24
+privateSubnetwork: 10.10.10.0/25
+skipInitApply: true
+machines:
+  - <<: *machineDefaults
+    id: hcloud-go-controlplane-1
+    type: init
+    privateIP: 10.10.10.5
+    configPatches: *controlplanePatches
+  - <<: *machineDefaults
+    id: hcloud-go-worker-1
+    type: worker
+    privateIP: 10.10.10.3
+    # Config change: one more patch on an existing node.
+    configPatches:
+      - *machineBase
+      - *nodeConfigLabeled
+      - *timeEnabled
+      - *cloudflared
+  # New node.
+  - <<: *machineDefaults
+    id: hcloud-go-worker-2
+    type: worker
+    privateIP: 10.10.10.4
+    configPatches: *workerPatches

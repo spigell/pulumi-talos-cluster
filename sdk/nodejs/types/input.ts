@@ -51,7 +51,7 @@ export interface ClusterMachinesArgs {
     /**
      * Talos OS installation image.
      * Used in the `install` configuration and set via CLI.
-     * The default is generated based on the Talos machinery version, current: ghcr.io/siderolabs/installer:v1.14.2.
+     * The default is generated based on the Talos machinery version, current: factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2.
      */
     talosImage?: pulumi.Input<string | undefined>;
 }
@@ -61,7 +61,7 @@ export interface ClusterMachinesArgs {
 export function clusterMachinesArgsProvideDefaults(val: ClusterMachinesArgs): ClusterMachinesArgs {
     return {
         ...val,
-        talosImage: (val.talosImage) ?? "ghcr.io/siderolabs/installer:v1.14.2",
+        talosImage: (val.talosImage) ?? "factory.talos.dev/installer/376567988ad370138ad8b2698212367b8edcb69b5fd68c80be1f2ec7d603b4ba:v1.14.2",
     };
 }
 

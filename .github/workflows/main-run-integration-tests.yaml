@@ -53,7 +53,9 @@ jobs:
     uses: ./.github/workflows/reuse-run-integration-tests.yaml
     with:
       name: ${{ inputs.test }}
+      # The shared setup action has no python runtime; nodejs installs Go and Node, python is preinstalled.
       runtime: nodejs
+      target: python
       test: TestHcloudHAClusterPy
     secrets:
       google-credentials: ${{ secrets.GOOGLE_CREDENTIALS }}

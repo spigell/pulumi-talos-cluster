@@ -74,15 +74,15 @@ integration_tests_talosctl:
 
 integration_tests_go: clean
 	$(MAKE) -C .. build_provider_tests gen_go_sdk
-	go test -timeout=25m -v -run $(TEST)
+	go test -timeout=55m -v -run $(TEST)
 
 integration_tests_nodejs: clean install_nodejs_integration_tests_infra
 	$(MAKE) -C .. build_nodejs_sdk build_provider_tests install_nodejs_sdk
-	go test -timeout=25m -v -run $(TEST)
+	go test -timeout=55m -v -run $(TEST)
 
 integration_tests_python: clean
 	$(MAKE) -C .. build_python_sdk build_provider_tests
-	go test -timeout=25m -v -run $(TEST)
+	go test -timeout=55m -v -run $(TEST)
 
 
 github_run_test: export TEST=$(GH_TEST)

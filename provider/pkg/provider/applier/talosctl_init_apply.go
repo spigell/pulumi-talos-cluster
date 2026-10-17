@@ -20,7 +20,8 @@ func (a *Applier) initApplyWithTalosctl(m *types.MachineInfo, deps []pulumi.Reso
 		AdditionalFiles: []talosctl.ExtraFile{
 			{Name: machineConfigName, Content: m.Configuration},
 		},
-		CommandArgs:      pulumi.Sprintf("apply-config -f %s --mode reboot", machineConfigName),
+		// talosctl 1.14 dropped the reboot mode; auto installs and reboots a node in maintenance mode.
+		CommandArgs:      pulumi.Sprintf("apply-config -f %s --mode auto", machineConfigName),
 		Dir:              generateWorkDirNameForTalosctl(a.name, stageName, m.MachineID),
 		RetryCount:       2,
 		TryInsecureFirst: true,
