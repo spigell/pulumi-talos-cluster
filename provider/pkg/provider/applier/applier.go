@@ -185,7 +185,9 @@ func (a *Applier) GenerateMachineConfig(c *types.Cluster, m *types.ClusterMachin
 		return pulumi.StringOutput{}, err
 	}
 
-	return configuration.(*local.Command).Stdout, nil
+	return configuration.(*local.Command).Stdout.ApplyT(func(raw string) (string, error) {
+		return raw, validateMachineConfig(m.MachineID, raw)
+	}).(pulumi.StringOutput), nil
 }
 
 func (a *Applier) GenerateTalosconfig(c *types.Cluster, secrets pulumi.StringOutput) (pulumi.StringOutput, error) {
