@@ -188,7 +188,7 @@ flowchart TD
 
 ## MCP Shell Server & Tooling
 
-When available, the specialized `pulumi-talos-cluster-mcp` server supports scoped integration tests and Talos debugging. It is configured in `.mcp.json` at the repository root. It may not be registered in reforge; release preparation uses the local worker checkout as described above.
+When available, the specialized `pulumi-talos-cluster-mcp` server supports scoped integration tests and Talos debugging. It is configured for Claude only, in `.mcp.json` at the repository root; Codex (`.codex/config.toml`) and Gemini (`.gemini/settings.json`) do not register it. It may not be registered in reforge; release preparation uses the local worker checkout as described above.
 
 **Configuration:**
 - **Tool:** `shell_exec` (session tool name: `mcp__pulumi-talos-cluster-mcp__shell_exec`)
