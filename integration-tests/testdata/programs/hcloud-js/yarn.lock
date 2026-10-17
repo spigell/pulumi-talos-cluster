@@ -1019,10 +1019,10 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-4.6.0.tgz#3c7c9c46e678feefe7a2e5bb609d3dbd665ffb3f"
   integrity sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==
 
-"@spigell/pulumi-talos-cluster@^0.5.0":
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/@spigell/pulumi-talos-cluster/-/pulumi-talos-cluster-0.5.1.tgz#ce2fa9471c1d48558df3bb39100449d83803f14b"
-  integrity sha512-uNJDr1w9cV8u3S73kIelKZfMooshpf2u4aCrmUqeO+2ziNFHcM8h7R1TETIRd1gfI/RHvEkkVPmGPRyp/FH+Kg==
+"@spigell/pulumi-talos-cluster@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@spigell/pulumi-talos-cluster/-/pulumi-talos-cluster-0.6.0.tgz#568b2637b8a38381f95b735fb6ed176d88d6e6b0"
+  integrity sha512-UlveOOmUtv1W5tBUmwiPqlIsHCPJqcQoF54tSCxOUSvg+QUObMt8yTR0Vftfv06Y2FdhJ/AJxf6+1dqxSHUT7w==
   dependencies:
     "@pulumi/command" v1.2.1
     "@pulumi/pulumi" "3.267.0"
