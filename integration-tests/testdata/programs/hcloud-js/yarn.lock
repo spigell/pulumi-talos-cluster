@@ -2549,9 +2549,9 @@ postcss-selector-parser@^7.0.0:
     util-deprecate "^1.0.2"
 
 prettier@^3.6.2:
-  version "3.9.9"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.9.9.tgz#09b826918c91cd4cbc80e0cbd1d2a922ff04f233"
-  integrity sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg==
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.10.0.tgz#b546ab979f85b850be17ed5e41ea6719e3be8681"
+  integrity sha512-mBi4765LgjO1PFjlEs7pUeK0nb1bw71c+N4/ItfeUWNdY5cV2pRKaFpbbFRYmDJMO+5ZwzGxHRqHxFZna7iv5w==
 
 proc-log@^4.0.0, proc-log@^4.1.0, proc-log@^4.2.0:
   version "4.2.0"
